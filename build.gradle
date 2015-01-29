@@ -1,0 +1,31 @@
+buildscript {
+    repositories { jcenter() }
+    dependencies {
+        classpath "com.netflix.nebula:nebula-plugin-plugin:${gradle.gradleVersion}.+"
+        classpath 'com.github.ben-manes:gradle-versions-plugin:0.8'
+    }
+}
+
+description 'Nebula Metrics plugin'
+group 'com.netflix.nebula'
+version '1.0-SNAPSHOT'
+
+defaultTasks 'build'
+
+apply plugin: 'nebula-plugin'
+apply plugin: 'com.github.ben-manes.versions'
+
+contacts {
+    'dannyt@netflix.com' {
+        moniker 'Danny Thomas'
+        github 'DanielThomas'
+    }
+}
+
+apply from: 'gradle/dependencies.gradle'
+apply from: 'gradle/idea.gradle'
+apply from: 'gradle/tests.gradle'
+
+task wrapper(type: Wrapper) {
+    gradleVersion = '2.2'
+}

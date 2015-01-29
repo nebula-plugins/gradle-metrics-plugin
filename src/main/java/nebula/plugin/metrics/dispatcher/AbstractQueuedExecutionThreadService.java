@@ -1,0 +1,98 @@
+package nebula.plugin.metrics.dispatcher;
+
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.util.concurrent.AbstractExecutionThreadService;
+import org.slf4j.Logger;
+
+import javax.annotation.Nullable;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.TimeUnit;
+
+import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Preconditions.checkState;
+import static org.slf4j.LoggerFactory.*;
+
+/**
+ * An {@link AbstractQueuedExecutionThreadService} that allows actions of type <pre>E</pre> to be queued and executed in
+ * the order received.
+ *
+ * @author Danny Thomas
+ */
+public abstract class AbstractQueuedExecutionThreadService<E> extends AbstractExecutionThreadService {
+    private final Logger logger = getLogger(AbstractExecutionThreadService.class);
+    private final BlockingQueue<E> queue;
+    private final boolean shutdownOnFailure;
+
+    public AbstractQueuedExecutionThreadService(boolean shutdownOnFailure) {
+        this(new LinkedBlockingQueue<E>(), shutdownOnFailure);
+    }
+
+    @VisibleForTesting
+    AbstractQueuedExecutionThreadService(BlockingQueue<E> queue, boolean shutdownOnFailure) {
+        this.queue = checkNotNull(queue);
+        this.shutdownOnFailure = shutdownOnFailure;
+    }
+
+    // TODO docs
+    protected abstract void execute(E action) throws Exception;
+
+    // TODO docs
+    protected void postShutDown() throws Exception {
+    }
+
+    @Override
+    protected final void run() throws Exception {
+        while (isRunning() || !queue.isEmpty()) {
+            E action = queue.poll(100, TimeUnit.MILLISECONDS);
+            doExecute(action);
+        }
+    }
+
+    private void doExecute(@Nullable E action) {
+        try {
+            if (action != null) {
+                logger.debug("Executing {}", action);
+                execute(action);
+            }
+        } catch (Exception e) {
+            logger.error("[metrics] Error executing action {}: {}", action, e.getMessage(), e); // FIXME add abstraction for appending [metrics] to messages
+            if (shutdownOnFailure) {
+                logger.info("Shutting down {} due to previous failure", this);
+                queue.clear();
+                stopAsync().awaitTerminated();
+            }
+        }
+    }
+
+    @Override
+    protected final void shutDown() throws Exception {
+        logger.debug("Shutting down queued execution service {}", this);
+        while (!queue.isEmpty()) {
+            logger.debug("Waiting for queue to drain...");
+            Thread.sleep(500);
+        }
+        checkState(queue.isEmpty(), "The queue should have been drained before shutdown");
+        postShutDown();
+    }
+
+    protected final void queue(E action) {
+        checkNotNull(action);
+        checkState(state() == State.STARTING || state() == State.RUNNING, "Service %s has not been started", this);
+        if (isAsync()) {
+            logger.debug("Queueing {}", action);
+            queue.add(action);
+        } else {
+            doExecute(action);
+        }
+    }
+
+
+    /**
+     * Allow service to run non-asynchronously to allow unit testing of concrete implementations, without needing to
+     * deal with timing issues.
+     */
+    protected boolean isAsync() {
+        return true;
+    }
+}
