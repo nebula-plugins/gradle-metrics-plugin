@@ -17,14 +17,9 @@ import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.databind.ser.std.StdSerializer;
 import com.fasterxml.jackson.datatype.joda.JodaModule;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.MoreObjects;
-import com.google.common.base.MoreObjects.ToStringHelper;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import net.logstash.logback.layout.LogstashLayout;
-import org.elasticsearch.action.ActionListener;
-import org.elasticsearch.action.ActionRequestBuilder;
-import org.elasticsearch.action.ActionResponse;
 import org.elasticsearch.action.admin.indices.create.CreateIndexRequestBuilder;
 import org.elasticsearch.action.admin.indices.exists.indices.IndicesExistsRequestBuilder;
 import org.elasticsearch.action.admin.indices.exists.indices.IndicesExistsResponse;
@@ -53,9 +48,11 @@ import static org.elasticsearch.common.xcontent.XContentFactory.jsonBuilder;
 /**
  * Elasticsearch client {@link nebula.plugin.metrics.dispatcher.MetricsDispatcher}.
  *
+ * TODO I'm not quite sure about the Runnable pattern. It's a nice way of ensuring failure can't bubble up to callers, but maybe I can do better...
+ *
  * @author Danny Thomas
  */
-public class ESClientMetricsDispatcher extends AbstractQueuedExecutionThreadService<ESClientMetricsDispatcher.ActionRequestBuilderRunnable> implements MetricsDispatcher {
+public class ESClientMetricsDispatcher extends AbstractQueuedExecutionThreadService<Runnable> implements MetricsDispatcher {
     protected static final String BUILD_METRICS_INDEX = "build-metrics";
     protected static final String BUILD_TYPE = "build";
     protected static final String LOG_TYPE = "log";
@@ -104,26 +101,6 @@ public class ESClientMetricsDispatcher extends AbstractQueuedExecutionThreadServ
         return mapper;
     }
 
-    @Override
-    protected void startUp() throws Exception {
-        createIndexesIfNeeded();
-    }
-
-    @Override
-    protected void postShutDown() throws Exception {
-        flushLogbackEvents(); // One last flush to to make sure we got everything
-        if (!logbackEvents.isEmpty()) {
-            logger.error("Not all logback events were successfully flushed: {}", logbackEvents);
-        }
-        client.close();
-        logstashLayout.stop();
-    }
-
-    @Override
-    protected boolean isAsync() {
-        return async;
-    }
-
     /**
      * Register Jackson module that maps enums as lowercase. From http://stackoverflow.com/a/24173645
      */
@@ -162,17 +139,81 @@ public class ESClientMetricsDispatcher extends AbstractQueuedExecutionThreadServ
         return new TransportClient(settings).addTransportAddress(new InetSocketTransportAddress("localhost", 9300));
     }
 
+
     @Override
-    protected void execute(ESClientMetricsDispatcher.ActionRequestBuilderRunnable runnable) throws Exception {
+    protected boolean isAsync() {
+        return async;
+    }
+
+    @Override
+    protected void startUp() throws Exception {
+        createIndexesIfNeeded();
+    }
+
+    @Override
+    protected void execute(Runnable runnable) throws Exception {
         runnable.run();
     }
 
-    private void queue(ActionRequestBuilder<?, ?, ?, ?> builder, ActionListener<? extends ActionResponse> listener) {
-        queue(new ActionRequestBuilderRunnable(builder, listener));
+    private void createIndexesIfNeeded() {
+        Runnable runnable = new Runnable() {
+            @Override
+            public void run() {
+                final IndicesExistsRequestBuilder indicesExists = client.admin().indices().prepareExists(BUILD_METRICS_INDEX);
+                IndicesExistsResponse indicesExistsResponse = indicesExists.execute().actionGet();
+                if (!indicesExistsResponse.isExists()) {
+                    createBuildIndex(NESTED_MAPPINGS);
+                }
+            }
+        };
+        queue(runnable);
     }
 
-    private void queue(ActionRequestBuilder<?, ?, ?, ?> builder) {
-        queue(new ActionRequestBuilderRunnable(builder));
+    @Override
+    protected void postShutDown() throws Exception {
+        flushLogbackEvents(); // One last flush to to make sure we got everything
+        if (!logbackEvents.isEmpty()) {
+            logger.error("Not all logback events were successfully flushed: {}", logbackEvents);
+        }
+        client.close();
+        logstashLayout.stop();
+    }
+
+    private void flushLogbackEvents() {
+        if (buildId == null) {
+            logger.debug("Skipping logback event flush, as buildId has not been set");
+            return;
+        }
+        if (!logstashLayout.isStarted()) {
+            logstashLayout.setTimeZone("UTC");
+            logstashLayout.setCustomFields(String.format("{\"@source\":\"%s\"}", buildId));
+            logstashLayout.start();
+        }
+        final List<LoggingEvent> events = Lists.newArrayListWithExpectedSize(logbackEvents.size());
+        logbackEvents.drainTo(events);
+        if (!events.isEmpty()) {
+            Runnable runnable = new Runnable() {
+                @Override
+                public void run() {
+                    BulkRequestBuilder bulk = client.prepareBulk();
+                    for (LoggingEvent event : events) {
+                        IndexRequestBuilder index = client.prepareIndex(BUILD_METRICS_INDEX, LOG_TYPE);
+                        index.setSource(logstashLayout.doLayout(event));
+                        bulk.add(index);
+                    }
+                }
+            };
+            queue(runnable);
+        }
+    }
+
+    @VisibleForTesting
+    String getBuildId() {
+        return buildId;
+    }
+
+    private void checkBuildStarted() {
+        checkNotNull(build, "Build is null. Has buildStarted() been called?");
     }
 
     @Override
@@ -181,40 +222,22 @@ public class ESClientMetricsDispatcher extends AbstractQueuedExecutionThreadServ
         build = new Build(project);
         // This won't be accurate, but we at least want a value here if we have a failure that causes the duration not to be fired
         build.setStartTime(System.currentTimeMillis());
-        try {
-            String json = mapper.writeValueAsString(build);
-            IndexRequestBuilder index = client.prepareIndex(BUILD_METRICS_INDEX, BUILD_TYPE).setSource(json);
-            ActionListener<IndexResponse> listener = new ThrowingActionListener<IndexResponse>() {
-                @Override
-                public void onResponse(IndexResponse indexResponse) {
+        Runnable runnable = new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    String json = mapper.writeValueAsString(build);
+                    IndexRequestBuilder index = client.prepareIndex(BUILD_METRICS_INDEX, BUILD_TYPE).setSource(json);
+                    IndexResponse indexResponse = index.execute().actionGet();
                     assert indexResponse.isCreated() : "Response should always be created";
                     buildId = indexResponse.getId();
                     logger.warn("Build id is {}", buildId);
-                }
-            };
-            queue(new ActionRequestBuilderRunnable(index, listener));
-        } catch (JsonProcessingException e) {
-            logger.error("Unable to write JSON string value: " + e.getMessage(), e);
-        }
-    }
-
-    @Override
-    public void duration(long startTime, long elapsedTime) {
-        build.setStartTime(startTime);
-        build.setElapsedTime(elapsedTime);
-    }
-
-    private void createIndexesIfNeeded() {
-        final IndicesExistsRequestBuilder indicesExists = client.admin().indices().prepareExists(BUILD_METRICS_INDEX);
-        ActionListener<IndicesExistsResponse> listener = new ThrowingActionListener<IndicesExistsResponse>() {
-            @Override
-            public void onResponse(IndicesExistsResponse indicesExistsResponse) {
-                if (!indicesExistsResponse.isExists()) {
-                    createBuildIndex(NESTED_MAPPINGS);
+                } catch (JsonProcessingException e) {
+                    logger.error("Unable to write JSON string value: " + e.getMessage(), e);
                 }
             }
         };
-        queue(indicesExists, listener);
+        queue(runnable);
     }
 
     private void createBuildIndex(Map<String, List<String>> nestedTypes) {
@@ -238,15 +261,17 @@ public class ESClientMetricsDispatcher extends AbstractQueuedExecutionThreadServ
             }
             jsonBuilder.endObject().endObject().endObject().endObject();
             CreateIndexRequestBuilder indexCreate = client.admin().indices().prepareCreate(BUILD_METRICS_INDEX).setSource(jsonBuilder);
-            queue(new ActionRequestBuilderRunnable(indexCreate));
+            indexCreate.execute().actionGet();
+            // TODO do I need to check the response here?
         } catch (IOException e) {
             throw com.google.common.base.Throwables.propagate(e);
         }
     }
 
-    @VisibleForTesting
-    String getBuildId() {
-        return buildId;
+    @Override
+    public void duration(long startTime, long elapsedTime) {
+        build.setStartTime(startTime);
+        build.setElapsedTime(elapsedTime);
     }
 
     @Override
@@ -255,21 +280,23 @@ public class ESClientMetricsDispatcher extends AbstractQueuedExecutionThreadServ
         build.setEnvironment(environment);
     }
 
-    private void checkBuildStarted() {
-        checkNotNull(build, "Build is null. Has buildStarted() been called?");
-    }
-
     @Override
     public void result(Result result) {
         checkBuildStarted();
         build.setResult(result);
-        try {
-            String json = mapper.writeValueAsString(build);
-            IndexRequestBuilder index = client.prepareIndex(BUILD_METRICS_INDEX, BUILD_TYPE).setSource(json).setId(buildId);
-            queue(index);
-        } catch (JsonProcessingException e) {
-            logger.error("Unable to write object JSON: " + e.getMessage(), e);
-        }
+        Runnable runnable = new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    String json = mapper.writeValueAsString(build);
+                    IndexRequestBuilder index = client.prepareIndex(BUILD_METRICS_INDEX, BUILD_TYPE).setSource(json).setId(buildId);
+                    index.execute().actionGet();
+                } catch (JsonProcessingException e) {
+                    Throwables.propagate(e);
+                }
+            }
+        };
+        queue(runnable);
     }
 
     @Override
@@ -293,83 +320,9 @@ public class ESClientMetricsDispatcher extends AbstractQueuedExecutionThreadServ
         flushLogbackEvents();
     }
 
-    private void flushLogbackEvents() {
-        if (buildId == null) {
-            logger.debug("Skipping logback event flush, as buildId has not been set");
-            return;
-        }
-        if (!logstashLayout.isStarted()) {
-            logstashLayout.setTimeZone("UTC");
-            logstashLayout.setCustomFields(String.format("{\"@source\":\"%s\"}", buildId));
-            logstashLayout.start();
-        }
-        List<LoggingEvent> events = Lists.newArrayListWithExpectedSize(logbackEvents.size());
-        logbackEvents.drainTo(events);
-        if (!events.isEmpty()) {
-            BulkRequestBuilder bulk = client.prepareBulk();
-            for (LoggingEvent event : events) {
-                IndexRequestBuilder index = client.prepareIndex(BUILD_METRICS_INDEX, LOG_TYPE);
-                index.setSource(logstashLayout.doLayout(event));
-                bulk.add(index);
-            }
-            queue(bulk);
-        }
-    }
-
     @Override
     public void test(Test test) {
         checkBuildStarted();
         build.addTest(test);
-    }
-
-    /**
-     * A {@link Runnable} that executes an {@link ActionRequestBuilder}, so requests can be queued with a listener, and
-     * exception handling logic can be made common.
-     */
-    public static class ActionRequestBuilderRunnable<R extends ActionResponse> implements Runnable {
-        @SuppressWarnings("rawtypes") // FIXME
-        private final ActionRequestBuilder<?, R, ?, ?> builder;
-        private final ActionListener<R> listener;
-
-        private ActionRequestBuilderRunnable(ActionRequestBuilder<?, R, ?, ?> builder) {
-            this.builder = builder;
-            this.listener = null;
-        }
-
-        private ActionRequestBuilderRunnable(ActionRequestBuilder<?, R, ?, ?> builder, ActionListener<R> listener) {
-            this.builder = builder;
-            this.listener = listener;
-        }
-
-        @Override
-        public void run() {
-            // We want the queue to be processed in order and Elasticsearch executes listener based requests asynchronously it seems, even when you tell it not to...
-            // TODO the above makes me wonder about this design. Might need a rewrite...
-            if (listener != null) {
-                try {
-                    R response = builder.execute().actionGet();
-                    listener.onResponse(response);
-                } catch (Exception e) {
-                    listener.onFailure(e);
-                }
-            } else {
-                builder.execute().actionGet();
-            }
-        }
-
-        @Override
-        public String toString() {
-            ToStringHelper helper = MoreObjects.toStringHelper(this).omitNullValues();
-            helper.add("builder", builder);
-            helper.add("listener", listener);
-            return helper.toString();
-        }
-    }
-
-    private abstract static class ThrowingActionListener<E> implements ActionListener<E> {
-        @Override
-        public void onFailure(Throwable e) {
-            throw Throwables.propagate(e);
-        }
     }
 }
