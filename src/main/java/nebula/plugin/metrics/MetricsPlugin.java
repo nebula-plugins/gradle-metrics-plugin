@@ -3,12 +3,10 @@ package nebula.plugin.metrics;
 import nebula.plugin.metrics.collector.GradleProfileCollector;
 import nebula.plugin.metrics.collector.GradleStartParameterCollector;
 import nebula.plugin.metrics.collector.GradleTestSuiteCollector;
-import nebula.plugin.metrics.collector.LogbackAppenderCollector;
+import nebula.plugin.metrics.collector.LogbackCollector;
 import nebula.plugin.metrics.dispatcher.ESClientMetricsDispatcher;
 import nebula.plugin.metrics.dispatcher.MetricsDispatcher;
-import nebula.plugin.metrics.model.CI;
 import nebula.plugin.metrics.model.Result;
-import nebula.plugin.metrics.model.SCM;
 
 import com.google.common.annotations.VisibleForTesting;
 import org.gradle.BuildListener;
@@ -19,16 +17,15 @@ import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 import org.gradle.api.Task;
 import org.gradle.api.initialization.Settings;
+import org.gradle.api.internal.GradleInternal;
 import org.gradle.api.invocation.Gradle;
 import org.gradle.api.tasks.TaskContainer;
 import org.gradle.api.tasks.testing.Test;
-import org.gradle.internal.classloader.ClasspathUtil;
+import org.gradle.initialization.ClassLoaderRegistry;
 import org.gradle.internal.classloader.FilteringClassLoader;
+import org.gradle.invocation.DefaultGradle;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-import java.net.URL;
-import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
@@ -41,7 +38,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
  */
 public final class MetricsPlugin implements Plugin<Project> {
     private static final long SHUTDOWN_TIMEOUT_MS = 1000;
-    private final Logger logger = LoggerFactory.getLogger(MetricsPlugin.class);
+    private final Logger logger = MetricsLoggerFactory.getLogger(MetricsPlugin.class);
 
     @Override
     public void apply(Project project) {
@@ -55,15 +52,14 @@ public final class MetricsPlugin implements Plugin<Project> {
     }
 
     private void configureCollectors(Project project) {
-        Gradle gradle = project.getGradle();
+        GradleInternal gradle = (DefaultGradle) project.getGradle();
+        FilteringClassLoader filteringClassLoader = (FilteringClassLoader) gradle.getServices().get(ClassLoaderRegistry.class).getGradleApiClassLoader().getParent();
+        filteringClassLoader.allowPackage("ch.qos.logback");
 
         MetricsExtension extension = MetricsExtension.getRootMetricsExtension(gradle);
         MetricsDispatcher dispatcher = new ESClientMetricsDispatcher(extension);
 
-        // FIXME this is obviously a total hack, but it's the easiest way of getting past the classloading filtering, fix this!
-        //FilteringClassLoader filteringClassLoader = (FilteringClassLoader) getClass().getClassLoader().getParent().getParent();
-        //filteringClassLoader.allowPackage("ch.qos.logback");
-        //LogbackAppenderCollector.addLogbackAppender(dispatcher, Project.class);
+        LogbackCollector.configureLogbackCollection(dispatcher);
 
         gradle.addListener(new MetricsBuildListener(dispatcher));
         gradle.addListener(new GradleProfileCollector(dispatcher));
@@ -95,7 +91,7 @@ public final class MetricsPlugin implements Plugin<Project> {
         public void projectsEvaluated(Gradle gradle) {
             StartParameter startParameter = gradle.getStartParameter();
             if (startParameter.isOffline()) {
-                logger.warn("[metrics] Build is running offline. Metrics will not be collected");
+                logger.warn("Build is running offline. Metrics will not be collected");
             } else {
                 dispatcher.startAsync().awaitRunning();
             }
@@ -121,7 +117,7 @@ public final class MetricsPlugin implements Plugin<Project> {
                     dispatcher.stopAsync().awaitTerminated(SHUTDOWN_TIMEOUT_MS, TimeUnit.MILLISECONDS);
                 }
             } catch (TimeoutException e) {
-                logger.error("Timed after {}ms while waiting for metrics dispatcher to terminate", SHUTDOWN_TIMEOUT_MS);
+                logger.error("Timed out after {}ms while waiting for metrics dispatcher to terminate", SHUTDOWN_TIMEOUT_MS);
             }
         }
 

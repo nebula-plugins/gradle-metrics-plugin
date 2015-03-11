@@ -22,18 +22,18 @@ import nebula.test.ProjectSpec
 import org.gradle.api.Project
 
 /**
- * Tests for {@link LogbackAppenderCollector}.
+ * Tests for {@link LogbackCollector}.
  */
-class LogbackAppenderCollectorTest extends ProjectSpec {
+class LogbackCollectorTest extends ProjectSpec {
     def ''() {
         given:
         def dispatcher = Mock(MetricsDispatcher)
-        LogbackAppenderCollector.addLogbackAppender(dispatcher, Project)
+        LogbackCollector.configureLogbackCollection(dispatcher)
 
         when:
         project.logger.error("error")
 
         then:
-        1 * dispatcher.log(_)
+        1 * dispatcher.logbackEvent(_)
     }
 }

@@ -1,5 +1,7 @@
 package nebula.plugin.metrics.dispatcher;
 
+import nebula.plugin.metrics.MetricsLoggerFactory;
+
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.util.concurrent.AbstractExecutionThreadService;
 import org.slf4j.Logger;
@@ -11,7 +13,6 @@ import java.util.concurrent.TimeUnit;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
-import static org.slf4j.LoggerFactory.*;
 
 /**
  * An {@link AbstractQueuedExecutionThreadService} that allows actions of type <pre>E</pre> to be queued and executed in
@@ -20,7 +21,7 @@ import static org.slf4j.LoggerFactory.*;
  * @author Danny Thomas
  */
 public abstract class AbstractQueuedExecutionThreadService<E> extends AbstractExecutionThreadService {
-    private final Logger logger = getLogger(AbstractExecutionThreadService.class);
+    private final Logger logger = MetricsLoggerFactory.getLogger(AbstractExecutionThreadService.class);
     private final BlockingQueue<E> queue;
     private final boolean shutdownOnFailure;
 
@@ -56,7 +57,7 @@ public abstract class AbstractQueuedExecutionThreadService<E> extends AbstractEx
                 execute(action);
             }
         } catch (Exception e) {
-            logger.error("[metrics] Error executing action {}: {}", action, e.getMessage(), e); // FIXME add abstraction for appending [metrics] to messages
+            logger.error("Error executing action {}: {}", action, e.getMessage(), e);
             if (shutdownOnFailure) {
                 logger.info("Shutting down {} due to previous failure", this);
                 queue.clear();
@@ -78,8 +79,10 @@ public abstract class AbstractQueuedExecutionThreadService<E> extends AbstractEx
 
     protected final void queue(E action) {
         checkNotNull(action);
-        checkState(state() == State.STARTING || state() == State.RUNNING, "Service %s has not been started", this);
-        if (isAsync()) {
+        if (!(state() == State.STARTING || state() == State.RUNNING)) {
+            logger.debug("Dispatcher is not running, dropping action {}", action);
+            return;
+        } else if (isAsync()) {
             logger.debug("Queueing {}", action);
             queue.add(action);
         } else {

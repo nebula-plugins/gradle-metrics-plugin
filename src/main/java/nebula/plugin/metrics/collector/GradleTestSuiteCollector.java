@@ -1,5 +1,6 @@
 package nebula.plugin.metrics.collector;
 
+import nebula.plugin.metrics.MetricsLoggerFactory;
 import nebula.plugin.metrics.dispatcher.MetricsDispatcher;
 import nebula.plugin.metrics.model.Result;
 import nebula.plugin.metrics.model.Test;
@@ -9,7 +10,6 @@ import org.gradle.api.tasks.testing.TestDescriptor;
 import org.gradle.api.tasks.testing.TestListener;
 import org.gradle.api.tasks.testing.TestResult;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.List;
 
@@ -21,7 +21,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
  * @author Danny Thomas
  */
 public class GradleTestSuiteCollector implements TestListener {
-    private static final Logger logger = LoggerFactory.getLogger(GradleTestSuiteCollector.class);
+    private static final Logger logger = MetricsLoggerFactory.getLogger(GradleTestSuiteCollector.class);
     private final MetricsDispatcher dispatcher;
 
     public GradleTestSuiteCollector(MetricsDispatcher dispatcher) {

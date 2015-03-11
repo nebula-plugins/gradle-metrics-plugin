@@ -17,7 +17,6 @@ public class Build {
     private final Project project;
     private final List<Event> events = new ArrayList<>();
     private final List<Task> tasks = new ArrayList<>();
-    private final List<LogEvent> logs = new ArrayList<>();
     private final List<Test> tests = new ArrayList<>();
     private final List<Artifact> artifacts = new ArrayList<>();
     private Environment environment;
@@ -47,14 +46,6 @@ public class Build {
 
     public void addTask(Task task) {
         tasks.add(checkNotNull(task));
-    }
-
-    public List<LogEvent> getLogs() {
-        return ImmutableList.copyOf(logs);
-    }
-
-    public void addLogEvent(LogEvent logEvent) {
-        logs.add(checkNotNull(logEvent));
     }
 
     public List<Test> getTests() {

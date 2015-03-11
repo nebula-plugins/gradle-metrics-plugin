@@ -1,5 +1,6 @@
 package nebula.plugin.metrics.collector;
 
+import nebula.plugin.metrics.MetricsLoggerFactory;
 import nebula.plugin.metrics.dispatcher.MetricsDispatcher;
 import nebula.plugin.metrics.model.Result;
 import nebula.plugin.metrics.model.Task;
@@ -8,7 +9,6 @@ import com.google.common.annotations.VisibleForTesting;
 import org.gradle.api.tasks.TaskState;
 import org.gradle.profile.*;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -18,7 +18,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
  * @author Danny Thomas
  */
 public class GradleProfileCollector implements ProfileListener {
-    private static final Logger logger = LoggerFactory.getLogger(GradleProfileCollector.class);
+    private static final Logger logger = MetricsLoggerFactory.getLogger(GradleProfileCollector.class);
     private final MetricsDispatcher dispatcher;
 
     public GradleProfileCollector(MetricsDispatcher dispatcher) {
@@ -73,11 +73,12 @@ public class GradleProfileCollector implements ProfileListener {
         long elapsedTotal = result.getElapsedTotal();
         dispatcher.duration(result.getBuildStarted(), elapsedTotal);
 
+        // FIXME this appears to always be the case, investigate
         // Check the totals agree with the aggregate elapsed times, and log an event with the difference if not
         if (elapsedTotal != expectedTotal) {
             long difference = expectedTotal - elapsedTotal;
-            logger.info("Total build time of {}ms does not match the actual calculated total of {}ms (difference: {}ms). Creating event with type 'other'", expectedTotal, elapsedTotal, difference);
-            dispatcher.event("unknown", "other", difference); // FIXME this appears to always be the case, investigate
+            logger.warn("Total build time of {}ms does not match the actual calculated total of {}ms (difference: {}ms). Creating event with type 'other'", expectedTotal, elapsedTotal, difference);
+            dispatcher.event("unknown", "other", difference);
         }
     }
 

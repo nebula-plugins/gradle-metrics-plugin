@@ -18,11 +18,4 @@ class MetricsPluginTest extends ProjectSpec {
         then:
         project.extensions.findByName(MetricsExtension.METRICS_EXTENSION_NAME)
     }
-
-    def 'test'() {
-        expect:
-        System.out.println(jsonBuilder()
-                .startObject()
-                .field("postDate", new Date()).endObject().string());
-    }
 }

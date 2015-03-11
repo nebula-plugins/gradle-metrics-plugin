@@ -1,9 +1,12 @@
 package nebula.plugin.metrics.dispatcher;
 
 import nebula.plugin.metrics.MetricsExtension;
+import nebula.plugin.metrics.MetricsLoggerFactory;
 import nebula.plugin.metrics.model.*;
 
+import autovalue.shaded.com.google.common.common.collect.Lists;
 import autovalue.shaded.com.google.common.common.collect.Maps;
+import ch.qos.logback.classic.spi.LoggingEvent;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonParser;
@@ -16,18 +19,16 @@ import com.fasterxml.jackson.datatype.joda.JodaModule;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.MoreObjects.ToStringHelper;
-import com.google.common.base.Splitter;
 import com.google.common.base.Throwables;
-import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ListMultimap;
-import com.google.common.collect.Multimap;
+import net.logstash.logback.layout.LogstashLayout;
 import org.elasticsearch.action.ActionListener;
 import org.elasticsearch.action.ActionRequestBuilder;
 import org.elasticsearch.action.ActionResponse;
 import org.elasticsearch.action.admin.indices.create.CreateIndexRequestBuilder;
 import org.elasticsearch.action.admin.indices.exists.indices.IndicesExistsRequestBuilder;
 import org.elasticsearch.action.admin.indices.exists.indices.IndicesExistsResponse;
+import org.elasticsearch.action.bulk.BulkRequestBuilder;
 import org.elasticsearch.action.index.IndexRequestBuilder;
 import org.elasticsearch.action.index.IndexResponse;
 import org.elasticsearch.client.Client;
@@ -43,10 +44,11 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
 
 import static com.google.common.base.Preconditions.*;
 import static org.elasticsearch.common.xcontent.XContentFactory.jsonBuilder;
-import static org.slf4j.LoggerFactory.getLogger;
 
 /**
  * Elasticsearch client {@link nebula.plugin.metrics.dispatcher.MetricsDispatcher}.
@@ -56,6 +58,7 @@ import static org.slf4j.LoggerFactory.getLogger;
 public class ESClientMetricsDispatcher extends AbstractQueuedExecutionThreadService<ESClientMetricsDispatcher.ActionRequestBuilderRunnable> implements MetricsDispatcher {
     protected static final String BUILD_METRICS_INDEX = "build-metrics";
     protected static final String BUILD_TYPE = "build";
+    protected static final String LOG_TYPE = "log";
     protected static final Map<String, List<String>> NESTED_MAPPINGS;
 
     static {
@@ -66,11 +69,13 @@ public class ESClientMetricsDispatcher extends AbstractQueuedExecutionThreadServ
         NESTED_MAPPINGS.put("environment", ImmutableList.of("environmentVariables", "systemProperties"));
     }
 
-    protected final Logger logger = getLogger(this.getClass());
+    protected final Logger logger = MetricsLoggerFactory.getLogger(this.getClass());
     protected final MetricsExtension extension;
     private final Client client;
     private final ObjectMapper mapper;
     private final boolean async;
+    private final LogstashLayout logstashLayout;
+    private final BlockingQueue<LoggingEvent> logbackEvents;
     private Build build;
     private String buildId;
 
@@ -85,6 +90,8 @@ public class ESClientMetricsDispatcher extends AbstractQueuedExecutionThreadServ
         this.client = checkNotNull(client);
         this.mapper = getObjectMapper();
         this.async = async;
+        logstashLayout = new LogstashLayout();
+        logbackEvents = new LinkedBlockingQueue<>();
     }
 
     @VisibleForTesting
@@ -100,6 +107,16 @@ public class ESClientMetricsDispatcher extends AbstractQueuedExecutionThreadServ
     @Override
     protected void startUp() throws Exception {
         createIndexesIfNeeded();
+    }
+
+    @Override
+    protected void postShutDown() throws Exception {
+        flushLogbackEvents(); // One last flush to to make sure we got everything
+        if (!logbackEvents.isEmpty()) {
+            logger.error("Not all logback events were successfully flushed: {}", logbackEvents);
+        }
+        client.close();
+        logstashLayout.stop();
     }
 
     @Override
@@ -159,11 +176,6 @@ public class ESClientMetricsDispatcher extends AbstractQueuedExecutionThreadServ
     }
 
     @Override
-    protected void postShutDown() throws Exception {
-        client.close();
-    }
-
-    @Override
     public void started(Project project) {
         checkState(build == null, "Build is not null. Duplicate call to started()?");
         build = new Build(project);
@@ -171,16 +183,16 @@ public class ESClientMetricsDispatcher extends AbstractQueuedExecutionThreadServ
         build.setStartTime(System.currentTimeMillis());
         try {
             String json = mapper.writeValueAsString(build);
-            IndexRequestBuilder builder = client.prepareIndex(BUILD_METRICS_INDEX, BUILD_TYPE).setSource(json);
+            IndexRequestBuilder index = client.prepareIndex(BUILD_METRICS_INDEX, BUILD_TYPE).setSource(json);
             ActionListener<IndexResponse> listener = new ThrowingActionListener<IndexResponse>() {
                 @Override
                 public void onResponse(IndexResponse indexResponse) {
                     assert indexResponse.isCreated() : "Response should always be created";
                     buildId = indexResponse.getId();
-                    logger.warn("[metrics] Build id is {}", buildId);
+                    logger.warn("Build id is {}", buildId);
                 }
             };
-            queue(new ActionRequestBuilderRunnable(builder, listener));
+            queue(new ActionRequestBuilderRunnable(index, listener));
         } catch (JsonProcessingException e) {
             logger.error("Unable to write JSON string value: " + e.getMessage(), e);
         }
@@ -193,7 +205,7 @@ public class ESClientMetricsDispatcher extends AbstractQueuedExecutionThreadServ
     }
 
     private void createIndexesIfNeeded() {
-        final IndicesExistsRequestBuilder builder = client.admin().indices().prepareExists(BUILD_METRICS_INDEX);
+        final IndicesExistsRequestBuilder indicesExists = client.admin().indices().prepareExists(BUILD_METRICS_INDEX);
         ActionListener<IndicesExistsResponse> listener = new ThrowingActionListener<IndicesExistsResponse>() {
             @Override
             public void onResponse(IndicesExistsResponse indicesExistsResponse) {
@@ -202,7 +214,7 @@ public class ESClientMetricsDispatcher extends AbstractQueuedExecutionThreadServ
                 }
             }
         };
-        queue(builder, listener);
+        queue(indicesExists, listener);
     }
 
     private void createBuildIndex(Map<String, List<String>> nestedTypes) {
@@ -211,7 +223,7 @@ public class ESClientMetricsDispatcher extends AbstractQueuedExecutionThreadServ
             jsonBuilder.startObject().startObject("mappings").startObject(BUILD_TYPE);
             jsonBuilder.startObject("_timestamp").field("enabled", true).field("path", "build.startTime").endObject();
             jsonBuilder.startObject("properties");
-            for (Map.Entry<String,List<String>> entry : nestedTypes.entrySet()) {
+            for (Map.Entry<String, List<String>> entry : nestedTypes.entrySet()) {
                 String type = entry.getKey();
                 Collection<String> children = entry.getValue();
                 if (children.isEmpty()) {
@@ -225,8 +237,8 @@ public class ESClientMetricsDispatcher extends AbstractQueuedExecutionThreadServ
                 }
             }
             jsonBuilder.endObject().endObject().endObject().endObject();
-            CreateIndexRequestBuilder builder = client.admin().indices().prepareCreate(BUILD_METRICS_INDEX).setSource(jsonBuilder);
-            queue(new ActionRequestBuilderRunnable(builder));
+            CreateIndexRequestBuilder indexCreate = client.admin().indices().prepareCreate(BUILD_METRICS_INDEX).setSource(jsonBuilder);
+            queue(new ActionRequestBuilderRunnable(indexCreate));
         } catch (IOException e) {
             throw com.google.common.base.Throwables.propagate(e);
         }
@@ -253,8 +265,8 @@ public class ESClientMetricsDispatcher extends AbstractQueuedExecutionThreadServ
         build.setResult(result);
         try {
             String json = mapper.writeValueAsString(build);
-            IndexRequestBuilder builder = client.prepareIndex(BUILD_METRICS_INDEX, BUILD_TYPE).setSource(json).setId(buildId);
-            queue(builder);
+            IndexRequestBuilder index = client.prepareIndex(BUILD_METRICS_INDEX, BUILD_TYPE).setSource(json).setId(buildId);
+            queue(index);
         } catch (JsonProcessingException e) {
             logger.error("Unable to write object JSON: " + e.getMessage(), e);
         }
@@ -275,9 +287,33 @@ public class ESClientMetricsDispatcher extends AbstractQueuedExecutionThreadServ
     }
 
     @Override
-    public void log(LogEvent event) {
-        checkBuildStarted();
-        build.addLogEvent(event);
+    public void logbackEvent(LoggingEvent event) {
+        // We need the buildId for the logging event source, so we need to defer logging events until the buildId is set
+        logbackEvents.add(event); // TODO probably need a different queue implementation
+        flushLogbackEvents();
+    }
+
+    private void flushLogbackEvents() {
+        if (buildId == null) {
+            logger.debug("Skipping logback event flush, as buildId has not been set");
+            return;
+        }
+        if (!logstashLayout.isStarted()) {
+            logstashLayout.setTimeZone("UTC");
+            logstashLayout.setCustomFields(String.format("{\"@source\":\"%s\"}", buildId));
+            logstashLayout.start();
+        }
+        List<LoggingEvent> events = Lists.newArrayListWithExpectedSize(logbackEvents.size());
+        logbackEvents.drainTo(events);
+        if (!events.isEmpty()) {
+            BulkRequestBuilder bulk = client.prepareBulk();
+            for (LoggingEvent event : events) {
+                IndexRequestBuilder index = client.prepareIndex(BUILD_METRICS_INDEX, LOG_TYPE);
+                index.setSource(logstashLayout.doLayout(event));
+                bulk.add(index);
+            }
+            queue(bulk);
+        }
     }
 
     @Override

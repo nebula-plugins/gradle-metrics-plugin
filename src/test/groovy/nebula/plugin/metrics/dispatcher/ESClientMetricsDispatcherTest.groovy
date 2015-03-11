@@ -86,7 +86,7 @@ class ESClientMetricsDispatcherTest extends LogbackAssertSpecification {
             builder
         }
         // TODO Ignoring the tail because it includes timestamps which I'm being too lazy to match right now
-        json.startsWith('{"project":{"name":"project","version":"1.0"},"events":[],"tasks":[],"logs":[],"tests":[],"artifacts":[],"result":{"status":"unknown"}')
+        json.startsWith('{"project":{"name":"project","version":"1.0"},"events":[],"tasks":[],"tests":[],"artifacts":[],"result":{"status":"unknown"}')
     }
 
     def 'mapper formats dates using the same format as content builder'() {
