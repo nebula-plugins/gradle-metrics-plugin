@@ -69,6 +69,6 @@ idea {
     }
   }
   module {
-    sourceDirs += file('generated') // TODO later Gradle versions support 'generatedSourceDirs'. We have to relocate this because out/ appears to be completely excluded
+    generatedSourceDirs += file('generated')
   }
 }
