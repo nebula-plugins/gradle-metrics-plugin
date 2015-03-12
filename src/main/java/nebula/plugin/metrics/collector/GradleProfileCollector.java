@@ -90,11 +90,11 @@ public class GradleProfileCollector implements ProfileListener {
         long elapsedTotal = result.getElapsedTotal();
         dispatcher.duration(result.getBuildStarted(), elapsedTotal);
 
-        // FIXME this appears to always be the case, investigate
         // Check the totals agree with the aggregate elapsed times, and log an event with the difference if not
+        // For instance, Gradle doesn't account for the time taken to download artifacts: http://forums.gradle.org/gradle/topics/profile-report-doesnt-account-for-time-spent-downloading-dependencies
         if (elapsedTotal < expectedTotal) {
             long difference = expectedTotal - elapsedTotal;
-            logger.warn("Total build time of {}ms is less than the calculated total of {}ms (difference: {}ms). Creating event with type 'other'", expectedTotal, elapsedTotal, difference);
+            logger.info("Total build time of {}ms is less than the calculated total of {}ms (difference: {}ms). Creating 'unknown' event with type 'other'", expectedTotal, elapsedTotal, difference);
             dispatcher.event("unknown", "other", difference);
         }
     }
