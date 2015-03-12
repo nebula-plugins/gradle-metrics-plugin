@@ -48,7 +48,7 @@ public final class MetricsPlugin implements Plugin<Project> {
     }
 
     private void configureExtension(Project project) {
-        project.getExtensions().add("metrics", new MetricsExtension());
+        project.getExtensions().add("metrics", new MetricsPluginExtension());
     }
 
     private void configureCollectors(Project project) {
@@ -56,7 +56,7 @@ public final class MetricsPlugin implements Plugin<Project> {
         FilteringClassLoader filteringClassLoader = (FilteringClassLoader) gradle.getServices().get(ClassLoaderRegistry.class).getGradleApiClassLoader().getParent();
         filteringClassLoader.allowPackage("ch.qos.logback");
 
-        MetricsExtension extension = MetricsExtension.getRootMetricsExtension(gradle);
+        MetricsPluginExtension extension = MetricsPluginExtension.getRootMetricsExtension(gradle);
         MetricsDispatcher dispatcher = new ESClientMetricsDispatcher(extension);
 
         LogbackCollector.configureLogbackCollection(dispatcher);
@@ -93,10 +93,14 @@ public final class MetricsPlugin implements Plugin<Project> {
             if (startParameter.isOffline()) {
                 logger.warn("Build is running offline. Metrics will not be collected");
             } else {
-                dispatcher.startAsync().awaitRunning();
+                try {
+                    dispatcher.startAsync().awaitRunning();
+                    dispatchProject(gradle);
+                    GradleStartParameterCollector.collect(gradle.getStartParameter(), dispatcher);
+                } catch (IllegalStateException e) {
+                    logger.error("Error while starting metrics dispatcher. Metrics collection disabled.", e);
+                }
             }
-            dispatchProject(gradle);
-            GradleStartParameterCollector.collect(gradle.getStartParameter(), dispatcher);
         }
 
         private void dispatchProject(Gradle gradle) {
@@ -112,12 +116,14 @@ public final class MetricsPlugin implements Plugin<Project> {
             Throwable failure = buildResult.getFailure();
             Result result = failure == null ? Result.success() : Result.failure(failure);
             dispatcher.result(result);
-            try {
-                if (dispatcher.isRunning()) {
+            if (dispatcher.isRunning()) {
+                try {
                     dispatcher.stopAsync().awaitTerminated(SHUTDOWN_TIMEOUT_MS, TimeUnit.MILLISECONDS);
+                } catch (TimeoutException e) {
+                    logger.error("Timed out after {}ms while waiting for metrics dispatcher to terminate", SHUTDOWN_TIMEOUT_MS);
+                } catch (IllegalStateException e) {
+                    logger.error("Could not stop metrics dispatcher service", e);
                 }
-            } catch (TimeoutException e) {
-                logger.error("Timed out after {}ms while waiting for metrics dispatcher to terminate", SHUTDOWN_TIMEOUT_MS);
             }
         }
 

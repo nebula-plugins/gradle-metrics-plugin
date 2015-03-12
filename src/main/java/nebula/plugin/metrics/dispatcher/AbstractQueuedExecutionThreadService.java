@@ -35,10 +35,8 @@ public abstract class AbstractQueuedExecutionThreadService<E> extends AbstractEx
         this.shutdownOnFailure = shutdownOnFailure;
     }
 
-    // TODO docs
     protected abstract void execute(E action) throws Exception;
 
-    // TODO docs
     protected void postShutDown() throws Exception {
     }
 

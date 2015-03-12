@@ -1,7 +1,7 @@
 package nebula.plugin.metrics.dispatcher;
 
-import nebula.plugin.metrics.MetricsExtension;
 import nebula.plugin.metrics.MetricsLoggerFactory;
+import nebula.plugin.metrics.MetricsPluginExtension;
 import nebula.plugin.metrics.model.*;
 
 import autovalue.shaded.com.google.common.common.collect.Lists;
@@ -34,11 +34,9 @@ import org.elasticsearch.common.transport.InetSocketTransportAddress;
 import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.slf4j.Logger;
 
+import javax.annotation.Nullable;
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
@@ -47,7 +45,7 @@ import static org.elasticsearch.common.xcontent.XContentFactory.jsonBuilder;
 
 /**
  * Elasticsearch client {@link nebula.plugin.metrics.dispatcher.MetricsDispatcher}.
- *
+ * <p/>
  * TODO I'm not quite sure about the Runnable pattern. It's a nice way of ensuring failure can't bubble up to callers, but maybe I can do better...
  *
  * @author Danny Thomas
@@ -60,35 +58,36 @@ public class ESClientMetricsDispatcher extends AbstractQueuedExecutionThreadServ
 
     static {
         NESTED_MAPPINGS = Maps.newLinkedHashMap();
-        for (String mapping : Arrays.asList("events", "tasks", "logs", "tests", "artifacts")) {
-            NESTED_MAPPINGS.put(mapping, ImmutableList.<String>of());
+        for (String mapping : Arrays.asList("events", "tasks", "tests", "artifacts")) {
+            NESTED_MAPPINGS.put(mapping, Collections.<String>emptyList());
         }
         NESTED_MAPPINGS.put("environment", ImmutableList.of("environmentVariables", "systemProperties"));
     }
 
     protected final Logger logger = MetricsLoggerFactory.getLogger(this.getClass());
-    protected final MetricsExtension extension;
-    private final Client client;
+    private final MetricsPluginExtension extension;
     private final ObjectMapper mapper;
     private final boolean async;
+    private final Build build;
     private final LogstashLayout logstashLayout;
     private final BlockingQueue<LoggingEvent> logbackEvents;
-    private Build build;
+    private Client client;
     private String buildId;
 
-    public ESClientMetricsDispatcher(MetricsExtension extension) {
-        this(extension, getTransportClient(), true);
+    public ESClientMetricsDispatcher(MetricsPluginExtension extension) {
+        this(extension, null, true);
     }
 
     @VisibleForTesting
-    ESClientMetricsDispatcher(MetricsExtension extension, Client client, boolean async) {
+    ESClientMetricsDispatcher(MetricsPluginExtension extension, @Nullable Client client, boolean async) {
         super(true);
         this.extension = checkNotNull(extension);
-        this.client = checkNotNull(client);
         this.mapper = getObjectMapper();
         this.async = async;
+        this.build = new Build();
         logstashLayout = new LogstashLayout();
         logbackEvents = new LinkedBlockingQueue<>();
+        this.client = client;
     }
 
     @VisibleForTesting
@@ -102,7 +101,7 @@ public class ESClientMetricsDispatcher extends AbstractQueuedExecutionThreadServ
     }
 
     /**
-     * Register Jackson module that maps enums as lowercase. From http://stackoverflow.com/a/24173645
+     * Register Jackson module that maps enums as lowercase. Per http://stackoverflow.com/a/24173645.
      */
     @SuppressWarnings("rawtypes")
     private static void registerEnumModule(ObjectMapper mapper) {
@@ -131,15 +130,6 @@ public class ESClientMetricsDispatcher extends AbstractQueuedExecutionThreadServ
         mapper.registerModule(module);
     }
 
-    /**
-     * Temporary method until I have an extension for configuring these properties.
-     */
-    private static Client getTransportClient() {
-        Settings settings = ImmutableSettings.settingsBuilder().put("cluster.name", "elasticsearch_dannyt").build();
-        return new TransportClient(settings).addTransportAddress(new InetSocketTransportAddress("localhost", 9300));
-    }
-
-
     @Override
     protected boolean isAsync() {
         return async;
@@ -148,7 +138,18 @@ public class ESClientMetricsDispatcher extends AbstractQueuedExecutionThreadServ
     @Override
     protected void startUp() throws Exception {
         createIndexesIfNeeded();
+        client = createTransportClient(extension);
     }
+
+    private Client createTransportClient(MetricsPluginExtension extension) {
+        ImmutableSettings.Builder builder = ImmutableSettings.settingsBuilder();
+        builder.classLoader(Settings.class.getClassLoader());
+        builder.put("cluster.name", extension.getClusterName());
+        builder.put("transport.tcp.connect_timeout", extension.getConnectTimeout());
+        InetSocketTransportAddress address = new InetSocketTransportAddress(extension.getHostname(), extension.getPort());
+        return new TransportClient(builder.build()).addTransportAddress(address);
+    }
+
 
     @Override
     protected void execute(Runnable runnable) throws Exception {
@@ -212,14 +213,9 @@ public class ESClientMetricsDispatcher extends AbstractQueuedExecutionThreadServ
         return buildId;
     }
 
-    private void checkBuildStarted() {
-        checkNotNull(build, "Build is null. Has buildStarted() been called?");
-    }
-
     @Override
     public void started(Project project) {
-        checkState(build == null, "Build is not null. Duplicate call to started()?");
-        build = new Build(project);
+        build.setProject(project);
         // This won't be accurate, but we at least want a value here if we have a failure that causes the duration not to be fired
         build.setStartTime(System.currentTimeMillis());
         Runnable runnable = new Runnable() {
@@ -276,13 +272,11 @@ public class ESClientMetricsDispatcher extends AbstractQueuedExecutionThreadServ
 
     @Override
     public void environment(Environment environment) {
-        checkBuildStarted();
         build.setEnvironment(environment);
     }
 
     @Override
     public void result(Result result) {
-        checkBuildStarted();
         build.setResult(result);
         Runnable runnable = new Runnable() {
             @Override
@@ -301,7 +295,6 @@ public class ESClientMetricsDispatcher extends AbstractQueuedExecutionThreadServ
 
     @Override
     public void event(String description, String type, long elapsedTime) {
-        checkBuildStarted();
         checkArgument(!description.isEmpty(), "Description may not be empty");
         checkArgument(!type.isEmpty(), "Type may not be empty");
         build.addEvent(Event.create(description, type, elapsedTime));
@@ -309,20 +302,18 @@ public class ESClientMetricsDispatcher extends AbstractQueuedExecutionThreadServ
 
     @Override
     public void task(Task task) {
-        checkBuildStarted();
         build.addTask(task);
     }
 
     @Override
     public void logbackEvent(LoggingEvent event) {
         // We need the buildId for the logging event source, so we need to defer logging events until the buildId is set
-        logbackEvents.add(event); // TODO probably need a different queue implementation
+        logbackEvents.add(event);
         flushLogbackEvents();
     }
 
     @Override
     public void test(Test test) {
-        checkBuildStarted();
         build.addTest(test);
     }
 }

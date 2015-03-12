@@ -21,7 +21,7 @@ import com.fasterxml.jackson.core.TreeNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.node.TextNode
 import com.github.tlrx.elasticsearch.test.EsSetup
-import nebula.plugin.metrics.MetricsExtension
+import nebula.plugin.metrics.MetricsPluginExtension
 import nebula.plugin.metrics.model.*
 import org.elasticsearch.client.Client
 import org.gradle.StartParameter
@@ -42,7 +42,7 @@ class ESClientMetricsDispatcherIntegTest extends LogbackAssertSpecification {
         // Execute a dummy request so the ES client is initialised
         assertFalse(esSetup.exists(BUILD_METRICS_INDEX))
         client = esSetup.client()
-        dispatcher = new ESClientMetricsDispatcher(new MetricsExtension(), client, false)
+        dispatcher = new ESClientMetricsDispatcher(new MetricsPluginExtension(), client, false)
         dispatcher.startAsync().awaitRunning()
     }
 

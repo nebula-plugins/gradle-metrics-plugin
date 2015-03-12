@@ -14,7 +14,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
  * @author Danny Thomas
  */
 public class Build {
-    private final Project project;
+    private Project project;
     private final List<Event> events = new ArrayList<>();
     private final List<Task> tasks = new ArrayList<>();
     private final List<Test> tests = new ArrayList<>();
@@ -24,12 +24,12 @@ public class Build {
     private long startTime;
     private long elapsedTime;
 
-    public Build(Project project) {
-        this.project = checkNotNull(project);
-    }
-
     public Project getProject() {
         return project;
+    }
+
+    public void setProject(Project project) {
+        this.project = project;
     }
 
     public List<Event> getEvents() {

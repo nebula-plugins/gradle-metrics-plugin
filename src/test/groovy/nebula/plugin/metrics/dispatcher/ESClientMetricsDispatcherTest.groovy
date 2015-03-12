@@ -17,7 +17,7 @@
 
 package nebula.plugin.metrics.dispatcher
 
-import nebula.plugin.metrics.MetricsExtension
+import nebula.plugin.metrics.MetricsPluginExtension
 import nebula.plugin.metrics.model.Project
 import org.elasticsearch.action.ListenableActionFuture
 import org.elasticsearch.action.admin.indices.exists.indices.IndicesExistsRequestBuilder
@@ -38,7 +38,7 @@ import static nebula.plugin.metrics.dispatcher.ESClientMetricsDispatcher.BUILD_T
  * Tests for {@link ESClientMetricsDispatcher}.
  */
 class ESClientMetricsDispatcherTest extends LogbackAssertSpecification {
-    def extension = new MetricsExtension()
+    def extension = new MetricsPluginExtension()
     def project = Project.create("project", "1.0")
 
     ESClientMetricsDispatcher dispatcher
