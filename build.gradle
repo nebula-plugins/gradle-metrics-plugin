@@ -6,7 +6,7 @@ buildscript {
     }
 }
 
-description 'Nebula Metrics plugin'
+description 'Gradle metrics plugin'
 group 'com.netflix.nebula'
 version '1.0-SNAPSHOT'
 
