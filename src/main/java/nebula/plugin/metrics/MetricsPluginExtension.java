@@ -3,14 +3,14 @@ package nebula.plugin.metrics;
 import org.gradle.api.invocation.Gradle;
 import org.gradle.api.plugins.ExtensionContainer;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 /**
  * Nebula build metrics plugin extension.
  *
  * @author Danny Thomas
  */
 public class MetricsPluginExtension {
-    private static final Integer DEFAULT_TIMEOUT = 5000;
-
     /**
      * The name used when adding this extension to the extension container.
      */
@@ -30,15 +30,13 @@ public class MetricsPluginExtension {
     private String hostname = "localhost";
     private int port = 9300;
     private String clusterName = "elasticsearch";
-    private int connectTimeout = DEFAULT_TIMEOUT;
-    private int socketTimeout = DEFAULT_TIMEOUT;
 
     public String getHostname() {
         return hostname;
     }
 
     public void setHostname(String hostname) {
-        this.hostname = hostname;
+        this.hostname = checkNotNull(hostname);
     }
 
     public int getPort() {
@@ -54,22 +52,6 @@ public class MetricsPluginExtension {
     }
 
     public void setClusterName(String clusterName) {
-        this.clusterName = clusterName;
-    }
-
-    public int getConnectTimeout() {
-        return connectTimeout;
-    }
-
-    public void setConnectTimeout(int connectTimeout) {
-        this.connectTimeout = connectTimeout;
-    }
-
-    public int getSocketTimeout() {
-        return socketTimeout;
-    }
-
-    public void setSocketTimeout(int socketTimeout) {
-        this.socketTimeout = socketTimeout;
+        this.clusterName = checkNotNull(clusterName);
     }
 }

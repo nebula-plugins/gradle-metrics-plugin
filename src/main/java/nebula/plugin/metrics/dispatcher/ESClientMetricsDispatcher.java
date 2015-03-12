@@ -138,18 +138,18 @@ public class ESClientMetricsDispatcher extends AbstractQueuedExecutionThreadServ
     @Override
     protected void startUp() throws Exception {
         createIndexesIfNeeded();
-        client = createTransportClient(extension);
+        if (client == null) {
+            client = createTransportClient(extension);
+        }
     }
 
     private Client createTransportClient(MetricsPluginExtension extension) {
         ImmutableSettings.Builder builder = ImmutableSettings.settingsBuilder();
         builder.classLoader(Settings.class.getClassLoader());
         builder.put("cluster.name", extension.getClusterName());
-        builder.put("transport.tcp.connect_timeout", extension.getConnectTimeout());
         InetSocketTransportAddress address = new InetSocketTransportAddress(extension.getHostname(), extension.getPort());
         return new TransportClient(builder.build()).addTransportAddress(address);
     }
-
 
     @Override
     protected void execute(Runnable runnable) throws Exception {
@@ -295,8 +295,6 @@ public class ESClientMetricsDispatcher extends AbstractQueuedExecutionThreadServ
 
     @Override
     public void event(String description, String type, long elapsedTime) {
-        checkArgument(!description.isEmpty(), "Description may not be empty");
-        checkArgument(!type.isEmpty(), "Type may not be empty");
         build.addEvent(Event.create(description, type, elapsedTime));
     }
 

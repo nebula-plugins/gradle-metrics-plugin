@@ -49,18 +49,6 @@ class ESClientMetricsDispatcherTest extends LogbackAssertSpecification {
         }
     }
 
-    def 'duplicate build start call throws an ISE'() {
-        dispatcher = createDispatcher()
-
-        when:
-        dispatcher.started(project)
-        dispatcher.started(project)
-
-        then:
-        def e = thrown(IllegalStateException)
-        e.message == 'Build is not null. Duplicate call to started()?'
-    }
-
     def 'build start response sets buildId'() {
         def builder = mockIndexRequestBuilder()
         dispatcher = createDispatcher(builder)

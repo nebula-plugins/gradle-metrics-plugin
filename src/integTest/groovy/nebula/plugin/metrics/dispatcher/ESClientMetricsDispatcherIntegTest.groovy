@@ -23,8 +23,14 @@ import com.fasterxml.jackson.databind.node.TextNode
 import com.github.tlrx.elasticsearch.test.EsSetup
 import nebula.plugin.metrics.MetricsPluginExtension
 import nebula.plugin.metrics.model.*
+import org.codehaus.groovy.runtime.SocketGroovyMethods
 import org.elasticsearch.client.Client
+import org.elasticsearch.client.transport.TransportClient
+import org.elasticsearch.common.settings.ImmutableSettings
+import org.elasticsearch.common.settings.Settings
+import org.elasticsearch.common.transport.InetSocketTransportAddress
 import org.gradle.StartParameter
+import spock.lang.Timeout
 
 import static junit.framework.Assert.assertFalse
 import static nebula.plugin.metrics.dispatcher.ESClientMetricsDispatcher.*
@@ -42,8 +48,18 @@ class ESClientMetricsDispatcherIntegTest extends LogbackAssertSpecification {
         // Execute a dummy request so the ES client is initialised
         assertFalse(esSetup.exists(BUILD_METRICS_INDEX))
         client = esSetup.client()
-        dispatcher = new ESClientMetricsDispatcher(new MetricsPluginExtension(), client, false)
+        dispatcher = createStartedDispatcher(client)
+    }
+
+    def createStartedDispatcher(client) {
+        def dispatcher = createDispatcher(new MetricsPluginExtension(), client)
         dispatcher.startAsync().awaitRunning()
+        dispatcher
+    }
+
+    def createDispatcher(extension, client) {
+        def dispatcher = new ESClientMetricsDispatcher(extension, client, false)
+        dispatcher
     }
 
     def cleanup() {
@@ -86,6 +102,56 @@ class ESClientMetricsDispatcherIntegTest extends LogbackAssertSpecification {
                 }
             }
         }
+    }
+
+    @Timeout(value = 10)
+    def 'transport client times out when node is not listening on configured port'() {
+        super.cleanup() // Detach the logging asserter for this test
+        def extension = new MetricsPluginExtension()
+        def serverSocket = new ServerSocket(0)
+        extension.port = serverSocket.localPort
+        serverSocket.close()
+        def transportClient = createTransportClient(extension)
+        def dispatcher = createDispatcher(extension, transportClient)
+
+        when:
+        dispatcher.startAsync().awaitRunning()
+
+        then:
+        thrown(IllegalStateException)
+    }
+
+    @Timeout(value = 10)
+    def 'transport client times out when node is unresponsible on configured port'() {
+        setup:
+        super.cleanup() // Detach the logging asserter for this test
+        def extension = new MetricsPluginExtension()
+        def serverSocket = new ServerSocket(0)
+        new Thread(new Runnable() {
+            public void run() {
+                serverSocket.accept()
+            }
+        }).start();
+        extension.setPort(serverSocket.localPort)
+        def transportClient = createTransportClient(extension)
+        def dispatcher = createDispatcher(extension, transportClient)
+
+        when:
+        dispatcher.startAsync().awaitRunning()
+
+        then:
+        thrown(IllegalStateException)
+
+        cleanup:
+        serverSocket.close()
+    }
+
+    def Client createTransportClient(MetricsPluginExtension extension) {
+        ImmutableSettings.Builder builder = ImmutableSettings.settingsBuilder();
+        builder.classLoader(Settings.class.getClassLoader());
+        builder.put("cluster.name", extension.getClusterName());
+        InetSocketTransportAddress address = new InetSocketTransportAddress(extension.getHostname(), extension.getPort());
+        new TransportClient(builder.build()).addTransportAddress(address);
     }
 
     def checkTypeIsNested(TreeNode treeNode) {

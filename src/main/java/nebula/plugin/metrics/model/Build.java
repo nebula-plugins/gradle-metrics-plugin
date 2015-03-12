@@ -29,7 +29,7 @@ public class Build {
     }
 
     public void setProject(Project project) {
-        this.project = project;
+        this.project = checkNotNull(project);
     }
 
     public List<Event> getEvents() {
