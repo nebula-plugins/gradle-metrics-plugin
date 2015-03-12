@@ -18,57 +18,59 @@
 apply plugin: 'idea'
 
 idea {
-  project {
-    def javaTarget = '1.7'
-    jdkName = javaTarget
-    languageLevel = javaTarget
+    project {
+        def javaTarget = '1.7'
+        jdkName = javaTarget
+        languageLevel = javaTarget
 
-    wildcards += 'logback.groovy'
+        wildcards += 'logback.groovy'
 
-    ipr {
-      withXml { provider ->
-        def node = provider.asNode()
+        ipr {
+            withXml { provider ->
+                def node = provider.asNode()
 
-        // Code styles
-        def codestyle = new XmlParser().parse(file('gradle/idea-codestyle.xml'))
-        node.append(codestyle)
+                // Code styles
+                def codestyle = new XmlParser().parse(file('gradle/idea-codestyle.xml'))
+                node.append(codestyle)
 
-        // Inspections
-        def inspections = new XmlParser().parse(file('gradle/idea-inspections.xml'))
-        node.append(inspections)
+                // Inspections
+                def inspections = new XmlParser().parse(file('gradle/idea-inspections.xml'))
+                node.append(inspections)
 
-        // Copyright
-        def copyrightManager = node.component.find { it.'@name' == 'CopyrightManager' }
-        node.remove(copyrightManager)
-        def copyright = new XmlParser().parse(file('gradle/idea-copyright.xml'))
-        node.append(copyright)
+                // Copyright
+                def copyrightManager = node.component.find { it.'@name' == 'CopyrightManager' }
+                node.remove(copyrightManager)
+                def copyright = new XmlParser().parse(file('gradle/idea-copyright.xml'))
+                node.append(copyright)
 
-        // VCS mappings
-        def vcsDirectoryMappings = node.component.find { it.'@name' == 'VcsDirectoryMappings' }
-        def mappings = vcsDirectoryMappings.iterator()
-        while (mappings.hasNext()) {
-          mappings.next()
-          mappings.remove()
-        }
+                // VCS mappings
+                def vcsDirectoryMappings = node.component.find { it.'@name' == 'VcsDirectoryMappings' }
+                def mappings = vcsDirectoryMappings.iterator()
+                while (mappings.hasNext()) {
+                    mappings.next()
+                    mappings.remove()
+                }
 
-        def gitRoot = file('.git')
-        if (gitRoot.exists()) {
-          vcsDirectoryMappings.appendNode('mapping', ['directory': gitRoot.parentFile, 'vcs': 'Git'])
-        }
+                def gitRoot = file('.git')
+                if (gitRoot.exists()) {
+                    vcsDirectoryMappings.appendNode('mapping', ['directory': gitRoot.parentFile, 'vcs': 'Git'])
+                }
 
-        // Annotation scanning
-        node.component.find { it.@name == 'CompilerConfiguration' }['annotationProcessing'][0].replaceNode {
-            annotationProcessing {
-                profile(default: true, name: 'Default', useClasspath: 'true', enabled: true) {
-                    outputRelativeToContentRoot(value: true)
-                    processorPath(useClasspath: true)
+                // Annotation scanning
+                node.component.find { it.@name == 'CompilerConfiguration' }['annotationProcessing'][0].replaceNode {
+                    annotationProcessing {
+                        profile(default: true, name: 'Default', useClasspath: 'true', enabled: true) {
+                            outputRelativeToContentRoot(value: true)
+                            processorPath(useClasspath: true)
+                        }
+                    }
                 }
             }
         }
-      }
     }
-  }
-  module {
-    generatedSourceDirs += file('generated')
-  }
+    module {
+        def generated = file('generated')
+        sourceDirs += generated
+        generatedSourceDirs += generated
+    }
 }
