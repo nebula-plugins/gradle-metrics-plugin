@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2015 the original author or authors.
+ * Copyright 2015 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,6 +15,8 @@
  *
  */
 
+
+
 package nebula.plugin.metrics.dispatcher
 
 import com.fasterxml.jackson.core.TreeNode
@@ -23,7 +25,6 @@ import com.fasterxml.jackson.databind.node.TextNode
 import com.github.tlrx.elasticsearch.test.EsSetup
 import nebula.plugin.metrics.MetricsPluginExtension
 import nebula.plugin.metrics.model.*
-import org.codehaus.groovy.runtime.SocketGroovyMethods
 import org.elasticsearch.client.Client
 import org.elasticsearch.client.transport.TransportClient
 import org.elasticsearch.common.settings.ImmutableSettings

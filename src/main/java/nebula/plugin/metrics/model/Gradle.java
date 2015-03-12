@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2015 the original author or authors.
+ * Copyright 2015 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -40,7 +40,8 @@ public final class Gradle implements Tool {
     /**
      * We'll just use flat Gradle StartParameter for now. If we need more, we'll mix in this class with a subclass.
      */
-    @JsonIgnoreProperties("mergedSystemProperties") // The StartParameter.getMergedSystemProperties() method has been deprecated and is scheduled to be removed in Gradle 2.0
+    @JsonIgnoreProperties("mergedSystemProperties")
+    // The StartParameter.getMergedSystemProperties() method has been deprecated and is scheduled to be removed in Gradle 2.0
     public StartParameter getGradle() {
         return startParameter;
     }

@@ -1,5 +1,5 @@
 <!--
-  ~ Copyright 2013-2014 the original author or authors.
+  ~ Copyright 2015 the original author or authors.
   ~
   ~ Licensed under the Apache License, Version 2.0 (the "License");
   ~ you may not use this file except in compliance with the License.
@@ -16,21 +16,21 @@
   -->
 
 <component name="InspectionProjectProfileManager">
-  <profiles>
-    <profile version="1.0" is_locked="false">
-      <option name="myName" value="Project Default" />
-      <option name="myLocal" value="false" />
-      <inspection_tool class="RawUseOfParameterizedType" enabled="true" level="WARNING" enabled_by_default="true">
-        <option name="ignoreObjectConstruction" value="false" />
-      </inspection_tool>
-      <inspection_tool class="UnusedImport" enabled="true" level="WARNING" enabled_by_default="true" />
-      <inspection_tool class="MissingOverrideAnnotation" enabled="true" level="WARNING" enabled_by_default="true">
-        <option name="ignoreObjectMethods" value="false" />
-        <option name="ignoreAnonymousClassMethods" value="false" />
-      </inspection_tool>
-    </profile>
-  </profiles>
-  <option name="PROJECT_PROFILE" value="Project Default" />
-  <option name="USE_PROJECT_PROFILE" value="true" />
-  <version value="1.0" />
+    <profiles>
+        <profile version="1.0" is_locked="false">
+            <option name="myName" value="Project Default"/>
+            <option name="myLocal" value="false"/>
+            <inspection_tool class="RawUseOfParameterizedType" enabled="true" level="WARNING" enabled_by_default="true">
+                <option name="ignoreObjectConstruction" value="false"/>
+            </inspection_tool>
+            <inspection_tool class="UnusedImport" enabled="true" level="WARNING" enabled_by_default="true"/>
+            <inspection_tool class="MissingOverrideAnnotation" enabled="true" level="WARNING" enabled_by_default="true">
+                <option name="ignoreObjectMethods" value="false"/>
+                <option name="ignoreAnonymousClassMethods" value="false"/>
+            </inspection_tool>
+        </profile>
+    </profiles>
+    <option name="PROJECT_PROFILE" value="Project Default"/>
+    <option name="USE_PROJECT_PROFILE" value="true"/>
+    <version value="1.0"/>
 </component>
