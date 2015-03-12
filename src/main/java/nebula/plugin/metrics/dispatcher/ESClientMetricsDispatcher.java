@@ -219,6 +219,7 @@ public class ESClientMetricsDispatcher extends AbstractQueuedExecutionThreadServ
                         index.setSource(logstashLayout.doLayout(event));
                         bulk.add(index);
                     }
+                    bulk.execute().actionGet();
                 }
             };
             queue(runnable);
