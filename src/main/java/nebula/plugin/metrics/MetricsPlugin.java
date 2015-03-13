@@ -47,6 +47,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Preconditions.checkState;
 
 /**
  * Gradle build metrics plugin.
@@ -60,6 +61,7 @@ public final class MetricsPlugin implements Plugin<Project> {
     @Override
     public void apply(Project project) {
         checkNotNull(project);
+        checkState(project == project.getRootProject(), "The metrics plugin may only be applied to the root project");
         configureExtension(project);
         configureCollectors(project);
     }

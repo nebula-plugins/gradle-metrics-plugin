@@ -22,7 +22,6 @@ import nebula.test.ProjectSpec
 /*
  * Tests for {@link MetricsPlugin}.
  */
-
 class MetricsPluginTest extends ProjectSpec {
     def 'applying plugin registers extension'() {
         when:
@@ -30,5 +29,26 @@ class MetricsPluginTest extends ProjectSpec {
 
         then:
         project.extensions.findByName(MetricsPluginExtension.METRICS_EXTENSION_NAME)
+    }
+
+    def 'plugin can only be applied to root project'() {
+        given:
+        def subproject = addSubproject('subproject')
+
+        when:
+        subproject.plugins.apply(MetricsPlugin)
+
+        then:
+        thrown(IllegalStateException)
+    }
+
+    def 'project evaluation succeeds'() {
+        // Ideally, I'd check that all of the listeners we expect have been registered here, but unfortunately Gradle gives us no way at getting at those
+        when:
+        project.plugins.apply(MetricsPlugin)
+        project.evaluate()
+
+        then:
+        noExceptionThrown()
     }
 }
