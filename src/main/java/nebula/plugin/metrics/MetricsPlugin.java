@@ -36,6 +36,7 @@ import org.gradle.api.Task;
 import org.gradle.api.initialization.Settings;
 import org.gradle.api.internal.GradleInternal;
 import org.gradle.api.invocation.Gradle;
+import org.gradle.api.plugins.ExtensionContainer;
 import org.gradle.api.tasks.TaskContainer;
 import org.gradle.api.tasks.testing.Test;
 import org.gradle.initialization.ClassLoaderRegistry;
@@ -57,17 +58,28 @@ import static com.google.common.base.Preconditions.checkState;
 public final class MetricsPlugin implements Plugin<Project> {
     private static final long SHUTDOWN_TIMEOUT_MS = 1000;
     private final Logger logger = MetricsLoggerFactory.getLogger(MetricsPlugin.class);
+    private MetricsPluginExtension extension;
+    private MetricsDispatcher dispatcher;
 
     @Override
     public void apply(Project project) {
         checkNotNull(project);
         checkState(project == project.getRootProject(), "The metrics plugin may only be applied to the root project");
-        configureExtension(project);
-        configureCollectors(project);
+        ExtensionContainer extensions = project.getExtensions();
+        extensions.add("metrics", new MetricsPluginExtension());
+        extension = extensions.getByType(MetricsPluginExtension.class);
+        dispatcher = new ESClientMetricsDispatcher(extension);
+        project.afterEvaluate(new Action<Project>() {
+            @Override
+            public void execute(Project project) {
+                configureCollectors(project);
+            }
+        });
     }
 
-    private void configureExtension(Project project) {
-        project.getExtensions().add("metrics", new MetricsPluginExtension());
+    @VisibleForTesting
+    void setDispatcher(MetricsDispatcher dispatcher) {
+        this.dispatcher = checkNotNull(dispatcher);
     }
 
     private void configureCollectors(Project project) {
@@ -75,27 +87,19 @@ public final class MetricsPlugin implements Plugin<Project> {
         FilteringClassLoader filteringClassLoader = (FilteringClassLoader) gradle.getServices().get(ClassLoaderRegistry.class).getGradleApiClassLoader().getParent();
         filteringClassLoader.allowPackage("ch.qos.logback");
 
-        MetricsPluginExtension extension = MetricsPluginExtension.getRootMetricsExtension(gradle);
-        MetricsDispatcher dispatcher = new ESClientMetricsDispatcher(extension);
-
         LogbackCollector.configureLogbackCollection(dispatcher);
 
         gradle.addListener(new MetricsBuildListener(dispatcher));
         gradle.addListener(new GradleProfileCollector(dispatcher));
 
-        final GradleTestSuiteCollector suiteCollector = new GradleTestSuiteCollector(dispatcher);
-        project.afterEvaluate(new Action<Project>() {
-            @Override
-            public void execute(Project project) {
-                TaskContainer tasks = project.getTasks();
-                for (String name : tasks.getNames()) {
-                    Task task = tasks.getByName(name);
-                    if (task instanceof Test) {
-                        ((Test) task).addTestListener(suiteCollector);
-                    }
-                }
+        GradleTestSuiteCollector suiteCollector = new GradleTestSuiteCollector(dispatcher);
+        TaskContainer tasks = project.getTasks();
+        for (String name : tasks.getNames()) {
+            Task task = tasks.getByName(name);
+            if (task instanceof Test) {
+                ((Test) task).addTestListener(suiteCollector);
             }
-        });
+        }
     }
 
     @VisibleForTesting
@@ -123,6 +127,7 @@ public final class MetricsPlugin implements Plugin<Project> {
         }
 
         private void dispatchProject(Gradle gradle) {
+            // TODO do we need to support sub-projects?
             Project gradleProject = gradle.getRootProject();
             String name = gradleProject.getName();
             String version = String.valueOf(gradleProject.getVersion());
