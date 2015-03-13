@@ -17,12 +17,7 @@
 
 package nebula.plugin.metrics;
 
-import org.gradle.api.Project;
-import org.gradle.api.invocation.Gradle;
-import org.gradle.api.plugins.ExtensionContainer;
-
 import static com.google.common.base.Preconditions.checkNotNull;
-import static com.google.common.base.Preconditions.checkState;
 
 /**
  * Nebula build metrics plugin extension.
@@ -34,17 +29,6 @@ public class MetricsPluginExtension {
      * The name used when adding this extension to the extension container.
      */
     public static final String METRICS_EXTENSION_NAME = "metrics";
-
-    /**
-     * Retrieve the metrics extension for the root project.
-     *
-     * @param project the project instance to retrieve the root project from
-     * @return the {@link MetricsPluginExtension} for the root project
-     */
-    public static MetricsPluginExtension getRootMetricsExtension(Project project) {
-        ExtensionContainer extensions = project.getRootProject().getExtensions();
-        return (MetricsPluginExtension) extensions.findByName(METRICS_EXTENSION_NAME);
-    }
 
     private String hostname = "localhost";
     private int port = 9300;
