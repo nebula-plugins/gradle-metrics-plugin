@@ -188,11 +188,28 @@ public class ESClientMetricsDispatcher extends AbstractQueuedExecutionThreadServ
     }
 
     @Override
-    protected void postShutDown() throws Exception {
+    protected void beforeShutDown() {
+        Runnable runnable = new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    String json = mapper.writeValueAsString(build);
+                    IndexRequestBuilder index = client.prepareIndex(BUILD_METRICS_INDEX, BUILD_TYPE).setSource(json).setId(buildId);
+                    index.execute().actionGet();
+                } catch (JsonProcessingException e) {
+                    Throwables.propagate(e);
+                }
+            }
+        };
+        queue(runnable);
         flushLogbackEvents(); // One last flush to to make sure we got everything
         if (!logbackEvents.isEmpty()) {
             logger.error("Not all logback events were successfully flushed: {}", logbackEvents);
         }
+    }
+
+    @Override
+    protected void postShutDown() throws Exception {
         client.close();
         logstashLayout.stop();
     }
@@ -296,19 +313,6 @@ public class ESClientMetricsDispatcher extends AbstractQueuedExecutionThreadServ
     @Override
     public void result(Result result) {
         build.setResult(result);
-        Runnable runnable = new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    String json = mapper.writeValueAsString(build);
-                    IndexRequestBuilder index = client.prepareIndex(BUILD_METRICS_INDEX, BUILD_TYPE).setSource(json).setId(buildId);
-                    index.execute().actionGet();
-                } catch (JsonProcessingException e) {
-                    Throwables.propagate(e);
-                }
-            }
-        };
-        queue(runnable);
     }
 
     @Override

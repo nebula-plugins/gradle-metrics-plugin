@@ -19,11 +19,14 @@ package nebula.plugin.metrics.dispatcher;
 
 import nebula.plugin.metrics.MetricsLoggerFactory;
 
+import autovalue.shaded.com.google.common.common.base.Throwables;
+import autovalue.shaded.com.google.common.common.collect.Sets;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.util.concurrent.AbstractExecutionThreadService;
 import org.slf4j.Logger;
 
 import javax.annotation.Nullable;
+import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
@@ -38,24 +41,22 @@ import static com.google.common.base.Preconditions.checkState;
  * @author Danny Thomas
  */
 public abstract class AbstractQueuedExecutionThreadService<E> extends AbstractExecutionThreadService {
+    private static final Set<State> QUEUE_AVAILABLE_STATES = Sets.newHashSet(State.STARTING, State.RUNNING);
     private final Logger logger = MetricsLoggerFactory.getLogger(AbstractExecutionThreadService.class);
     private final BlockingQueue<E> queue;
-    private final boolean shutdownOnFailure;
+    private final boolean failOnError;
 
-    public AbstractQueuedExecutionThreadService(boolean shutdownOnFailure) {
-        this(new LinkedBlockingQueue<E>(), shutdownOnFailure);
+    public AbstractQueuedExecutionThreadService(boolean failOnError) {
+        this(new LinkedBlockingQueue<E>(), failOnError);
     }
 
     @VisibleForTesting
-    AbstractQueuedExecutionThreadService(BlockingQueue<E> queue, boolean shutdownOnFailure) {
+    AbstractQueuedExecutionThreadService(BlockingQueue<E> queue, boolean failOnError) {
         this.queue = checkNotNull(queue);
-        this.shutdownOnFailure = shutdownOnFailure;
+        this.failOnError = failOnError;
     }
 
     protected abstract void execute(E action) throws Exception;
-
-    protected void postShutDown() throws Exception {
-    }
 
     @Override
     protected final void run() throws Exception {
@@ -63,6 +64,7 @@ public abstract class AbstractQueuedExecutionThreadService<E> extends AbstractEx
             E action = queue.poll(100, TimeUnit.MILLISECONDS);
             doExecute(action);
         }
+        logger.debug("Service is not running and queue is empty, returning from run()");
     }
 
     private void doExecute(@Nullable E action) {
@@ -73,16 +75,17 @@ public abstract class AbstractQueuedExecutionThreadService<E> extends AbstractEx
             }
         } catch (Exception e) {
             logger.error("Error executing action {}: {}", action, e.getMessage(), e);
-            if (shutdownOnFailure) {
+            if (failOnError) {
                 logger.info("Shutting down {} due to previous failure", this);
                 queue.clear();
-                stopAsync().awaitTerminated();
+                throw Throwables.propagate(e);
             }
         }
     }
 
     @Override
     protected final void shutDown() throws Exception {
+        beforeShutDown();
         logger.debug("Shutting down queued execution service {}", this);
         while (!queue.isEmpty()) {
             logger.debug("Waiting for queue to drain...");
@@ -92,11 +95,16 @@ public abstract class AbstractQueuedExecutionThreadService<E> extends AbstractEx
         postShutDown();
     }
 
+    protected void beforeShutDown() throws Exception {
+    }
+
+    protected void postShutDown() throws Exception {
+    }
+
     protected final void queue(E action) {
         checkNotNull(action);
-        if (!(state() == State.STARTING || state() == State.RUNNING)) {
+        if (!QUEUE_AVAILABLE_STATES.contains(state())) {
             logger.debug("Dispatcher is not running, dropping action {}", action);
-            return;
         } else if (isAsync()) {
             logger.debug("Queueing {}", action);
             queue.add(action);

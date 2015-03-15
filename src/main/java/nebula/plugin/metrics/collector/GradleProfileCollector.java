@@ -27,6 +27,9 @@ import org.gradle.api.tasks.TaskState;
 import org.gradle.profile.*;
 import org.slf4j.Logger;
 
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
+
 import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
@@ -34,8 +37,9 @@ import static com.google.common.base.Preconditions.checkNotNull;
  *
  * @author Danny Thomas
  */
-public class GradleProfileCollector implements ProfileListener {
+public final class GradleProfileCollector implements ProfileListener {
     private static final Logger logger = MetricsLoggerFactory.getLogger(GradleProfileCollector.class);
+    private static final long SHUTDOWN_TIMEOUT_MS = 1000;
     private final MetricsDispatcher dispatcher;
 
     public GradleProfileCollector(MetricsDispatcher dispatcher) {
@@ -96,6 +100,17 @@ public class GradleProfileCollector implements ProfileListener {
             long difference = expectedTotal - elapsedTotal;
             logger.info("Total build time of {}ms is less than the calculated total of {}ms (difference: {}ms). Creating 'unknown' event with type 'other'", expectedTotal, elapsedTotal, difference);
             dispatcher.event("unknown", "other", difference);
+        }
+
+        // FIXME BuildListener.buildFinished is triggering for MetricsBuildListener before this listener, so we shutdown here. Look for a better lifecycle event to avoid burying this logic
+        if (dispatcher.isRunning()) {
+            try {
+                dispatcher.stopAsync().awaitTerminated(SHUTDOWN_TIMEOUT_MS, TimeUnit.MILLISECONDS);
+            } catch (TimeoutException e) {
+                logger.error("Timed out after {}ms while waiting for metrics dispatcher to terminate", SHUTDOWN_TIMEOUT_MS);
+            } catch (IllegalStateException e) {
+                logger.error("Could not stop metrics dispatcher service", e);
+            }
         }
     }
 

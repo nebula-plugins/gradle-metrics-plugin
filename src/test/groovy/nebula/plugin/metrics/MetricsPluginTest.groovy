@@ -17,6 +17,8 @@
 
 package nebula.plugin.metrics
 
+import ch.qos.logback.classic.Level
+import ch.qos.logback.classic.spi.LoggingEvent
 import nebula.plugin.metrics.dispatcher.MetricsDispatcher
 import nebula.test.ProjectSpec
 import org.gradle.BuildListener
@@ -66,7 +68,6 @@ class MetricsPluginTest extends ProjectSpec {
             dispatcher.isRunning() >> true
             dispatcher
         }
-        1 * dispatcher.stopAsync() >> dispatcher
 
         DefaultGradle gradle = project.gradle
 
@@ -83,7 +84,8 @@ class MetricsPluginTest extends ProjectSpec {
         def dispatcher = applyPluginWithMockedDispatcher(project)
         def broadcaster = buildListenerBroadcaster(project)
         def gradle = Mock(Gradle)
-        1 * gradle.getStartParameter() >> {
+        1 * gradle.getRootProject() >> project
+        2 * gradle.getStartParameter() >> {
             def parameter = Mock(StartParameter)
             parameter.isOffline() >> true
             parameter
@@ -96,7 +98,53 @@ class MetricsPluginTest extends ProjectSpec {
         0 * dispatcher.startAsync()
     }
 
-    def 'test suite listeners are registered when plugin is applied to java project'() {
+
+    def 'project evaluation dispatches started event'() {
+        def dispatcher = applyPluginWithMockedDispatcher(project)
+        1 * dispatcher.startAsync() >> dispatcher
+
+        when:
+        buildListenerBroadcaster(project).projectsEvaluated(project.gradle)
+
+        then:
+        1 * dispatcher.started(_)
+    }
+
+    def 'project evaluation dispatches environment event'() {
+        def dispatcher = applyPluginWithMockedDispatcher(project)
+        1 * dispatcher.startAsync() >> dispatcher
+
+        when:
+        buildListenerBroadcaster(project).projectsEvaluated(project.gradle)
+
+        then:
+        1 * dispatcher.environment(_)
+    }
+
+    def 'project evaluation dispatches result event'() {
+        def dispatcher = applyPluginWithMockedDispatcher(project)
+
+        when:
+        buildListenerBroadcaster(project).buildFinished(new BuildResult(project.gradle, null))
+
+        then:
+        1 * dispatcher.result(_)
+    }
+
+    def 'project logger dispatches logback event'() {
+        def dispatcher = applyPluginWithMockedDispatcher(project)
+
+        when:
+        project.logger.info('log message')
+
+        then:
+        1 * dispatcher.logbackEvent(_) >> { LoggingEvent event ->
+            assert event.message == 'log message'
+            assert event.level == Level.INFO
+        }
+    }
+
+    def 'afterTest notification dispatches test event'() {
         project.plugins.apply(JavaPlugin)
         def dispatcher = applyPluginWithMockedDispatcher(project)
         def task = project.tasks.getByName('test') as Test

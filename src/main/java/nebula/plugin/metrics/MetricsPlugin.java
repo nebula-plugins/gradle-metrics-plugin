@@ -17,23 +17,16 @@
 
 package nebula.plugin.metrics;
 
-import nebula.plugin.metrics.collector.GradleProfileCollector;
-import nebula.plugin.metrics.collector.GradleStartParameterCollector;
-import nebula.plugin.metrics.collector.GradleTestSuiteCollector;
-import nebula.plugin.metrics.collector.LogbackCollector;
+import nebula.plugin.metrics.collector.*;
+import nebula.plugin.metrics.dispatcher.DispatcherLifecycleListener;
 import nebula.plugin.metrics.dispatcher.ESClientMetricsDispatcher;
 import nebula.plugin.metrics.dispatcher.MetricsDispatcher;
-import nebula.plugin.metrics.model.Result;
 
 import com.google.common.annotations.VisibleForTesting;
-import org.gradle.BuildListener;
-import org.gradle.BuildResult;
-import org.gradle.StartParameter;
 import org.gradle.api.Action;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 import org.gradle.api.Task;
-import org.gradle.api.initialization.Settings;
 import org.gradle.api.internal.GradleInternal;
 import org.gradle.api.invocation.Gradle;
 import org.gradle.api.plugins.ExtensionContainer;
@@ -44,9 +37,6 @@ import org.gradle.internal.classloader.FilteringClassLoader;
 import org.gradle.invocation.DefaultGradle;
 import org.slf4j.Logger;
 
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
-
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
@@ -56,8 +46,6 @@ import static com.google.common.base.Preconditions.checkState;
  * @author Danny Thomas
  */
 public final class MetricsPlugin implements Plugin<Project> {
-    private static final long SHUTDOWN_TIMEOUT_MS = 1000;
-    private final Logger logger = MetricsLoggerFactory.getLogger(MetricsPlugin.class);
     private MetricsPluginExtension extension;
     private MetricsDispatcher dispatcher;
 
@@ -65,6 +53,7 @@ public final class MetricsPlugin implements Plugin<Project> {
     public void apply(Project project) {
         checkNotNull(project);
         checkState(project == project.getRootProject(), "The metrics plugin may only be applied to the root project");
+        allowLogbackClassLoading(project);
         ExtensionContainer extensions = project.getExtensions();
         extensions.add("metrics", new MetricsPluginExtension());
         extension = extensions.getByType(MetricsPluginExtension.class);
@@ -82,14 +71,19 @@ public final class MetricsPlugin implements Plugin<Project> {
         this.dispatcher = checkNotNull(dispatcher);
     }
 
-    private void configureCollectors(Project project) {
+    private void allowLogbackClassLoading(Project project) {
         GradleInternal gradle = (DefaultGradle) project.getGradle();
-        FilteringClassLoader filteringClassLoader = (FilteringClassLoader) gradle.getServices().get(ClassLoaderRegistry.class).getGradleApiClassLoader().getParent();
-        filteringClassLoader.allowPackage("ch.qos.logback");
+        ClassLoaderRegistry registry = gradle.getServices().get(ClassLoaderRegistry.class);
+        FilteringClassLoader classLoader = (FilteringClassLoader) registry.getGradleApiClassLoader().getParent();
+        classLoader.allowPackage("ch.qos.logback");
+    }
 
+    private void configureCollectors(Project project) {
         LogbackCollector.configureLogbackCollection(dispatcher);
 
-        gradle.addListener(new MetricsBuildListener(dispatcher));
+        Gradle gradle = project.getGradle();
+        gradle.addListener(new DispatcherLifecycleListener(dispatcher));
+        gradle.addListener(new GradleBuildCollector(dispatcher));
         gradle.addListener(new GradleProfileCollector(dispatcher));
 
         GradleTestSuiteCollector suiteCollector = new GradleTestSuiteCollector(dispatcher);
@@ -99,69 +93,6 @@ public final class MetricsPlugin implements Plugin<Project> {
             if (task instanceof Test) {
                 ((Test) task).addTestListener(suiteCollector);
             }
-        }
-    }
-
-    @VisibleForTesting
-    class MetricsBuildListener implements BuildListener {
-        private final MetricsDispatcher dispatcher;
-
-        MetricsBuildListener(MetricsDispatcher dispatcher) {
-            this.dispatcher = checkNotNull(dispatcher);
-        }
-
-        @Override
-        public void projectsEvaluated(Gradle gradle) {
-            StartParameter startParameter = gradle.getStartParameter();
-            if (startParameter.isOffline()) {
-                logger.warn("Build is running offline. Metrics will not be collected");
-            } else {
-                try {
-                    dispatcher.startAsync().awaitRunning();
-                    dispatchProject(gradle);
-                    GradleStartParameterCollector.collect(gradle.getStartParameter(), dispatcher);
-                } catch (IllegalStateException e) {
-                    logger.error("Error while starting metrics dispatcher. Metrics collection disabled.", e);
-                }
-            }
-        }
-
-        private void dispatchProject(Gradle gradle) {
-            // TODO do we need to support sub-projects?
-            Project gradleProject = gradle.getRootProject();
-            String name = gradleProject.getName();
-            String version = String.valueOf(gradleProject.getVersion());
-            nebula.plugin.metrics.model.Project project = nebula.plugin.metrics.model.Project.create(name, version);
-            dispatcher.started(project);
-        }
-
-        @Override
-        public void buildFinished(BuildResult buildResult) {
-            Throwable failure = buildResult.getFailure();
-            Result result = failure == null ? Result.success() : Result.failure(failure);
-            dispatcher.result(result);
-            if (dispatcher.isRunning()) {
-                try {
-                    dispatcher.stopAsync().awaitTerminated(SHUTDOWN_TIMEOUT_MS, TimeUnit.MILLISECONDS);
-                } catch (TimeoutException e) {
-                    logger.error("Timed out after {}ms while waiting for metrics dispatcher to terminate", SHUTDOWN_TIMEOUT_MS);
-                } catch (IllegalStateException e) {
-                    logger.error("Could not stop metrics dispatcher service", e);
-                }
-            }
-        }
-
-        @Override
-        public void buildStarted(Gradle gradle) {
-            // We register this listener too late to catch this event, so we use projectsEvaluated instead
-        }
-
-        @Override
-        public void settingsEvaluated(Settings settings) {
-        }
-
-        @Override
-        public void projectsLoaded(Gradle gradle) {
         }
     }
 }
