@@ -48,7 +48,7 @@ dependencies {
     compile "org.elasticsearch:elasticsearch:$versions.es"
     compile 'joda-time:joda-time:2.7'
     compile('net.logstash.logback:logstash-logback-encoder:4.2') {
-        exclude module: 'logback-core' // Already on Gradle classpath
+        exclude group: 'ch.qos.logback', module: 'logback-core' // Already on Gradle classpath
     }
     compile "com.fasterxml.jackson.core:jackson-databind:$versions.jackson"
     compile "com.fasterxml.jackson.datatype:jackson-datatype-joda:$versions.jackson"
