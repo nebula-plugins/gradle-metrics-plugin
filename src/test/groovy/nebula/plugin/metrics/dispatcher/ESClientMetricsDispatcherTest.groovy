@@ -41,7 +41,7 @@ import static nebula.plugin.metrics.dispatcher.ESClientMetricsDispatcher.BUILD_T
  */
 class ESClientMetricsDispatcherTest extends LogbackAssertSpecification {
     def extension = new MetricsPluginExtension()
-    def project = Project.create("project", "1.0")
+    def project = new Project("project", "1.0")
 
     ESClientMetricsDispatcher dispatcher
 

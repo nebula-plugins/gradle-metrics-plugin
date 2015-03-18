@@ -19,9 +19,9 @@ package nebula.plugin.metrics.dispatcher;
 
 import nebula.plugin.metrics.MetricsLoggerFactory;
 
-import autovalue.shaded.com.google.common.common.base.Throwables;
-import autovalue.shaded.com.google.common.common.collect.Sets;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Throwables;
+import com.google.common.collect.Sets;
 import com.google.common.util.concurrent.AbstractExecutionThreadService;
 import org.slf4j.Logger;
 

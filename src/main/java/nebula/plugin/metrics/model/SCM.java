@@ -17,19 +17,8 @@
 
 package nebula.plugin.metrics.model;
 
-import com.google.auto.value.AutoValue;
-
 /**
  * Source control management.
- *
- * @author Danny Thomas
  */
-@AutoValue
-public abstract class SCM implements Tool {
-    public static SCM detect() {
-        return new AutoValue_SCM("unknown");
-    }
-
-    @Override
-    public abstract String getType();
+public interface SCM extends Tool {
 }

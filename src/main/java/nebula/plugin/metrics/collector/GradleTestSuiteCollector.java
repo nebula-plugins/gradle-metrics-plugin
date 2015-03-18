@@ -26,6 +26,7 @@ import com.google.common.annotations.VisibleForTesting;
 import org.gradle.api.tasks.testing.TestDescriptor;
 import org.gradle.api.tasks.testing.TestListener;
 import org.gradle.api.tasks.testing.TestResult;
+import org.joda.time.DateTime;
 import org.slf4j.Logger;
 
 import java.util.List;
@@ -69,7 +70,7 @@ public class GradleTestSuiteCollector implements TestListener {
         String suiteName = getSuiteName(testDescriptor);
         long startTime = testResult.getStartTime();
         long elapsed = testResult.getEndTime() - startTime;
-        Test test = Test.create(testDescriptor.getName(), testDescriptor.getClassName(), suiteName, result, startTime, elapsed);
+        Test test = new Test(testDescriptor.getName(), testDescriptor.getClassName(), suiteName, result, new DateTime(startTime), elapsed);
         dispatcher.test(test);
     }
 

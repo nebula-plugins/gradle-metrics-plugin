@@ -17,32 +17,20 @@
 
 package nebula.plugin.metrics.model;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import lombok.NonNull;
+import lombok.Value;
 import org.gradle.StartParameter;
-
-import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
  * Gradle {@link Tool}.
  */
-public final class Gradle implements Tool {
-    private final StartParameter startParameter;
-
-    public Gradle(StartParameter startParameter) {
-        this.startParameter = checkNotNull(startParameter);
-    }
-
+@Value
+public class Gradle implements Tool {
     @Override
     public String getType() {
         return "gradle";
     }
 
-    /**
-     * We'll just use flat Gradle StartParameter for now. If we need more, we'll mix in this class with a subclass.
-     */
-    @JsonIgnoreProperties("mergedSystemProperties")
-    // The StartParameter.getMergedSystemProperties() method has been deprecated and is scheduled to be removed in Gradle 2.0
-    public StartParameter getGradle() {
-        return startParameter;
-    }
+    @NonNull
+    private StartParameter gradle;
 }

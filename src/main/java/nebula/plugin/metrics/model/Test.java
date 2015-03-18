@@ -17,27 +17,29 @@
 
 package nebula.plugin.metrics.model;
 
-import com.google.auto.value.AutoValue;
+import lombok.NonNull;
+import lombok.Value;
 import org.joda.time.DateTime;
 
 /**
  * Value object for tests.
  */
-@AutoValue
-public abstract class Test {
-    public static Test create(String methodName, String className, String suiteName, Result result, long startTime, long elapsedTime) {
-        return new AutoValue_Test(methodName, className, suiteName, result, new DateTime(startTime), elapsedTime);
-    }
+@Value
+public class Test {
+    @NonNull
+    private final String methodName;
 
-    public abstract String getMethodName();
+    @NonNull
+    private final String className;
 
-    public abstract String getClassName();
+    @NonNull
+    private final String suiteName;
 
-    public abstract String getSuiteName();
+    @NonNull
+    private final Result result;
 
-    public abstract Result getResult();
+    @NonNull
+    private final DateTime startTime;
 
-    public abstract DateTime getStartTime();
-
-    public abstract long getElapsedTime();
+    public final long elapsedTime;
 }

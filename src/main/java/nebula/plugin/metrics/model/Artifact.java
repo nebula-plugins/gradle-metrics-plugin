@@ -17,11 +17,11 @@
 
 package nebula.plugin.metrics.model;
 
-import com.google.auto.value.AutoValue;
+import lombok.Value;
 
 /**
  * Artifact.
  */
-@AutoValue
+@Value
 public class Artifact {
 }

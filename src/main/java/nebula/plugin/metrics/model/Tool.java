@@ -18,7 +18,7 @@
 package nebula.plugin.metrics.model;
 
 /**
- * A build tool.
+ * Tool.
  */
 public interface Tool {
     String getType();

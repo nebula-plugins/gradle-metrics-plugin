@@ -17,25 +17,23 @@
 
 package nebula.plugin.metrics.model;
 
-import com.google.auto.value.AutoValue;
+import lombok.NonNull;
+import lombok.Value;
 import org.joda.time.DateTime;
 
 /**
  * Task.
- *
- * @author Danny Thomas
  */
-@AutoValue
-public abstract class Task {
-    public static Task create(String description, Result result, long startTime, long elapsedTime) {
-        return new AutoValue_Task(description, result, new DateTime(startTime), elapsedTime);
-    }
+@Value
+public class Task {
+    @NonNull
+    private String description;
 
-    public abstract String getDescription();
+    @NonNull
+    private Result result;
 
-    public abstract Result getResult();
+    @NonNull
+    private DateTime startTime;
 
-    public abstract DateTime getStartTime();
-
-    public abstract long getElapsedTime();
+    private long elapsedTime;
 }

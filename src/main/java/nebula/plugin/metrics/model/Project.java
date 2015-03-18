@@ -17,20 +17,17 @@
 
 package nebula.plugin.metrics.model;
 
-import com.google.auto.value.AutoValue;
+import lombok.Data;
+import lombok.NonNull;
 
 /**
  * Project.
- *
- * @author Danny Thomas
  */
-@AutoValue
-public abstract class Project {
-    public static Project create(String name, String version) {
-        return new AutoValue_Project(name, version);
-    }
+@Data
+public class Project {
+    @NonNull
+    private String name;
 
-    public abstract String getName();
-
-    public abstract String getVersion();
+    @NonNull
+    private String version;
 }

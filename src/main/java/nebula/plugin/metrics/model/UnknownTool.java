@@ -15,23 +15,14 @@
  *
  */
 
-package nebula.plugin.metrics.model
-
-import com.google.common.base.Predicate
-import com.google.common.testing.AbstractPackageSanityTests
-
-import javax.annotation.Nullable
+package nebula.plugin.metrics.model;
 
 /**
- * Sanity checks for {@link nebula.plugin.metrics.model}.
+ * Unknown {@link Tool}.
  */
-public class PackageSanityTest extends AbstractPackageSanityTests {
-    def PackageSanityTest() {
-        ignoreClasses(new Predicate<Class<?>>() {
-            @Override
-            boolean apply(@Nullable Class<?> input) {
-                return true
-            }
-        })
+public class UnknownTool implements Tool {
+    @Override
+    public String getType() {
+        return "unknown";
     }
 }

@@ -17,18 +17,17 @@
 
 package nebula.plugin.metrics.model;
 
-import com.google.auto.value.AutoValue;
+import lombok.NonNull;
+import lombok.Value;
 
 /**
  * Key/value.
  */
-@AutoValue
-public abstract class KeyValue {
-    public static KeyValue create(String key, String value) {
-        return new AutoValue_KeyValue(key, value);
-    }
+@Value
+public class KeyValue {
+    @NonNull
+    private String key;
 
-    public abstract String getKey();
-
-    public abstract String getValue();
+    @NonNull
+    private String value;
 }

@@ -45,7 +45,7 @@ public final class GradleBuildCollector implements BuildListener {
         Project gradleProject = gradle.getRootProject();
         String name = gradleProject.getName();
         String version = String.valueOf(gradleProject.getVersion());
-        nebula.plugin.metrics.model.Project project = nebula.plugin.metrics.model.Project.create(name, version);
+        nebula.plugin.metrics.model.Project project = new nebula.plugin.metrics.model.Project(name, version);
         dispatcher.started(project);
         GradleStartParameterCollector.collect(gradle.getStartParameter(), dispatcher);
     }

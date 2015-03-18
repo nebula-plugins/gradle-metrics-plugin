@@ -17,28 +17,8 @@
 
 package nebula.plugin.metrics.model;
 
-import com.google.auto.value.AutoValue;
-
-import java.util.Map;
-
-import static com.google.common.base.Preconditions.checkNotNull;
-
 /**
  * Continuous integration.
- *
- * @author Danny Thomas
  */
-@AutoValue
-public abstract class CI implements Tool {
-    public static CI detect() {
-        return create(System.getenv());
-    }
-
-    public static CI create(Map<String, String> systemEnv) {
-        checkNotNull(systemEnv);
-        return new AutoValue_CI("unknown");
-    }
-
-    @Override
-    public abstract String getType();
+public interface CI extends Tool {
 }

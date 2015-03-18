@@ -18,10 +18,21 @@
 package nebula.plugin.metrics
 
 import nebula.test.IntegrationSpec
+import spock.lang.Ignore
 
 /**
  * Integration tests for {@link MetricsPlugin}.
  */
 class MetricsPluginIntegTest extends IntegrationSpec {
+    def 'plugin applies'() {
+        buildFile << """
+            ${applyPlugin(MetricsPlugin)}
+        """.stripIndent()
 
+        when:
+        runTasksSuccessfully('tasks')
+
+        then:
+        noExceptionThrown()
+    }
 }

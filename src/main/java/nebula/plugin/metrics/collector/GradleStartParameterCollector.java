@@ -18,10 +18,7 @@
 package nebula.plugin.metrics.collector;
 
 import nebula.plugin.metrics.dispatcher.MetricsDispatcher;
-import nebula.plugin.metrics.model.CI;
-import nebula.plugin.metrics.model.Environment;
-import nebula.plugin.metrics.model.Gradle;
-import nebula.plugin.metrics.model.SCM;
+import nebula.plugin.metrics.model.*;
 
 import org.gradle.StartParameter;
 
@@ -31,8 +28,8 @@ import org.gradle.StartParameter;
 public class GradleStartParameterCollector {
     public static void collect(StartParameter startParameter, MetricsDispatcher dispatcher) {
         Gradle tool = new Gradle(startParameter);
-        SCM scm = SCM.detect();
-        CI ci = CI.detect();
+        SCM scm = new UnknownSCM();
+        CI ci = new UnknownCI();
         dispatcher.environment(Environment.create(tool, scm, ci));
     }
 }

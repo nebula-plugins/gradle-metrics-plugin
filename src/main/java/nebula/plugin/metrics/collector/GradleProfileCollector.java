@@ -25,6 +25,7 @@ import nebula.plugin.metrics.model.Task;
 import com.google.common.annotations.VisibleForTesting;
 import org.gradle.api.tasks.TaskState;
 import org.gradle.profile.*;
+import org.joda.time.DateTime;
 import org.slf4j.Logger;
 
 import java.util.concurrent.TimeUnit;
@@ -83,7 +84,7 @@ public final class GradleProfileCollector implements ProfileListener {
             for (TaskExecution execution : tasks.getOperations()) {
                 Result taskResult = getTaskExecutionResult(execution);
                 long taskElapsed = execution.getElapsedTime();
-                Task task = Task.create(execution.getDescription(), taskResult, execution.getStartTime(), taskElapsed);
+                Task task = new Task(execution.getDescription(), taskResult, new DateTime(execution.getStartTime()), taskElapsed);
                 dispatcher.task(task);
                 totalTaskElapsed += taskElapsed;
             }

@@ -17,7 +17,7 @@
 
 package nebula.plugin.metrics.model;
 
-import autovalue.shaded.com.google.common.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableList;
 import org.joda.time.DateTime;
 
 import java.util.ArrayList;

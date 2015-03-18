@@ -75,11 +75,11 @@ class ESClientMetricsDispatcherIntegTest extends LogbackAssertSpecification {
 
     def 'nested mappings are configured correctly'() {
         when:
-        dispatcher.started(Project.create('', ''))
+        dispatcher.started(new Project('', ''))
         dispatcher.event('description', 'type', 0)
         Gradle tool = new Gradle(new StartParameter());
-        SCM scm = SCM.detect();
-        CI ci = CI.detect();
+        SCM scm = new UnknownSCM()
+        CI ci = new UnknownCI()
         dispatcher.environment(Environment.create(tool, scm, ci));
         dispatcher.result(Result.success())
 

@@ -17,10 +17,11 @@
 
 package nebula.plugin.metrics.model;
 
-import autovalue.shaded.com.google.common.common.collect.Lists;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.google.auto.value.AutoValue;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.Lists;
+import lombok.NonNull;
+import lombok.Value;
 
 import java.util.HashMap;
 import java.util.List;
@@ -30,9 +31,9 @@ import java.util.Set;
 /**
  * Environment.
  */
-@AutoValue
+@Value
 @JsonPropertyOrder({"build", "scm", "ci", "environmentVariables", "systemProperties"})
-public abstract class Environment {
+public class Environment {
     public static Environment create(Tool tool, SCM scm, CI ci) {
         return create(tool, scm, ci, System.getenv(), new HashMap(System.getProperties()));
     }
@@ -41,7 +42,7 @@ public abstract class Environment {
         // TODO do we need to blacklist/redact certain properties?
         List<KeyValue> envList = mapToKeyValueList(env);
         List<KeyValue> systemPropertiesList = mapToKeyValueList(systemProperties);
-        return new AutoValue_Environment(tool, scm, ci, envList, systemPropertiesList);
+        return new Environment(tool, scm, ci, envList, systemPropertiesList);
     }
 
     @VisibleForTesting
@@ -58,16 +59,21 @@ public abstract class Environment {
     static KeyValue entryToKeyValue(Map.Entry<String, String> entry) {
         String key = String.valueOf(entry.getKey());
         String value = String.valueOf(entry.getValue());
-        return KeyValue.create(key, value);
+        return new KeyValue(key, value);
     }
 
-    public abstract Tool getBuild();
+    @NonNull
+    private Tool build;
 
-    public abstract SCM getSCM();
+    @NonNull
+    private SCM scm;
 
-    public abstract CI getCI();
+    @NonNull
+    private CI ci;
 
-    public abstract List<KeyValue> getEnvironmentVariables();
+    @NonNull
+    private List<KeyValue> environmentVariables;
 
-    public abstract List<KeyValue> getSystemProperties();
+    @NonNull
+    private List<KeyValue> systemProperties;
 }

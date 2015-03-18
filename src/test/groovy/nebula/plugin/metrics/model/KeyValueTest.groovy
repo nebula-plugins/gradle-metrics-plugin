@@ -16,11 +16,10 @@
  */
 
 
-
 package nebula.plugin.metrics.model
 
-import autovalue.shaded.com.google.common.common.collect.Lists
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.google.common.collect.Lists
 import spock.lang.Specification
 
 /**
@@ -28,7 +27,7 @@ import spock.lang.Specification
  */
 class KeyValueTest extends Specification {
     def 'mapper writes value with expected form'() {
-        def keyValue = KeyValue.create('mykey', 'myvalue')
+        def keyValue = new KeyValue('mykey', 'myvalue')
         def mapper = new ObjectMapper()
 
         expect:
@@ -36,7 +35,7 @@ class KeyValueTest extends Specification {
     }
 
     def 'mapper writes list of values with expected form'() {
-        def keyValue = KeyValue.create('mykey', 'myvalue')
+        def keyValue = new KeyValue('mykey', 'myvalue')
         def mapper = new ObjectMapper()
         def list = Lists.newArrayList(keyValue, keyValue)
 

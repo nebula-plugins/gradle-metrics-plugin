@@ -21,8 +21,6 @@ import nebula.plugin.metrics.MetricsLoggerFactory;
 import nebula.plugin.metrics.MetricsPluginExtension;
 import nebula.plugin.metrics.model.*;
 
-import autovalue.shaded.com.google.common.common.collect.Lists;
-import autovalue.shaded.com.google.common.common.collect.Maps;
 import ch.qos.logback.classic.spi.LoggingEvent;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.core.JsonGenerator;
@@ -36,6 +34,8 @@ import com.fasterxml.jackson.datatype.joda.JodaModule;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import net.logstash.logback.layout.LogstashLayout;
 import org.elasticsearch.action.admin.indices.create.CreateIndexRequestBuilder;
 import org.elasticsearch.action.admin.indices.exists.indices.IndicesExistsRequestBuilder;
@@ -67,7 +67,7 @@ import static org.elasticsearch.common.xcontent.XContentFactory.jsonBuilder;
  *
  * @author Danny Thomas
  */
-public class ESClientMetricsDispatcher extends AbstractQueuedExecutionThreadService<Runnable> implements MetricsDispatcher {
+public final class ESClientMetricsDispatcher extends AbstractQueuedExecutionThreadService<Runnable> implements MetricsDispatcher {
     protected static final String BUILD_METRICS_INDEX = "build-metrics";
     protected static final String BUILD_TYPE = "build";
     protected static final String LOG_TYPE = "log";
@@ -317,7 +317,7 @@ public class ESClientMetricsDispatcher extends AbstractQueuedExecutionThreadServ
 
     @Override
     public void event(String description, String type, long elapsedTime) {
-        build.addEvent(Event.create(description, type, elapsedTime));
+        build.addEvent(new Event(description, type, elapsedTime));
     }
 
     @Override

@@ -17,23 +17,22 @@
 
 package nebula.plugin.metrics.model;
 
-import com.google.auto.value.AutoValue;
 import com.google.common.base.Throwables;
+import lombok.NonNull;
+import lombok.Value;
 
-import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
  * Result.
- *
- * @author Danny Thomas
  */
-@AutoValue
-public abstract class Result {
+@Value
+public class Result {
     public static Result unknown() {
         return create(ResultStatus.UNKNOWN);
     }
@@ -52,7 +51,7 @@ public abstract class Result {
         for (Throwable throwable : failures) {
             stringFailures.add(Throwables.getStackTraceAsString(throwable));
         }
-        return new AutoValue_Result(ResultStatus.FAILURE, stringFailures);
+        return new Result(ResultStatus.FAILURE, stringFailures);
     }
 
     public static Result skipped() {
@@ -60,14 +59,13 @@ public abstract class Result {
     }
 
     private static Result create(ResultStatus status) {
-        //noinspection ConstantConditions
-        return new AutoValue_Result(status, null);
+        return new Result(status, null);
     }
 
-    public abstract ResultStatus getStatus();
+    @NonNull
+    private ResultStatus status;
 
-    @Nullable
-    public abstract List<String> getFailures();
+    private List<String> failures;
 
     public enum ResultStatus {
         UNKNOWN,
