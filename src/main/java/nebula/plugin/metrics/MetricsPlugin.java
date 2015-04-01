@@ -17,7 +17,10 @@
 
 package nebula.plugin.metrics;
 
-import nebula.plugin.metrics.collector.*;
+import nebula.plugin.metrics.collector.GradleBuildCollector;
+import nebula.plugin.metrics.collector.GradleProfileCollector;
+import nebula.plugin.metrics.collector.GradleTestSuiteCollector;
+import nebula.plugin.metrics.collector.LogbackCollector;
 import nebula.plugin.metrics.dispatcher.DispatcherLifecycleListener;
 import nebula.plugin.metrics.dispatcher.ESClientMetricsDispatcher;
 import nebula.plugin.metrics.dispatcher.MetricsDispatcher;
@@ -35,7 +38,6 @@ import org.gradle.api.tasks.testing.Test;
 import org.gradle.initialization.ClassLoaderRegistry;
 import org.gradle.internal.classloader.FilteringClassLoader;
 import org.gradle.invocation.DefaultGradle;
-import org.slf4j.Logger;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
@@ -46,7 +48,6 @@ import static com.google.common.base.Preconditions.checkState;
  * @author Danny Thomas
  */
 public final class MetricsPlugin implements Plugin<Project> {
-    private MetricsPluginExtension extension;
     private MetricsDispatcher dispatcher;
 
     @Override
@@ -56,7 +57,7 @@ public final class MetricsPlugin implements Plugin<Project> {
         allowLogbackClassLoading(project);
         ExtensionContainer extensions = project.getExtensions();
         extensions.add("metrics", new MetricsPluginExtension());
-        extension = extensions.getByType(MetricsPluginExtension.class);
+        MetricsPluginExtension extension = extensions.getByType(MetricsPluginExtension.class);
         dispatcher = new ESClientMetricsDispatcher(extension);
         project.afterEvaluate(new Action<Project>() {
             @Override
