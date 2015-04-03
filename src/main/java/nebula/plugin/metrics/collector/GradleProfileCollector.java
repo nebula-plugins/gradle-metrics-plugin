@@ -40,7 +40,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
  */
 public final class GradleProfileCollector implements ProfileListener {
     private static final Logger logger = MetricsLoggerFactory.getLogger(GradleProfileCollector.class);
-    private static final long SHUTDOWN_TIMEOUT_MS = 1000;
+    private static final long SHUTDOWN_TIMEOUT_MS = 5000;
     private final MetricsDispatcher dispatcher;
 
     public GradleProfileCollector(MetricsDispatcher dispatcher) {

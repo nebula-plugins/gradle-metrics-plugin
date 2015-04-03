@@ -293,7 +293,6 @@ public final class ESClientMetricsDispatcher extends AbstractQueuedExecutionThre
             jsonBuilder.endObject().endObject().endObject().endObject();
             CreateIndexRequestBuilder indexCreate = client.admin().indices().prepareCreate(BUILD_METRICS_INDEX).setSource(jsonBuilder);
             indexCreate.execute().actionGet();
-            // TODO do I need to check the response here?
         } catch (IOException e) {
             throw com.google.common.base.Throwables.propagate(e);
         }

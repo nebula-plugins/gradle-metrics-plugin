@@ -21,11 +21,13 @@ import nebula.plugin.metrics.MetricsLoggerFactory;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Throwables;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.common.util.concurrent.AbstractExecutionThreadService;
 import org.slf4j.Logger;
 
 import javax.annotation.Nullable;
+import java.util.List;
 import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -41,7 +43,7 @@ import static com.google.common.base.Preconditions.checkState;
  * @author Danny Thomas
  */
 public abstract class AbstractQueuedExecutionThreadService<E> extends AbstractExecutionThreadService {
-    private static final Set<State> QUEUE_AVAILABLE_STATES = Sets.newHashSet(State.STARTING, State.RUNNING);
+    private static final Set<State> QUEUE_AVAILABLE_STATES = Sets.newHashSet(State.STARTING, State.RUNNING, State.STOPPING);
     private final Logger logger = MetricsLoggerFactory.getLogger(AbstractExecutionThreadService.class);
     private final BlockingQueue<E> queue;
     private final boolean failOnError;
@@ -86,10 +88,11 @@ public abstract class AbstractQueuedExecutionThreadService<E> extends AbstractEx
     @Override
     protected final void shutDown() throws Exception {
         beforeShutDown();
-        logger.debug("Shutting down queued execution service {}", this);
-        while (!queue.isEmpty()) {
-            logger.debug("Waiting for queue to drain...");
-            Thread.sleep(500);
+        logger.debug("Shutting down queued execution service {}. Draining queue...", this);
+        List<E> remaining = Lists.newArrayListWithCapacity(queue.size());
+        queue.drainTo(remaining);
+        for (E e : remaining) {
+            execute(e);
         }
         checkState(queue.isEmpty(), "The queue should have been drained before shutdown");
         postShutDown();
