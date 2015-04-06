@@ -22,11 +22,43 @@ import nebula.test.IntegrationSpec
 import org.elasticsearch.common.settings.ImmutableSettings
 import org.elasticsearch.node.Node
 import org.elasticsearch.node.NodeBuilder
+import spock.lang.Shared
 
 /**
  * Integration tests for {@link MetricsPlugin}.
  */
 class MetricsPluginIntegTest extends IntegrationSpec {
+    @Shared
+    File dataDir
+    @Shared
+    Node node
+
+    def setupSpec() {
+        dataDir = Files.createTempDir()
+        def settings = ImmutableSettings.settingsBuilder().put('path.data', dataDir).put('http.port', 19200).put('transport.tcp.port', 19300).put('cluster.name', 'elasticsearch_mpit').build()
+        node = NodeBuilder.nodeBuilder().settings(settings).build()
+        node.start()
+    }
+
+    def cleanup() {
+        if (indexExists()) {
+            def admin = node.client().admin()
+            def indices = admin.indices()
+            indices.prepareDelete('build-metrics').execute().actionGet()
+        }
+    }
+
+    boolean indexExists() {
+        def admin = node.client().admin()
+        def indices = admin.indices()
+        indices.prepareExists('build-metrics').execute().actionGet().isExists()
+    }
+
+    def cleanupSpec() {
+        node.close()
+        dataDir.deleteDir()
+    }
+
     def 'plugin applies'() {
         buildFile << """
             ${applyPlugin(MetricsPlugin)}
@@ -39,32 +71,56 @@ class MetricsPluginIntegTest extends IntegrationSpec {
         noExceptionThrown()
     }
 
-    def 'running build results in metrics being recorded'(Node start) {
-        def tempDir = Files.createTempDir()
-        def settings = ImmutableSettings.settingsBuilder().put('path.data', tempDir).put('http.port', 19200).put('transport.tcp.port', 19300).build()
-        def node = NodeBuilder.nodeBuilder().settings(settings).build()
-        node.start()
+    def 'running projects task causes no errors and the build id to standard out'() {
+        setValidBuildFile()
+        def result
 
+        when:
+        result = runTasksSuccessfully('projects')
+
+        then:
+        noExceptionThrown()
+        result.standardError.isEmpty()
+        result.standardOutput.contains('Build id is ')
+    }
+
+    def 'recorded build model is valid'() {
+        setValidBuildFile()
+        def runResult
+
+        when:
+        runResult = runTasksSuccessfully('projects')
+
+        then:
+        indexExists()
+
+        def m = runResult.standardOutput =~ /Build id is (.*)/
+        def buildId = m[0][1] as String
+        def client = node.client()
+        def result = client.prepareGet('build-metrics', 'build', buildId).execute().actionGet()
+        result.isExists()
+
+        def source = result.source
+        def project = source.project
+        project.name == moduleName
+        project.version == 'unspecified'
+        source.startTime
+        source.finishedTime
+        source.elapsedTime
+        source.result.status == 'success'
+        !source.events.isEmpty()
+        source.tasks.size() == 1
+        source.tests.isEmpty()
+    }
+
+    def setValidBuildFile() {
         buildFile << """
             ${applyPlugin(MetricsPlugin)}
 
             metrics {
                 port = 19300
+                clusterName = 'elasticsearch_mpit'
             }
         """.stripIndent()
-
-        when:
-        runTasksSuccessfully('projects')
-
-        then:
-        noExceptionThrown()
-        def indices = node.client().admin().indices()
-        def exists = indices.prepareExists('build-metrics')
-        exists.execute().actionGet().isExists()
-        // TODO lots more assertions
-
-        cleanup:
-        node.close()
-        tempDir.deleteDir()
     }
 }
