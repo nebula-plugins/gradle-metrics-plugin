@@ -154,10 +154,10 @@ public final class ESClientMetricsDispatcher extends AbstractQueuedExecutionThre
 
     @Override
     protected void startUp() throws Exception {
-        createIndexesIfNeeded();
         if (client == null) {
             client = createTransportClient(extension);
         }
+        createIndexesIfNeeded();
     }
 
     private Client createTransportClient(MetricsPluginExtension extension) {
@@ -171,20 +171,6 @@ public final class ESClientMetricsDispatcher extends AbstractQueuedExecutionThre
     @Override
     protected void execute(Runnable runnable) throws Exception {
         runnable.run();
-    }
-
-    private void createIndexesIfNeeded() {
-        Runnable runnable = new Runnable() {
-            @Override
-            public void run() {
-                final IndicesExistsRequestBuilder indicesExists = client.admin().indices().prepareExists(BUILD_METRICS_INDEX);
-                IndicesExistsResponse indicesExistsResponse = indicesExists.execute().actionGet();
-                if (!indicesExistsResponse.isExists()) {
-                    createBuildIndex(NESTED_MAPPINGS);
-                }
-            }
-        };
-        queue(runnable);
     }
 
     @Override
@@ -269,6 +255,14 @@ public final class ESClientMetricsDispatcher extends AbstractQueuedExecutionThre
             }
         };
         queue(runnable);
+    }
+
+    private void createIndexesIfNeeded() {
+        final IndicesExistsRequestBuilder indicesExists = client.admin().indices().prepareExists(BUILD_METRICS_INDEX);
+        IndicesExistsResponse indicesExistsResponse = indicesExists.execute().actionGet();
+        if (!indicesExistsResponse.isExists()) {
+            createBuildIndex(NESTED_MAPPINGS);
+        }
     }
 
     private void createBuildIndex(Map<String, List<String>> nestedTypes) {

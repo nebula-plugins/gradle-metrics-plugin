@@ -18,11 +18,9 @@
 package nebula.plugin.metrics
 
 import com.google.common.io.Files
-import nebula.plugin.metrics.dispatcher.ESClientMetricsDispatcher
 import nebula.test.IntegrationSpec
-import org.elasticsearch.action.admin.indices.exists.indices.IndicesExistsRequestBuilder
-import org.elasticsearch.client.IndicesAdminClient
 import org.elasticsearch.common.settings.ImmutableSettings
+import org.elasticsearch.node.Node
 import org.elasticsearch.node.NodeBuilder
 
 /**
@@ -41,7 +39,7 @@ class MetricsPluginIntegTest extends IntegrationSpec {
         noExceptionThrown()
     }
 
-    def 'running build results in metrics being recorded'() {
+    def 'running build results in metrics being recorded'(Node start) {
         def tempDir = Files.createTempDir()
         def settings = ImmutableSettings.settingsBuilder().put('path.data', tempDir).put('http.port', 19200).put('transport.tcp.port', 19300).build()
         def node = NodeBuilder.nodeBuilder().settings(settings).build()

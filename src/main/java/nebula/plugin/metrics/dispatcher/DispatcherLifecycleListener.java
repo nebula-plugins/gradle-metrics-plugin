@@ -51,7 +51,8 @@ public final class DispatcherLifecycleListener implements BuildListener {
             try {
                 dispatcher.startAsync().awaitRunning();
             } catch (IllegalStateException e) {
-                logger.error("Error while starting metrics dispatcher. Metrics collection disabled.", e);
+                logger.debug("Error while starting metrics dispatcher", e); // The failure should bubble up separately, so we only log with an stacktrace at debug level
+                logger.error("Error while starting metrics dispatcher. Metrics collection disabled.");
             }
         }
     }
