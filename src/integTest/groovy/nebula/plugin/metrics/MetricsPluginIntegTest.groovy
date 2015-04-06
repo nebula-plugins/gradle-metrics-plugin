@@ -17,8 +17,13 @@
 
 package nebula.plugin.metrics
 
+import com.google.common.io.Files
+import nebula.plugin.metrics.dispatcher.ESClientMetricsDispatcher
 import nebula.test.IntegrationSpec
-import spock.lang.Ignore
+import org.elasticsearch.action.admin.indices.exists.indices.IndicesExistsRequestBuilder
+import org.elasticsearch.client.IndicesAdminClient
+import org.elasticsearch.common.settings.ImmutableSettings
+import org.elasticsearch.node.NodeBuilder
 
 /**
  * Integration tests for {@link MetricsPlugin}.
@@ -34,5 +39,34 @@ class MetricsPluginIntegTest extends IntegrationSpec {
 
         then:
         noExceptionThrown()
+    }
+
+    def 'running build results in metrics being recorded'() {
+        def tempDir = Files.createTempDir()
+        def settings = ImmutableSettings.settingsBuilder().put('path.data', tempDir).put('http.port', 19200).put('transport.tcp.port', 19300).build()
+        def node = NodeBuilder.nodeBuilder().settings(settings).build()
+        node.start()
+
+        buildFile << """
+            ${applyPlugin(MetricsPlugin)}
+
+            metrics {
+                port = 19300
+            }
+        """.stripIndent()
+
+        when:
+        runTasksSuccessfully('projects')
+
+        then:
+        noExceptionThrown()
+        def indices = node.client().admin().indices()
+        def exists = indices.prepareExists('build-metrics')
+        exists.execute().actionGet().isExists()
+        // TODO lots more assertions
+
+        cleanup:
+        node.close()
+        tempDir.deleteDir()
     }
 }

@@ -35,3 +35,9 @@ task('checkSourceFiles') << {
     }
 }
 compileJava.dependsOn checkSourceFiles
+
+integrationTest {
+    minHeapSize = '128m'
+    maxHeapSize = '4g'
+    jvmArgs '-XX:MaxPermSize=256m'
+}

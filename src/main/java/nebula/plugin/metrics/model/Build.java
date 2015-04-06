@@ -35,7 +35,6 @@ public class Build {
     private final List<Event> events = new ArrayList<>();
     private final List<Task> tasks = new ArrayList<>();
     private final List<Test> tests = new ArrayList<>();
-    private final List<Artifact> artifacts = new ArrayList<>();
     private Environment environment;
     private Result result = Result.unknown();
     private long startTime;
@@ -79,14 +78,6 @@ public class Build {
 
     public void setEnvironment(Environment environment) {
         this.environment = checkNotNull(environment);
-    }
-
-    public List<Artifact> getArtifacts() {
-        return ImmutableList.copyOf(artifacts);
-    }
-
-    public void addArtifact(Artifact artifact) {
-        artifacts.add(checkNotNull(artifact));
     }
 
     public Result getResult() {
