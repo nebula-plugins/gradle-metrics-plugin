@@ -1,4 +1,15 @@
-# Gradle Build Metrics
+# Gradle Metrics Plugin
+
+An incubating plugin to collect Gradle build metrics, and persist them to an Elasticsearch index.
+
+Top level metrics include:
+
+* Project - name and version
+* Events - configuration, dependency resolution, task execution
+* Task executions - result, elapsed time per task
+* Tests - result, elapsed time per test
+* Environment - Gradle, system properties, environment variables, CI, SCM
+* Result - success, failure with throwable, elapsed time
 
 # Example Queries
 
