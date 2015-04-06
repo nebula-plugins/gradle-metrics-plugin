@@ -56,8 +56,7 @@ idea {
                     vcsDirectoryMappings.appendNode('mapping', ['directory': gitRoot.parentFile, 'vcs': 'Git'])
                 }
 
-                // Annotation scanning
-                /*
+                // Annotation processing
                 node.component.find { it.@name == 'CompilerConfiguration' }['annotationProcessing'][0].replaceNode {
                     annotationProcessing {
                         profile(default: true, name: 'Default', useClasspath: 'true', enabled: true) {
@@ -66,15 +65,7 @@ idea {
                         }
                     }
                 }
-                */
             }
         }
     }
-    /*
-    module {
-        def generated = file('generated')
-        sourceDirs += generated
-        generatedSourceDirs += generated
-    }
-    */
 }
