@@ -62,8 +62,6 @@ import static org.elasticsearch.common.xcontent.XContentFactory.jsonBuilder;
 
 /**
  * Elasticsearch client {@link nebula.plugin.metrics.dispatcher.MetricsDispatcher}.
- * <p/>
- * TODO I'm not quite sure about the Runnable pattern. It's a nice way of ensuring failure can't bubble up to callers, but maybe I can do better...
  *
  * @author Danny Thomas
  */
