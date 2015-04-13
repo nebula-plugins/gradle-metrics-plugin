@@ -79,20 +79,22 @@ public final class MetricsPlugin implements Plugin<Project> {
         classLoader.allowPackage("ch.qos.logback");
     }
 
-    private void configureCollectors(Project project) {
+    private void configureCollectors(Project rootProject) {
         LogbackCollector.configureLogbackCollection(dispatcher);
 
-        Gradle gradle = project.getGradle();
+        Gradle gradle = rootProject.getGradle();
         gradle.addListener(new DispatcherLifecycleListener(dispatcher));
         gradle.addListener(new GradleBuildCollector(dispatcher));
         gradle.addListener(new GradleProfileCollector(dispatcher));
 
-        GradleTestSuiteCollector suiteCollector = new GradleTestSuiteCollector(dispatcher);
-        TaskContainer tasks = project.getTasks();
-        for (String name : tasks.getNames()) {
-            Task task = tasks.getByName(name);
-            if (task instanceof Test) {
-                ((Test) task).addTestListener(suiteCollector);
+        for (Project project : rootProject.getAllprojects()) {
+            TaskContainer tasks = project.getTasks();
+            for (String name : tasks.getNames()) {
+                Task task = tasks.getByName(name);
+                if (task instanceof Test) {
+                    GradleTestSuiteCollector suiteCollector = new GradleTestSuiteCollector(dispatcher, (Test) task);
+                    ((Test) task).addTestListener(suiteCollector);
+                }
             }
         }
     }

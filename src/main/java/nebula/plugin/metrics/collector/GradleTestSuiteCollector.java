@@ -23,6 +23,7 @@ import nebula.plugin.metrics.model.Result;
 import nebula.plugin.metrics.model.Test;
 
 import com.google.common.annotations.VisibleForTesting;
+import org.gradle.api.Task;
 import org.gradle.api.tasks.testing.TestDescriptor;
 import org.gradle.api.tasks.testing.TestListener;
 import org.gradle.api.tasks.testing.TestResult;
@@ -41,9 +42,11 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public class GradleTestSuiteCollector implements TestListener {
     private static final Logger logger = MetricsLoggerFactory.getLogger(GradleTestSuiteCollector.class);
     private final MetricsDispatcher dispatcher;
+    private final org.gradle.api.tasks.testing.Test testTask;
 
-    public GradleTestSuiteCollector(MetricsDispatcher dispatcher) {
+    public GradleTestSuiteCollector(MetricsDispatcher dispatcher, org.gradle.api.tasks.testing.Test testTask) {
         this.dispatcher = checkNotNull(dispatcher);
+        this.testTask = checkNotNull(testTask);
     }
 
     @Override
@@ -74,15 +77,15 @@ public class GradleTestSuiteCollector implements TestListener {
         dispatcher.test(test);
     }
 
-    @VisibleForTesting
-    String getSuiteName(TestDescriptor testDescriptor) {
+    private String getSuiteName(TestDescriptor testDescriptor) {
         TestDescriptor rootDescriptor = testDescriptor;
         while (rootDescriptor.getParent() != null) {
             rootDescriptor = rootDescriptor.getParent();
         }
         // FIXME this appears to be always returning 'tests' regardless of whether we're dealing with unit tests or integration tests...
         // Use the sourceset as the suite name, which happens to be the toString representation of the description
-        // This feels on the fragile side, but the alternative is splitting out the representation from getName(), which feels equally fragile
+        // This feels on the fragile side, but
+        // the alternative is splitting out the representation from getName(), which feels equally fragile
         return String.valueOf(rootDescriptor);
     }
 

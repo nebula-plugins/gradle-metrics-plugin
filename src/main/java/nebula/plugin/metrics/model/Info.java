@@ -33,16 +33,16 @@ import java.util.Set;
  */
 @Value
 @JsonPropertyOrder({"build", "scm", "ci", "environmentVariables", "systemProperties"})
-public class Environment {
-    public static Environment create(Tool tool, SCM scm, CI ci) {
+public class Info {
+    public static Info create(Tool tool, SCM scm, CI ci) {
         return create(tool, scm, ci, System.getenv(), new HashMap(System.getProperties()));
     }
 
-    public static Environment create(Tool tool, SCM scm, CI ci, Map<String, String> env, Map<String, String> systemProperties) {
+    public static Info create(Tool tool, SCM scm, CI ci, Map<String, String> env, Map<String, String> systemProperties) {
         // TODO do we need to blacklist/redact certain properties?
         List<KeyValue> envList = mapToKeyValueList(env);
         List<KeyValue> systemPropertiesList = mapToKeyValueList(systemProperties);
-        return new Environment(tool, scm, ci, envList, systemPropertiesList);
+        return new Info(tool, scm, ci, envList, systemPropertiesList);
     }
 
     @VisibleForTesting

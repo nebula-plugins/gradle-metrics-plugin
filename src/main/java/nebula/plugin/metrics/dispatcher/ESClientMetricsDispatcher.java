@@ -297,8 +297,8 @@ public final class ESClientMetricsDispatcher extends AbstractQueuedExecutionThre
     }
 
     @Override
-    public void environment(Environment environment) {
-        build.setEnvironment(environment);
+    public void environment(Info info) {
+        build.setInfo(info);
     }
 
     @Override

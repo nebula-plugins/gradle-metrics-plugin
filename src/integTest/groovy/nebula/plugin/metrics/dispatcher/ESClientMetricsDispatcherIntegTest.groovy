@@ -80,7 +80,7 @@ class ESClientMetricsDispatcherIntegTest extends LogbackAssertSpecification {
         Gradle tool = new Gradle(new StartParameter());
         SCM scm = new UnknownSCM()
         CI ci = new UnknownCI()
-        dispatcher.environment(Environment.create(tool, scm, ci));
+        dispatcher.environment(Info.create(tool, scm, ci));
         dispatcher.result(Result.success())
 
         then:

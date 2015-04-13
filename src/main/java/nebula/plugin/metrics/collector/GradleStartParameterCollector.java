@@ -30,6 +30,6 @@ public class GradleStartParameterCollector {
         Gradle tool = new Gradle(startParameter);
         SCM scm = new UnknownSCM();
         CI ci = new UnknownCI();
-        dispatcher.environment(Environment.create(tool, scm, ci));
+        dispatcher.environment(Info.create(tool, scm, ci));
     }
 }

@@ -113,6 +113,18 @@ class MetricsPluginIntegTest extends IntegrationSpec {
         source.tests.isEmpty()
     }
 
+    def 'running offline results in no metrics being recorded'() {
+        setValidBuildFile()
+        def result
+
+        when:
+        result = runTasksSuccessfully("--offline", "projects")
+
+        then:
+        noExceptionThrown()
+        result.standardOutput.contains("Build is running offline")
+    }
+
     def setValidBuildFile() {
         buildFile << """
             ${applyPlugin(MetricsPlugin)}

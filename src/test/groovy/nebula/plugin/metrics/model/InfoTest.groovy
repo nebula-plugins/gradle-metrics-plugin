@@ -23,14 +23,14 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import spock.lang.Specification
 
 /**
- * Tests for {@link Environment}.
+ * Tests for {@link Info}.
  */
-class EnvironmentTest extends Specification {
+class InfoTest extends Specification {
     def 'environment is json serialized in expected form'() {
         def map = new HashMap<String, String>()
         map.put("mykey1", "myvalue1")
         map.put("mykey2", "myvalue2")
-        def environment = Environment.create(Mock(Tool), Mock(SCM), Mock(CI), map, Collections.emptyMap())
+        def environment = Info.create(Mock(Tool), Mock(SCM), Mock(CI), map, Collections.emptyMap())
         def mapper = new ObjectMapper()
 
         expect:

@@ -35,7 +35,7 @@ public class Build {
     private final List<Event> events = new ArrayList<>();
     private final List<Task> tasks = new ArrayList<>();
     private final List<Test> tests = new ArrayList<>();
-    private Environment environment;
+    private Info info;
     private Result result = Result.unknown();
     private long startTime;
     private long elapsedTime;
@@ -72,12 +72,12 @@ public class Build {
         tests.add(checkNotNull(test));
     }
 
-    public Environment getEnvironment() {
-        return environment;
+    public Info getInfo() {
+        return info;
     }
 
-    public void setEnvironment(Environment environment) {
-        this.environment = checkNotNull(environment);
+    public void setInfo(Info info) {
+        this.info = checkNotNull(info);
     }
 
     public Result getResult() {

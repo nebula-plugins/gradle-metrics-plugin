@@ -40,5 +40,5 @@ public interface MetricsDispatcher extends Service {
 
     void test(Test test);
 
-    void environment(Environment environment);
+    void environment(Info info);
 }
