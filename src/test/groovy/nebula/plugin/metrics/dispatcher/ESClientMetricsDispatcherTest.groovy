@@ -15,8 +15,6 @@
  *
  */
 
-
-
 package nebula.plugin.metrics.dispatcher
 
 import nebula.plugin.metrics.MetricsPluginExtension
@@ -45,19 +43,13 @@ class ESClientMetricsDispatcherTest extends LogbackAssertSpecification {
 
     ESClientMetricsDispatcher dispatcher
 
-    def cleanup() {
-        if (dispatcher != null) {
-            // FIXME I'm not sure where to scope this, need to ask Fletch
-            //dispatcherSupplier.stopAsync().awaitTerminated()
-        }
-    }
-
     def 'build start response sets buildId'() {
         def builder = mockIndexRequestBuilder()
-        dispatcher = createDispatcher(builder)
+        dispatcher = createStartedDispatcher(builder)
 
         when:
         dispatcher.started(project)
+        dispatcher.stopAsync().awaitTerminated()
 
         then:
         dispatcher.getBuildId() == 'id'
@@ -65,8 +57,8 @@ class ESClientMetricsDispatcherTest extends LogbackAssertSpecification {
 
     def 'build start event contains the expected json representation'() {
         def builder = mockIndexRequestBuilder()
-        dispatcher = createDispatcher(builder)
-        def json = null
+        dispatcher = createStartedDispatcher(builder)
+        def json = null as String
 
         when:
         dispatcher.started(project)
@@ -78,10 +70,16 @@ class ESClientMetricsDispatcherTest extends LogbackAssertSpecification {
         }
         // TODO Ignoring the tail because it includes timestamps which I'm being too lazy to match right now
         json.startsWith('{"project":{"name":"project","version":"1.0"},"events":[],"tasks":[],"tests":[],"result":{"status":"unknown"}')
+
+        when:
+        dispatcher.stopAsync().awaitTerminated()
+
+        then:
+        noExceptionThrown()
     }
 
     def 'mapper formats dates using the same format as content builder'() {
-        DateTimeFormatter datePrinter = XContentBuilder.defaultDatePrinter;
+        DateTimeFormatter datePrinter = XContentBuilder.defaultDatePrinter
         def mapper = ESClientMetricsDispatcher.getObjectMapper()
 
         expect:
@@ -91,12 +89,12 @@ class ESClientMetricsDispatcherTest extends LogbackAssertSpecification {
         printedDate == mappedDate.replace('"', '')
     }
 
-    def ESClientMetricsDispatcher createDispatcher() {
+    def ESClientMetricsDispatcher createStartedDispatcher() {
         def builder = mockIndexRequestBuilder()
-        createDispatcher(builder)
+        createStartedDispatcher(builder)
     }
 
-    def ESClientMetricsDispatcher createDispatcher(IndexRequestBuilder builder) {
+    def ESClientMetricsDispatcher createStartedDispatcher(IndexRequestBuilder builder) {
         def client = mockClient(builder)
         def dispatcher = new ESClientMetricsDispatcher(extension, client, false)
         dispatcher.startAsync().awaitRunning()
@@ -119,6 +117,7 @@ class ESClientMetricsDispatcherTest extends LogbackAssertSpecification {
         def future = Mock(ListenableActionFuture)
         def response = new IndexResponse(BUILD_METRICS_INDEX, BUILD_TYPE, 'id', 1, true)
         builder.setSource(_) >> builder
+        builder.setId(_) >> builder
         builder.execute() >> future
         future.actionGet() >> response
         builder
