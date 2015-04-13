@@ -26,6 +26,8 @@ import nebula.plugin.metrics.dispatcher.ESClientMetricsDispatcher;
 import nebula.plugin.metrics.dispatcher.MetricsDispatcher;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Supplier;
+import com.google.common.base.Suppliers;
 import org.gradle.api.Action;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
@@ -51,6 +53,15 @@ import static com.google.common.base.Preconditions.checkState;
  */
 public final class MetricsPlugin implements Plugin<Project> {
     private MetricsDispatcher dispatcher;
+    /**
+     * Supplier allowing the dispatcher to be fetched lazily, so we can replace the instance for testing.
+     */
+    private Supplier<MetricsDispatcher> dispatcherSupplier = new Supplier<MetricsDispatcher>() {
+        @Override
+        public MetricsDispatcher get() {
+            return checkNotNull(dispatcher, "Dispatcher has not yet been initialised");
+        }
+    };
 
     @Override
     public void apply(Project project) {
@@ -61,7 +72,7 @@ public final class MetricsPlugin implements Plugin<Project> {
         extensions.add("metrics", new MetricsPluginExtension());
         MetricsPluginExtension extension = extensions.getByType(MetricsPluginExtension.class);
         dispatcher = new ESClientMetricsDispatcher(extension);
-        configureBuildCollectors(project.getGradle());
+        configureRootProjectCollectors(project);
         project.afterEvaluate(new Action<Project>() {
             @Override
             public void execute(Project project) {
@@ -82,11 +93,12 @@ public final class MetricsPlugin implements Plugin<Project> {
         classLoader.allowPackage("ch.qos.logback");
     }
 
-    private void configureBuildCollectors(Gradle gradle) {
-        LogbackCollector.configureLogbackCollection(dispatcher);
-        gradle.addListener(new DispatcherLifecycleListener(dispatcher));
-        gradle.addListener(new GradleBuildCollector(dispatcher));
-        gradle.addListener(new GradleProfileCollector(dispatcher));
+    private void configureRootProjectCollectors(Project rootProject) {
+        Gradle gradle = rootProject.getGradle();
+        LogbackCollector.configureLogbackCollection(dispatcherSupplier);
+        gradle.addListener(new DispatcherLifecycleListener(dispatcherSupplier));
+        gradle.addListener(new GradleBuildCollector(dispatcherSupplier));
+        gradle.addListener(new GradleProfileCollector(dispatcherSupplier));
     }
 
     private void configureProjectCollectors(Set<Project> projects) {
@@ -95,7 +107,7 @@ public final class MetricsPlugin implements Plugin<Project> {
             for (String name : tasks.getNames()) {
                 Task task = tasks.getByName(name);
                 if (task instanceof Test) {
-                    GradleTestSuiteCollector suiteCollector = new GradleTestSuiteCollector(dispatcher, (Test) task);
+                    GradleTestSuiteCollector suiteCollector = new GradleTestSuiteCollector(dispatcherSupplier, (Test) task);
                     ((Test) task).addTestListener(suiteCollector);
                 }
             }

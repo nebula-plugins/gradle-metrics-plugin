@@ -48,7 +48,7 @@ class ESClientMetricsDispatcherTest extends LogbackAssertSpecification {
     def cleanup() {
         if (dispatcher != null) {
             // FIXME I'm not sure where to scope this, need to ask Fletch
-            //dispatcher.stopAsync().awaitTerminated()
+            //dispatcherSupplier.stopAsync().awaitTerminated()
         }
     }
 

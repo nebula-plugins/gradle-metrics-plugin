@@ -23,6 +23,7 @@ import nebula.plugin.metrics.model.Result;
 import nebula.plugin.metrics.model.Test;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Supplier;
 import org.gradle.api.Task;
 import org.gradle.api.tasks.testing.TestDescriptor;
 import org.gradle.api.tasks.testing.TestListener;
@@ -41,12 +42,12 @@ import static com.google.common.base.Preconditions.checkNotNull;
  */
 public class GradleTestSuiteCollector implements TestListener {
     private static final Logger logger = MetricsLoggerFactory.getLogger(GradleTestSuiteCollector.class);
-    private final MetricsDispatcher dispatcher;
-    private final org.gradle.api.tasks.testing.Test testTask;
+    private final Supplier<MetricsDispatcher> dispatcherSupplier;
+    private final Task task;
 
-    public GradleTestSuiteCollector(MetricsDispatcher dispatcher, org.gradle.api.tasks.testing.Test testTask) {
-        this.dispatcher = checkNotNull(dispatcher);
-        this.testTask = checkNotNull(testTask);
+    public GradleTestSuiteCollector(Supplier<MetricsDispatcher> dispatcherSupplier, Task task) {
+        this.dispatcherSupplier = checkNotNull(dispatcherSupplier);
+        this.task = checkNotNull(task);
     }
 
     @Override
@@ -74,7 +75,7 @@ public class GradleTestSuiteCollector implements TestListener {
         long startTime = testResult.getStartTime();
         long elapsed = testResult.getEndTime() - startTime;
         Test test = new Test(testDescriptor.getName(), testDescriptor.getClassName(), suiteName, result, new DateTime(startTime), elapsed);
-        dispatcher.test(test);
+        dispatcherSupplier.get().test(test);
     }
 
     private String getSuiteName(TestDescriptor testDescriptor) {

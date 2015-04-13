@@ -25,6 +25,7 @@ import org.gradle.BuildListener
 import org.gradle.BuildResult
 import org.gradle.StartParameter
 import org.gradle.api.Project
+import org.gradle.api.ProjectState
 import org.gradle.api.internal.project.DefaultProject
 import org.gradle.api.invocation.Gradle
 import org.gradle.api.plugins.JavaPlugin
@@ -184,7 +185,9 @@ class MetricsPluginTest extends ProjectSpec {
         def plugin = project.plugins.getPlugin(MetricsPlugin)
         def dispatcher = Mock(MetricsDispatcher)
         plugin.setDispatcher(dispatcher)
-        ((DefaultProject) project).evaluate()
+        def defaultProject = ((DefaultProject)project)
+        defaultProject.evaluate()
+        defaultProject.getProjectEvaluationBroadcaster().afterEvaluate(project, project.getState())
         dispatcher
     }
 }

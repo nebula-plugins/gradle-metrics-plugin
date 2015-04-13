@@ -17,14 +17,19 @@
 
 package nebula.plugin.metrics.collector;
 
+import nebula.plugin.metrics.MetricsLoggerFactory;
 import nebula.plugin.metrics.dispatcher.MetricsDispatcher;
+import nebula.plugin.metrics.model.Info;
 import nebula.plugin.metrics.model.Result;
 
+import com.google.common.base.Supplier;
 import org.gradle.BuildListener;
 import org.gradle.BuildResult;
+import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 import org.gradle.api.initialization.Settings;
 import org.gradle.api.invocation.Gradle;
+import org.slf4j.Logger;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -34,10 +39,11 @@ import static com.google.common.base.Preconditions.checkNotNull;
  * @author Danny Thomas
  */
 public final class GradleBuildCollector implements BuildListener {
-    private final MetricsDispatcher dispatcher;
+    private final Logger logger = MetricsLoggerFactory.getLogger(GradleBuildCollector.class);
+    private final Supplier<MetricsDispatcher> dispatcherSupplier;
 
-    public GradleBuildCollector(MetricsDispatcher dispatcher) {
-        this.dispatcher = checkNotNull(dispatcher);
+    public GradleBuildCollector(Supplier<MetricsDispatcher> dispatcherSupplier) {
+        this.dispatcherSupplier = checkNotNull(dispatcherSupplier);
     }
 
     @Override
@@ -46,15 +52,25 @@ public final class GradleBuildCollector implements BuildListener {
         String name = gradleProject.getName();
         String version = String.valueOf(gradleProject.getVersion());
         nebula.plugin.metrics.model.Project project = new nebula.plugin.metrics.model.Project(name, version);
-        dispatcher.started(project);
-        GradleStartParameterCollector.collect(gradle.getStartParameter(), dispatcher);
+        MetricsDispatcher dispatcher = dispatcherSupplier.get();
+        dispatcher.started(project); // We register this listener after the build has started, so we fire the start event here instead
+
+        nebula.plugin.metrics.model.Gradle tool = new nebula.plugin.metrics.model.Gradle(gradle.getStartParameter());
+        Plugin plugin = gradleProject.getPlugins().findPlugin("info-broker");
+        if (plugin == null) {
+            logger.info("Gradle info plugin not found. SCM and CI information will not be collected");
+            dispatcher.environment(Info.create(tool));
+        } else {
+            GradleInfoCollector collector = new GradleInfoCollector(plugin);
+            dispatcher.environment(Info.create(tool, collector.getSCM(), collector.getCI()));
+        }
     }
 
     @Override
     public void buildFinished(BuildResult buildResult) {
         Throwable failure = buildResult.getFailure();
         Result result = failure == null ? Result.success() : Result.failure(failure);
-        dispatcher.result(result);
+        dispatcherSupplier.get().result(result);
     }
 
     @Override

@@ -34,6 +34,10 @@ import java.util.Set;
 @Value
 @JsonPropertyOrder({"build", "scm", "ci", "environmentVariables", "systemProperties"})
 public class Info {
+    public static Info create(Gradle tool) {
+        return create(tool, new UnknownSCM(), new UnknownCI());
+    }
+
     public static Info create(Tool tool, SCM scm, CI ci) {
         return create(tool, scm, ci, System.getenv(), new HashMap(System.getProperties()));
     }

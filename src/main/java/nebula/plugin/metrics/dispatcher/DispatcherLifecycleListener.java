@@ -19,6 +19,7 @@ package nebula.plugin.metrics.dispatcher;
 
 import nebula.plugin.metrics.MetricsLoggerFactory;
 
+import com.google.common.base.Supplier;
 import org.gradle.BuildListener;
 import org.gradle.BuildResult;
 import org.gradle.StartParameter;
@@ -36,10 +37,10 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public final class DispatcherLifecycleListener implements BuildListener {
     private static final Logger logger = MetricsLoggerFactory.getLogger(DispatcherLifecycleListener.class);
 
-    private final MetricsDispatcher dispatcher;
+    private final Supplier<MetricsDispatcher> dispatcherSupplier;
 
-    public DispatcherLifecycleListener(MetricsDispatcher dispatcher) {
-        this.dispatcher = checkNotNull(dispatcher);
+    public DispatcherLifecycleListener(Supplier<MetricsDispatcher> dispatcherSupplier) {
+        this.dispatcherSupplier = checkNotNull(dispatcherSupplier);
     }
 
     @Override
@@ -49,7 +50,7 @@ public final class DispatcherLifecycleListener implements BuildListener {
             logger.warn("Build is running offline. Metrics will not be collected");
         } else {
             try {
-                dispatcher.startAsync().awaitRunning();
+                dispatcherSupplier.get().startAsync().awaitRunning();
             } catch (IllegalStateException e) {
                 logger.debug("Error while starting metrics dispatcher", e); // The failure should bubble up separately, so we only log with an stacktrace at debug level
                 logger.error("Error while starting metrics dispatcher. Metrics collection disabled.");

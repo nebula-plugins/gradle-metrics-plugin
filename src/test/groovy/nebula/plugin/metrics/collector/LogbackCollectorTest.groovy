@@ -19,6 +19,7 @@
 
 package nebula.plugin.metrics.collector
 
+import com.google.common.base.Supplier
 import nebula.plugin.metrics.dispatcher.MetricsDispatcher
 import nebula.test.ProjectSpec
 
@@ -29,7 +30,12 @@ class LogbackCollectorTest extends ProjectSpec {
     def ''() {
         given:
         def dispatcher = Mock(MetricsDispatcher)
-        LogbackCollector.configureLogbackCollection(dispatcher)
+        LogbackCollector.configureLogbackCollection(new Supplier<MetricsDispatcher>() {
+            @Override
+            MetricsDispatcher get() {
+                return dispatcher
+            }
+        })
 
         when:
         project.logger.error("error")

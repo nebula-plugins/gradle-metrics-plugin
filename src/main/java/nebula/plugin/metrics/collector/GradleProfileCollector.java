@@ -23,6 +23,7 @@ import nebula.plugin.metrics.model.Result;
 import nebula.plugin.metrics.model.Task;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Supplier;
 import org.gradle.api.tasks.TaskState;
 import org.gradle.profile.*;
 import org.joda.time.DateTime;
@@ -41,10 +42,10 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public final class GradleProfileCollector implements ProfileListener {
     private static final Logger logger = MetricsLoggerFactory.getLogger(GradleProfileCollector.class);
     private static final long SHUTDOWN_TIMEOUT_MS = 5000;
-    private final MetricsDispatcher dispatcher;
+    private final Supplier<MetricsDispatcher> dispatcherSupplier;
 
-    public GradleProfileCollector(MetricsDispatcher dispatcher) {
-        this.dispatcher = checkNotNull(dispatcher);
+    public GradleProfileCollector(Supplier<MetricsDispatcher> dispatcherSupplier) {
+        this.dispatcherSupplier = checkNotNull(dispatcherSupplier);
     }
 
     @Override
@@ -55,6 +56,7 @@ public final class GradleProfileCollector implements ProfileListener {
         long loadingElapsed = result.getElapsedProjectsLoading();
 
         // Initialisation
+        MetricsDispatcher dispatcher = this.dispatcherSupplier.get();
         dispatcher.event("startup", "init", startupElapsed);
         long expectedTotal = startupElapsed;
 

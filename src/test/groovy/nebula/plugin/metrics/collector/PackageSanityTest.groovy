@@ -15,9 +15,9 @@
  *
  */
 
-package nebula.plugin.metrics.collector;
+package nebula.plugin.metrics.collector
 
-import com.google.common.testing.AbstractPackageSanityTests;
+import com.google.common.testing.AbstractPackageSanityTests
 
 /**
  * Sanity checks for {@link nebula.plugin.metrics.collector}.

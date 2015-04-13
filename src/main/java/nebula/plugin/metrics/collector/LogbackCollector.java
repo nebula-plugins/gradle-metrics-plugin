@@ -26,6 +26,7 @@ import ch.qos.logback.classic.spi.LoggingEvent;
 import ch.qos.logback.classic.spi.TurboFilterList;
 import ch.qos.logback.classic.turbo.TurboFilter;
 import ch.qos.logback.core.spi.FilterReply;
+import com.google.common.base.Supplier;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Marker;
 
@@ -55,8 +56,8 @@ public class LogbackCollector {
      * encoders/layouts/etc aren't an option and LogbackLoggingConfigurer.doConfigure() adds a TurboFilter which
      * prevents us getting at those events, so we re-wire the filters so ours comes first.
      */
-    public static void configureLogbackCollection(final MetricsDispatcher dispatcher) {
-        checkNotNull(dispatcher);
+    public static void configureLogbackCollection(final Supplier<MetricsDispatcher> dispatcherSupplier) {
+        checkNotNull(dispatcherSupplier);
         LoggerContext context = (LoggerContext) LoggerFactory.getILoggerFactory();
         TurboFilter metricsFilter = new TurboFilter() {
             @Override
@@ -68,7 +69,7 @@ public class LogbackCollector {
                     IN_FILTER.set(true);
                     if (level.isGreaterOrEqual(Level.INFO)) { // TODO make configurable
                         LoggingEvent event = new LoggingEvent(Logger.class.getCanonicalName(), logger, level, s, throwable, objects);
-                        dispatcher.logbackEvent(event);
+                        dispatcherSupplier.get().logbackEvent(event);
                     }
                     return FilterReply.NEUTRAL;
                 } finally {
