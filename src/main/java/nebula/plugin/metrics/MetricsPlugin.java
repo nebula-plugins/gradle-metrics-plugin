@@ -39,6 +39,8 @@ import org.gradle.initialization.ClassLoaderRegistry;
 import org.gradle.internal.classloader.FilteringClassLoader;
 import org.gradle.invocation.DefaultGradle;
 
+import java.util.Set;
+
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
@@ -59,10 +61,11 @@ public final class MetricsPlugin implements Plugin<Project> {
         extensions.add("metrics", new MetricsPluginExtension());
         MetricsPluginExtension extension = extensions.getByType(MetricsPluginExtension.class);
         dispatcher = new ESClientMetricsDispatcher(extension);
+        configureBuildCollectors(project.getGradle());
         project.afterEvaluate(new Action<Project>() {
             @Override
             public void execute(Project project) {
-                configureCollectors(project);
+                configureProjectCollectors(project.getAllprojects());
             }
         });
     }
@@ -79,15 +82,15 @@ public final class MetricsPlugin implements Plugin<Project> {
         classLoader.allowPackage("ch.qos.logback");
     }
 
-    private void configureCollectors(Project rootProject) {
+    private void configureBuildCollectors(Gradle gradle) {
         LogbackCollector.configureLogbackCollection(dispatcher);
-
-        Gradle gradle = rootProject.getGradle();
         gradle.addListener(new DispatcherLifecycleListener(dispatcher));
         gradle.addListener(new GradleBuildCollector(dispatcher));
         gradle.addListener(new GradleProfileCollector(dispatcher));
+    }
 
-        for (Project project : rootProject.getAllprojects()) {
+    private void configureProjectCollectors(Set<Project> projects) {
+        for (Project project : projects) {
             TaskContainer tasks = project.getTasks();
             for (String name : tasks.getNames()) {
                 Task task = tasks.getByName(name);
