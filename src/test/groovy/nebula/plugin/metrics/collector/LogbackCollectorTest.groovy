@@ -15,8 +15,6 @@
  *
  */
 
-
-
 package nebula.plugin.metrics.collector
 
 import com.google.common.base.Supplier

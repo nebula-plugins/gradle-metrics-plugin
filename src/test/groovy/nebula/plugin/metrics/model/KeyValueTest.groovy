@@ -15,7 +15,6 @@
  *
  */
 
-
 package nebula.plugin.metrics.model
 
 import com.fasterxml.jackson.databind.ObjectMapper

@@ -18,7 +18,10 @@
 package nebula.plugin.metrics.collector;
 
 import nebula.plugin.info.InfoBrokerPlugin;
-import nebula.plugin.metrics.model.*;
+import nebula.plugin.metrics.model.GenericCI;
+import nebula.plugin.metrics.model.GenericSCM;
+import nebula.plugin.metrics.model.GenericToolContainer;
+import nebula.plugin.metrics.model.Tool;
 
 import org.gradle.api.Plugin;
 

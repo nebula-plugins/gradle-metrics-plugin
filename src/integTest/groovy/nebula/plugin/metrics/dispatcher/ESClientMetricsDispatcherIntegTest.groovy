@@ -16,7 +16,6 @@
  */
 
 
-
 package nebula.plugin.metrics.dispatcher
 
 import com.fasterxml.jackson.core.TreeNode
@@ -24,7 +23,10 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.node.TextNode
 import com.github.tlrx.elasticsearch.test.EsSetup
 import nebula.plugin.metrics.MetricsPluginExtension
-import nebula.plugin.metrics.model.*
+import nebula.plugin.metrics.model.Gradle
+import nebula.plugin.metrics.model.Info
+import nebula.plugin.metrics.model.Project
+import nebula.plugin.metrics.model.Result
 import org.elasticsearch.client.Client
 import org.elasticsearch.client.transport.TransportClient
 import org.elasticsearch.common.settings.ImmutableSettings

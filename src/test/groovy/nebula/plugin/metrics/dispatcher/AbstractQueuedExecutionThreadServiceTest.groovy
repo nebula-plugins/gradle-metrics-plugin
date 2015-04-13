@@ -15,8 +15,6 @@
  *
  */
 
-
-
 package nebula.plugin.metrics.dispatcher
 
 import spock.lang.Specification

@@ -27,7 +27,6 @@ import nebula.plugin.metrics.dispatcher.MetricsDispatcher;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Supplier;
-import com.google.common.base.Suppliers;
 import org.gradle.api.Action;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
