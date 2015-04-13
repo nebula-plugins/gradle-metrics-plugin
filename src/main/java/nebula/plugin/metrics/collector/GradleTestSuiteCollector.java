@@ -71,23 +71,12 @@ public class GradleTestSuiteCollector implements TestListener {
         checkNotNull(testDescriptor);
         checkNotNull(testResult);
         Result result = getTestResult(testResult);
-        String suiteName = getSuiteName(testDescriptor);
+        org.gradle.api.tasks.testing.Test testTask = (org.gradle.api.tasks.testing.Test) task;
+        String suiteName = testTask.getName();
         long startTime = testResult.getStartTime();
         long elapsed = testResult.getEndTime() - startTime;
         Test test = new Test(testDescriptor.getName(), testDescriptor.getClassName(), suiteName, result, new DateTime(startTime), elapsed);
         dispatcherSupplier.get().test(test);
-    }
-
-    private String getSuiteName(TestDescriptor testDescriptor) {
-        TestDescriptor rootDescriptor = testDescriptor;
-        while (rootDescriptor.getParent() != null) {
-            rootDescriptor = rootDescriptor.getParent();
-        }
-        // FIXME this appears to be always returning 'tests' regardless of whether we're dealing with unit tests or integration tests...
-        // Use the sourceset as the suite name, which happens to be the toString representation of the description
-        // This feels on the fragile side, but
-        // the alternative is splitting out the representation from getName(), which feels equally fragile
-        return String.valueOf(rootDescriptor);
     }
 
     @VisibleForTesting

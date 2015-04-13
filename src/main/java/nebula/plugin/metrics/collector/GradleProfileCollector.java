@@ -105,7 +105,7 @@ public final class GradleProfileCollector implements ProfileListener {
             dispatcher.event("unknown", "other", difference);
         }
 
-        // FIXME BuildListener.buildFinished is triggering for MetricsBuildListener before this listener, so we shutdown here. Look for a better lifecycle event to avoid burying this logic
+        // BuildListener.buildFinished triggers before this listener, so we shutdown here
         if (dispatcher.isRunning()) {
             try {
                 dispatcher.stopAsync().awaitTerminated(SHUTDOWN_TIMEOUT_MS, TimeUnit.MILLISECONDS);
