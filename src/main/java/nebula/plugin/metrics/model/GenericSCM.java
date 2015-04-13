@@ -17,10 +17,17 @@
 
 package nebula.plugin.metrics.model;
 
+import lombok.Value;
+
 /**
  * Git {@link SCM}.
  */
+@Value
 public class GenericSCM implements SCM {
+    private String origin;
+
+    private String change;
+
     @Override
     public String getType() {
         return "generic";

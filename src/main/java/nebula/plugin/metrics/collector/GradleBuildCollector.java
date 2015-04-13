@@ -48,21 +48,25 @@ public final class GradleBuildCollector implements BuildListener {
 
     @Override
     public void projectsEvaluated(Gradle gradle) {
-        Project gradleProject = gradle.getRootProject();
-        String name = gradleProject.getName();
-        String version = String.valueOf(gradleProject.getVersion());
-        nebula.plugin.metrics.model.Project project = new nebula.plugin.metrics.model.Project(name, version);
-        MetricsDispatcher dispatcher = dispatcherSupplier.get();
-        dispatcher.started(project); // We register this listener after the build has started, so we fire the start event here instead
+        try {
+            Project gradleProject = gradle.getRootProject();
+            String name = gradleProject.getName();
+            String version = String.valueOf(gradleProject.getVersion());
+            nebula.plugin.metrics.model.Project project = new nebula.plugin.metrics.model.Project(name, version);
+            MetricsDispatcher dispatcher = dispatcherSupplier.get();
+            dispatcher.started(project); // We register this listener after the build has started, so we fire the start event here instead
 
-        nebula.plugin.metrics.model.Gradle tool = new nebula.plugin.metrics.model.Gradle(gradle.getStartParameter());
-        Plugin plugin = gradleProject.getPlugins().findPlugin("info-broker");
-        if (plugin == null) {
-            logger.info("Gradle info plugin not found. SCM and CI information will not be collected");
-            dispatcher.environment(Info.create(tool));
-        } else {
-            GradleInfoCollector collector = new GradleInfoCollector(plugin);
-            dispatcher.environment(Info.create(tool, collector.getSCM(), collector.getCI()));
+            nebula.plugin.metrics.model.Gradle tool = new nebula.plugin.metrics.model.Gradle(gradle.getStartParameter());
+            Plugin plugin = gradleProject.getPlugins().findPlugin("info-broker");
+            if (plugin == null) {
+                logger.info("Gradle info plugin not found. SCM and CI information will not be collected");
+                dispatcher.environment(Info.create(tool));
+            } else {
+                GradleInfoCollector collector = new GradleInfoCollector(plugin);
+                dispatcher.environment(Info.create(tool, collector.getSCM(), collector.getCI()));
+            }
+        } catch (Exception e) {
+            logger.error("Unexpected exception in evaluation listener", e);
         }
     }
 

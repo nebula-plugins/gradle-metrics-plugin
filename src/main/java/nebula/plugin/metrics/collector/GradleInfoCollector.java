@@ -19,7 +19,10 @@ package nebula.plugin.metrics.collector;
 
 import nebula.plugin.info.InfoBrokerPlugin;
 import nebula.plugin.metrics.MetricsLoggerFactory;
-import nebula.plugin.metrics.model.*;
+import nebula.plugin.metrics.model.CI;
+import nebula.plugin.metrics.model.GenericCI;
+import nebula.plugin.metrics.model.GenericSCM;
+import nebula.plugin.metrics.model.SCM;
 
 import org.gradle.api.Plugin;
 import org.slf4j.Logger;
@@ -32,7 +35,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
  * Collector for Gradle info.
  */
 public class GradleInfoCollector {
-    private final Logger logger = MetricsLoggerFactory.getLogger(GradleInfoCollector.class);
     private final InfoBrokerPlugin plugin;
 
     public GradleInfoCollector(Plugin plugin) {
@@ -40,31 +42,12 @@ public class GradleInfoCollector {
     }
 
     public SCM getSCM() {
-        // TODO Implement
-        /*
-        Module-Source=
-        Module-Origin=git@github.com:nebula-plugins/nebula-test.git
-        Change=3e5440a
-         */
         Map<String, String> manifest = plugin.buildManifest();
-        return new GenericSCM();
+        return new GenericSCM(manifest.get("Module-Origin"), manifest.get("Change"));
     }
 
     public CI getCI() {
-        // TODO Complete implementation
-        /*
-        Built-Status=release
-        Built-By=jenkins
-        Built-OS=Linux
-        Build-Date=2014-11-25_14:40:33
-        Build-Host=https://netflixoss.ci.cloudbees.com/
-        Build-Job=nebula-plugins/nebula-test-1.12-release
-        Build-Number=9
-        Build-Id=2014-11-25_22-33-51
-        Build-Java-Version=1.7.0_60
-         */
-
         Map<String, String> manifest = plugin.buildManifest();
-        return new GenericCI();
+        return new GenericCI(manifest.get("Build-Number"), manifest.get("Build-Job"), manifest.get("Build-Host"), manifest.get("Built-By"), manifest.get("Build-OS"));
     }
 }
