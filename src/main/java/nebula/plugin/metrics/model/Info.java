@@ -35,14 +35,14 @@ import java.util.Set;
 @JsonPropertyOrder({"build", "scm", "ci", "environmentVariables", "systemProperties"})
 public class Info {
     public static Info create(Gradle tool) {
-        return create(tool, new UnknownSCM(), new UnknownCI());
+        return create(tool, new UnknownTool(), new UnknownTool());
     }
 
-    public static Info create(Tool tool, SCM scm, CI ci) {
+    public static Info create(Tool tool, Tool scm, Tool ci) {
         return create(tool, scm, ci, System.getenv(), new HashMap(System.getProperties()));
     }
 
-    public static Info create(Tool tool, SCM scm, CI ci, Map<String, String> env, Map<String, String> systemProperties) {
+    public static Info create(Tool tool, Tool scm, Tool ci, Map<String, String> env, Map<String, String> systemProperties) {
         // TODO do we need to blacklist/redact certain properties?
         List<KeyValue> envList = mapToKeyValueList(env);
         List<KeyValue> systemPropertiesList = mapToKeyValueList(systemProperties);
@@ -70,10 +70,10 @@ public class Info {
     private Tool build;
 
     @NonNull
-    private SCM scm;
+    private Tool scm;
 
     @NonNull
-    private CI ci;
+    private Tool ci;
 
     @NonNull
     private List<KeyValue> environmentVariables;

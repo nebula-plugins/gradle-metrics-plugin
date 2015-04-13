@@ -18,14 +18,9 @@
 package nebula.plugin.metrics.collector;
 
 import nebula.plugin.info.InfoBrokerPlugin;
-import nebula.plugin.metrics.MetricsLoggerFactory;
-import nebula.plugin.metrics.model.CI;
-import nebula.plugin.metrics.model.GenericCI;
-import nebula.plugin.metrics.model.GenericSCM;
-import nebula.plugin.metrics.model.SCM;
+import nebula.plugin.metrics.model.*;
 
 import org.gradle.api.Plugin;
-import org.slf4j.Logger;
 
 import java.util.Map;
 
@@ -41,13 +36,15 @@ public class GradleInfoCollector {
         this.plugin = (InfoBrokerPlugin) checkNotNull(plugin);
     }
 
-    public SCM getSCM() {
+    public Tool getSCM() {
         Map<String, String> manifest = plugin.buildManifest();
-        return new GenericSCM(manifest.get("Module-Origin"), manifest.get("Change"));
+        GenericSCM scm = new GenericSCM(manifest.get("Module-Origin"), manifest.get("Change"));
+        return new GenericToolContainer(scm);
     }
 
-    public CI getCI() {
+    public Tool getCI() {
         Map<String, String> manifest = plugin.buildManifest();
-        return new GenericCI(manifest.get("Build-Number"), manifest.get("Build-Job"), manifest.get("Build-Host"), manifest.get("Built-By"), manifest.get("Build-OS"));
+        GenericCI ci = new GenericCI(manifest.get("Build-Number"), manifest.get("Build-Job"), manifest.get("Build-Host"), manifest.get("Built-By"), manifest.get("Build-OS"));
+        return new GenericToolContainer(ci);
     }
 }

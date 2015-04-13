@@ -30,7 +30,8 @@ class InfoTest extends Specification {
         def map = new HashMap<String, String>()
         map.put("mykey1", "myvalue1")
         map.put("mykey2", "myvalue2")
-        def environment = Info.create(Mock(Tool), Mock(SCM), Mock(CI), map, Collections.emptyMap())
+        def tool = Mock(Tool)
+        def environment = Info.create(tool, tool, tool, map, Collections.emptyMap())
         def mapper = new ObjectMapper()
 
         expect:

@@ -17,8 +17,17 @@
 
 package nebula.plugin.metrics.model;
 
+import lombok.Value;
+
 /**
- * Unknown {@link CI}.
+ * Generic {@link Tool} container.
  */
-public class UnknownCI extends UnknownTool implements CI {
+@Value
+public class GenericToolContainer implements Tool {
+    private Object generic;
+
+    @Override
+    public String getType() {
+        return "generic";
+    }
 }

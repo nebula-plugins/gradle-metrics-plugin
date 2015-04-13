@@ -20,10 +20,10 @@ package nebula.plugin.metrics.model;
 import lombok.Value;
 
 /**
- * Jenkins {@link CI}.
+ * Generic CI.
  */
 @Value
-public class GenericCI implements CI {
+public class GenericCI {
     private String build;
 
     private String job;
@@ -33,9 +33,4 @@ public class GenericCI implements CI {
     private String user;
 
     private String os;
-
-    @Override
-    public String getType() {
-        return "generic";
-    }
 }
