@@ -48,6 +48,7 @@ public final class GradleBuildCollector implements BuildListener {
 
     @Override
     public void projectsEvaluated(Gradle gradle) {
+        checkNotNull(gradle);
         try {
             Project gradleProject = gradle.getRootProject();
             String name = gradleProject.getName();

@@ -186,7 +186,6 @@ class MetricsPluginTest extends ProjectSpec {
         def dispatcher = Mock(MetricsDispatcher)
         plugin.setDispatcher(dispatcher)
         def defaultProject = ((DefaultProject)project)
-        defaultProject.evaluate()
         defaultProject.getProjectEvaluationBroadcaster().afterEvaluate(project, project.getState())
         dispatcher
     }
