@@ -29,10 +29,12 @@ public class MetricsPluginExtension {
      * The name used when adding this extension to the extension container.
      */
     public static final String METRICS_EXTENSION_NAME = "metrics";
+    public static final String DEFAULT_INDEX_NAME = "build-metrics";
 
     private String hostname = "localhost";
     private int port = 9300;
     private String clusterName = "elasticsearch";
+    private String indexName = DEFAULT_INDEX_NAME;
 
     public String getHostname() {
         return hostname;
@@ -56,5 +58,13 @@ public class MetricsPluginExtension {
 
     public void setClusterName(String clusterName) {
         this.clusterName = checkNotNull(clusterName);
+    }
+
+    public String getIndexName() {
+        return indexName;
+    }
+
+    public void setIndexName(String indexName) {
+        this.indexName = checkNotNull(indexName);
     }
 }

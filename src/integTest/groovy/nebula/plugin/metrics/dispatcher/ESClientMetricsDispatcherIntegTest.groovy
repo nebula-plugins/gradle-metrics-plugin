@@ -49,7 +49,7 @@ class ESClientMetricsDispatcherIntegTest extends LogbackAssertSpecification {
     def setup() {
         esSetup = new EsSetup()
         // Execute a dummy request so the ES client is initialised
-        assertFalse(esSetup.exists(BUILD_METRICS_INDEX))
+        assertFalse(esSetup.exists(MetricsPluginExtension.DEFAULT_INDEX_NAME))
         client = esSetup.client()
         dispatcher = createStartedDispatcher(client)
     }
@@ -72,7 +72,7 @@ class ESClientMetricsDispatcherIntegTest extends LogbackAssertSpecification {
 
     def 'starting the service results in index and mappings being created'() {
         expect:
-        esSetup.exists(BUILD_METRICS_INDEX)
+        esSetup.exists(MetricsPluginExtension.DEFAULT_INDEX_NAME)
     }
 
     def 'nested mappings are configured correctly'() {
@@ -85,8 +85,8 @@ class ESClientMetricsDispatcherIntegTest extends LogbackAssertSpecification {
 
         then:
         def indices = client.admin().indices()
-        def response = indices.prepareGetMappings(BUILD_METRICS_INDEX).setTypes(BUILD_TYPE).get()
-        def source = response.mappings.get(BUILD_METRICS_INDEX).get(BUILD_TYPE).source().string()
+        def response = indices.prepareGetMappings(MetricsPluginExtension.DEFAULT_INDEX_NAME).setTypes(BUILD_TYPE).get()
+        def source = response.mappings.get(MetricsPluginExtension.DEFAULT_INDEX_NAME).get(BUILD_TYPE).source().string()
 
         // The ES apis don't seem to let us get at the type definitions for nested types via sourceAsMap, so we'll just parse as a tree ourselves
         def mapper = new ObjectMapper()

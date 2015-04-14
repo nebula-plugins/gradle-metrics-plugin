@@ -66,7 +66,6 @@ import static org.elasticsearch.common.xcontent.XContentFactory.jsonBuilder;
  * @author Danny Thomas
  */
 public final class ESClientMetricsDispatcher extends AbstractQueuedExecutionThreadService<Runnable> implements MetricsDispatcher {
-    protected static final String BUILD_METRICS_INDEX = "build-metrics";
     protected static final String BUILD_TYPE = "build";
     protected static final String LOG_TYPE = "log";
     protected static final Map<String, List<String>> NESTED_MAPPINGS;
@@ -178,7 +177,7 @@ public final class ESClientMetricsDispatcher extends AbstractQueuedExecutionThre
             public void run() {
                 try {
                     String json = mapper.writeValueAsString(build);
-                    IndexRequestBuilder index = client.prepareIndex(BUILD_METRICS_INDEX, BUILD_TYPE).setSource(json).setId(buildId);
+                    IndexRequestBuilder index = client.prepareIndex(extension.getIndexName(), BUILD_TYPE).setSource(json).setId(buildId);
                     index.execute().actionGet();
                 } catch (JsonProcessingException e) {
                     Throwables.propagate(e);
@@ -216,7 +215,7 @@ public final class ESClientMetricsDispatcher extends AbstractQueuedExecutionThre
                 public void run() {
                     BulkRequestBuilder bulk = client.prepareBulk();
                     for (LoggingEvent event : events) {
-                        IndexRequestBuilder index = client.prepareIndex(BUILD_METRICS_INDEX, LOG_TYPE);
+                        IndexRequestBuilder index = client.prepareIndex(extension.getIndexName(), LOG_TYPE);
                         index.setSource(logstashLayout.doLayout(event));
                         bulk.add(index);
                     }
@@ -242,7 +241,7 @@ public final class ESClientMetricsDispatcher extends AbstractQueuedExecutionThre
             public void run() {
                 try {
                     String json = mapper.writeValueAsString(build);
-                    IndexRequestBuilder index = client.prepareIndex(BUILD_METRICS_INDEX, BUILD_TYPE).setSource(json);
+                    IndexRequestBuilder index = client.prepareIndex(extension.getIndexName(), BUILD_TYPE).setSource(json);
                     IndexResponse indexResponse = index.execute().actionGet();
                     assert indexResponse.isCreated() : "Response should always be created";
                     buildId = indexResponse.getId();
@@ -256,7 +255,7 @@ public final class ESClientMetricsDispatcher extends AbstractQueuedExecutionThre
     }
 
     private void createIndexesIfNeeded() {
-        final IndicesExistsRequestBuilder indicesExists = client.admin().indices().prepareExists(BUILD_METRICS_INDEX);
+        final IndicesExistsRequestBuilder indicesExists = client.admin().indices().prepareExists(extension.getIndexName());
         IndicesExistsResponse indicesExistsResponse = indicesExists.execute().actionGet();
         if (!indicesExistsResponse.isExists()) {
             createBuildIndex(NESTED_MAPPINGS);
@@ -283,7 +282,7 @@ public final class ESClientMetricsDispatcher extends AbstractQueuedExecutionThre
                 }
             }
             jsonBuilder.endObject().endObject().endObject().endObject();
-            CreateIndexRequestBuilder indexCreate = client.admin().indices().prepareCreate(BUILD_METRICS_INDEX).setSource(jsonBuilder);
+            CreateIndexRequestBuilder indexCreate = client.admin().indices().prepareCreate(extension.getIndexName()).setSource(jsonBuilder);
             indexCreate.execute().actionGet();
         } catch (IOException e) {
             throw com.google.common.base.Throwables.propagate(e);
