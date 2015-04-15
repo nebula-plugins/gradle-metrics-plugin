@@ -24,14 +24,14 @@ buildscript {
 }
 
 description 'Gradle metrics plugin'
-group 'com.netflix.nebula'
-version '1.0-SNAPSHOT'
-
-defaultTasks 'build'
+apply plugin: 'nebula-plugin'
 
 apply plugin: 'idea'
-apply plugin: 'nebula-plugin'
 apply plugin: 'com.github.ben-manes.versions'
+
+apply from: 'gradle/dependencies.gradle'
+apply from: 'gradle/idea.gradle'
+apply from: 'gradle/tests.gradle'
 
 contacts {
     'dmthomas@gmail.com' {
@@ -39,10 +39,6 @@ contacts {
         github 'DanielThomas'
     }
 }
-
-apply from: 'gradle/dependencies.gradle'
-apply from: 'gradle/idea.gradle'
-apply from: 'gradle/tests.gradle'
 
 task wrapper(type: Wrapper) {
     gradleVersion = '2.2'
