@@ -4,11 +4,11 @@ An incubating plugin to collect Gradle build metrics, and persist them to an Ela
 
 Top level metrics include:
 
+* Info - Gradle start parameters, system properties and environment variables. SCM and GIT information if the gradle-info-plugin has been applied
 * Project - name and version
 * Events - configuration, dependency resolution, task execution
 * Task executions - result, elapsed time per task
 * Tests - result, elapsed time per test
-* Environment - Gradle, system properties, environment variables, CI, SCM
 * Result - success, failure with throwable, elapsed time
 
 # Example Queries
