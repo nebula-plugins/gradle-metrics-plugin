@@ -266,7 +266,8 @@ public final class ESClientMetricsDispatcher extends AbstractQueuedExecutionThre
         try {
             XContentBuilder jsonBuilder = jsonBuilder();
             jsonBuilder.startObject().startObject("mappings").startObject(BUILD_TYPE);
-            jsonBuilder.startObject("_timestamp").field("enabled", true).field("path", "build.startTime").endObject();
+            // Disable _timestamp path mapping. It's causing https://github.com/elastic/elasticsearch/issues/4718 against earlier versions of ES, and I'm not sure it's working anyway
+            // jsonBuilder.startObject("_timestamp").field("enabled", true).field("path", "build.startTime").endObject();
             jsonBuilder.startObject("properties");
             for (Map.Entry<String, List<String>> entry : nestedTypes.entrySet()) {
                 String type = entry.getKey();
