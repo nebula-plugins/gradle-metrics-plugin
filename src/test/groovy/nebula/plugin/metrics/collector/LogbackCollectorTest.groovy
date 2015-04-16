@@ -25,7 +25,7 @@ import nebula.test.ProjectSpec
  * Tests for {@link LogbackCollector}.
  */
 class LogbackCollectorTest extends ProjectSpec {
-    def ''() {
+    def 'logback collection captures events'() {
         given:
         def dispatcher = Mock(MetricsDispatcher)
         LogbackCollector.configureLogbackCollection(new Supplier<MetricsDispatcher>() {
@@ -40,5 +40,8 @@ class LogbackCollectorTest extends ProjectSpec {
 
         then:
         1 * dispatcher.logbackEvent(_)
+
+        cleanup:
+        LogbackCollector.resetLogbackCollection()
     }
 }

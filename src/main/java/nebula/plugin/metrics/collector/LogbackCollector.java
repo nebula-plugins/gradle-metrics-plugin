@@ -58,7 +58,6 @@ public class LogbackCollector {
      */
     public static void configureLogbackCollection(final Supplier<MetricsDispatcher> dispatcherSupplier) {
         checkNotNull(dispatcherSupplier);
-        LoggerContext context = (LoggerContext) LoggerFactory.getILoggerFactory();
         TurboFilter metricsFilter = new TurboFilter() {
             @Override
             public FilterReply decide(Marker marker, Logger logger, Level level, String s, Object[] objects, Throwable throwable) {
@@ -77,6 +76,8 @@ public class LogbackCollector {
                 }
             }
         };
+
+        LoggerContext context = (LoggerContext) LoggerFactory.getILoggerFactory();
         TurboFilterList filterList = context.getTurboFilterList();
         if (!filterList.isEmpty()) {
             TurboFilter gradleFilter = filterList.get(0);
@@ -86,6 +87,19 @@ public class LogbackCollector {
         } else {
             context.resetTurboFilterList();
             context.addTurboFilter(metricsFilter);
+        }
+    }
+
+    public static void resetLogbackCollection() {
+        LoggerContext context = (LoggerContext) LoggerFactory.getILoggerFactory();
+        TurboFilterList filterList = context.getTurboFilterList();
+        if (filterList.size() == 2) {
+            TurboFilter gradleFilter = filterList.get(1);
+            context.resetTurboFilterList();
+            context.addTurboFilter(gradleFilter);
+        } else {
+            assert filterList.size() == 1 : "Expected 1 filter to be registered, found " + filterList.size();
+            context.resetTurboFilterList();
         }
     }
 }

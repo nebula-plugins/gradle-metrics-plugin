@@ -116,6 +116,7 @@ public final class GradleProfileCollector implements ProfileListener {
                 logger.error("Could not stop metrics dispatcher service", e);
             }
         }
+        LogbackCollector.resetLogbackCollection();
     }
 
     @VisibleForTesting
