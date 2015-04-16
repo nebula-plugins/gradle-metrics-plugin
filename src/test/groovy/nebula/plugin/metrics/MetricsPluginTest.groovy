@@ -68,6 +68,7 @@ class MetricsPluginTest extends ProjectSpec {
             dispatcher.isRunning() >> true
             dispatcher
         }
+        1 * dispatcher.stopAsync() >> dispatcher
 
         DefaultGradle gradle = project.gradle
 
@@ -84,8 +85,7 @@ class MetricsPluginTest extends ProjectSpec {
         def dispatcher = applyPluginWithMockedDispatcher(project)
         def broadcaster = buildListenerBroadcaster(project)
         def gradle = Mock(Gradle)
-        1 * gradle.getRootProject() >> project
-        2 * gradle.getStartParameter() >> {
+        1 * gradle.getStartParameter() >> {
             def parameter = Mock(StartParameter)
             parameter.isOffline() >> true
             parameter

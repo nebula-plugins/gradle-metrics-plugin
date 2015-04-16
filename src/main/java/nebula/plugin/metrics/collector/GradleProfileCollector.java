@@ -40,6 +40,8 @@ import static com.google.common.base.Preconditions.checkNotNull;
  * @author Danny Thomas
  */
 public final class GradleProfileCollector implements ProfileListener {
+    private static final long SHUTDOWN_TIMEOUT_MS = 5000;
+
     private final Logger logger = MetricsLoggerFactory.getLogger(GradleProfileCollector.class);
     private final Supplier<MetricsDispatcher> dispatcherSupplier;
 
@@ -102,6 +104,17 @@ public final class GradleProfileCollector implements ProfileListener {
             long difference = expectedTotal - elapsedTotal;
             logger.info("Total build time of {}ms is less than the calculated total of {}ms (difference: {}ms). Creating 'unknown' event with type 'other'", expectedTotal, elapsedTotal, difference);
             dispatcher.event("unknown", "other", difference);
+        }
+
+        // This always appears to be called after the build result listener, so we shutdown here
+        if (dispatcher.isRunning()) {
+            try {
+                dispatcher.stopAsync().awaitTerminated(SHUTDOWN_TIMEOUT_MS, TimeUnit.MILLISECONDS);
+            } catch (TimeoutException e) {
+                logger.error("Timed out after {}ms while waiting for metrics dispatcher to terminate", SHUTDOWN_TIMEOUT_MS);
+            } catch (IllegalStateException e) {
+                logger.error("Could not stop metrics dispatcher service", e);
+            }
         }
     }
 

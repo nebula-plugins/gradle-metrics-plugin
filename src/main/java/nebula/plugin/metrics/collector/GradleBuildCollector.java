@@ -43,8 +43,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
  * @author Danny Thomas
  */
 public final class GradleBuildCollector implements BuildListener {
-    private static final long SHUTDOWN_TIMEOUT_MS = 5000;
-
     private final Logger logger = MetricsLoggerFactory.getLogger(GradleBuildCollector.class);
     private final Supplier<MetricsDispatcher> dispatcherSupplier;
 
@@ -95,17 +93,6 @@ public final class GradleBuildCollector implements BuildListener {
         Throwable failure = buildResult.getFailure();
         Result result = failure == null ? Result.success() : Result.failure(failure);
         dispatcherSupplier.get().result(result);
-
-        MetricsDispatcher dispatcher = dispatcherSupplier.get();
-        if (dispatcher.isRunning()) {
-            try {
-                dispatcher.stopAsync().awaitTerminated(SHUTDOWN_TIMEOUT_MS, TimeUnit.MILLISECONDS);
-            } catch (TimeoutException e) {
-                logger.error("Timed out after {}ms while waiting for metrics dispatcher to terminate", SHUTDOWN_TIMEOUT_MS);
-            } catch (IllegalStateException e) {
-                logger.error("Could not stop metrics dispatcher service", e);
-            }
-        }
     }
 
     @Override

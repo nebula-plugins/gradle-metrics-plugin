@@ -94,10 +94,8 @@ public final class MetricsPlugin implements Plugin<Project> {
     private void configureRootProjectCollectors(Project rootProject) {
         Gradle gradle = rootProject.getGradle();
         LogbackCollector.configureLogbackCollection(dispatcherSupplier);
-        // Listeners fire in the order they're registered, so you get FIFO evaluated/finished event ordering
-        // Be mindful about how these are implemented and the registrations ordered
-        gradle.addListener(new GradleProfileCollector(dispatcherSupplier));
         gradle.addListener(new GradleBuildCollector(dispatcherSupplier));
+        gradle.addListener(new GradleProfileCollector(dispatcherSupplier));
     }
 
     private void configureProjectCollectors(Set<Project> projects) {
