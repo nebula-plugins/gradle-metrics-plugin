@@ -25,11 +25,15 @@ import nebula.plugin.metrics.model.Result;
 import com.google.common.base.Supplier;
 import org.gradle.BuildListener;
 import org.gradle.BuildResult;
+import org.gradle.StartParameter;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 import org.gradle.api.initialization.Settings;
 import org.gradle.api.invocation.Gradle;
 import org.slf4j.Logger;
+
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -39,6 +43,8 @@ import static com.google.common.base.Preconditions.checkNotNull;
  * @author Danny Thomas
  */
 public final class GradleBuildCollector implements BuildListener {
+    private static final long SHUTDOWN_TIMEOUT_MS = 5000;
+
     private final Logger logger = MetricsLoggerFactory.getLogger(GradleBuildCollector.class);
     private final Supplier<MetricsDispatcher> dispatcherSupplier;
 
@@ -49,6 +55,19 @@ public final class GradleBuildCollector implements BuildListener {
     @Override
     public void projectsEvaluated(Gradle gradle) {
         checkNotNull(gradle);
+        StartParameter startParameter = gradle.getStartParameter();
+        if (startParameter.isOffline()) {
+            logger.warn("Build is running offline. Metrics will not be collected");
+            return;
+        } else {
+            try {
+                dispatcherSupplier.get().startAsync().awaitRunning();
+            } catch (IllegalStateException e) {
+                logger.error("Error while starting metrics dispatcher. Metrics collection disabled.", e);
+                return;
+            }
+        }
+
         try {
             Project gradleProject = gradle.getRootProject();
             String name = gradleProject.getName();
@@ -76,6 +95,17 @@ public final class GradleBuildCollector implements BuildListener {
         Throwable failure = buildResult.getFailure();
         Result result = failure == null ? Result.success() : Result.failure(failure);
         dispatcherSupplier.get().result(result);
+
+        MetricsDispatcher dispatcher = dispatcherSupplier.get();
+        if (dispatcher.isRunning()) {
+            try {
+                dispatcher.stopAsync().awaitTerminated(SHUTDOWN_TIMEOUT_MS, TimeUnit.MILLISECONDS);
+            } catch (TimeoutException e) {
+                logger.error("Timed out after {}ms while waiting for metrics dispatcher to terminate", SHUTDOWN_TIMEOUT_MS);
+            } catch (IllegalStateException e) {
+                logger.error("Could not stop metrics dispatcher service", e);
+            }
+        }
     }
 
     @Override

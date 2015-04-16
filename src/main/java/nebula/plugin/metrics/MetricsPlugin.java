@@ -21,7 +21,6 @@ import nebula.plugin.metrics.collector.GradleBuildCollector;
 import nebula.plugin.metrics.collector.GradleProfileCollector;
 import nebula.plugin.metrics.collector.GradleTestSuiteCollector;
 import nebula.plugin.metrics.collector.LogbackCollector;
-import nebula.plugin.metrics.dispatcher.DispatcherLifecycleListener;
 import nebula.plugin.metrics.dispatcher.ESClientMetricsDispatcher;
 import nebula.plugin.metrics.dispatcher.MetricsDispatcher;
 
@@ -95,9 +94,10 @@ public final class MetricsPlugin implements Plugin<Project> {
     private void configureRootProjectCollectors(Project rootProject) {
         Gradle gradle = rootProject.getGradle();
         LogbackCollector.configureLogbackCollection(dispatcherSupplier);
-        gradle.addListener(new DispatcherLifecycleListener(dispatcherSupplier));
-        gradle.addListener(new GradleBuildCollector(dispatcherSupplier));
+        // Listeners fire in the order they're registered, so you get FIFO evaluated/finished event ordering
+        // Be mindful about how these are implemented and the registrations ordered
         gradle.addListener(new GradleProfileCollector(dispatcherSupplier));
+        gradle.addListener(new GradleBuildCollector(dispatcherSupplier));
     }
 
     private void configureProjectCollectors(Set<Project> projects) {

@@ -187,7 +187,7 @@ public final class ESClientMetricsDispatcher extends AbstractQueuedExecutionThre
         queue(runnable);
         flushLogbackEvents(); // One last flush to to make sure we got everything
         if (!logbackEvents.isEmpty()) {
-            logger.error("Not all logback events were successfully flushed: {}", logbackEvents);
+            logger.error("Not all logback events were successfully flushed. {} events lost", logbackEvents.size());
         }
     }
 
