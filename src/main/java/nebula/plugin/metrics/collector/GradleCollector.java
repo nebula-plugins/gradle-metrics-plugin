@@ -19,11 +19,19 @@ package nebula.plugin.metrics.collector;
 
 import nebula.plugin.metrics.MetricsLoggerFactory;
 import nebula.plugin.metrics.dispatcher.MetricsDispatcher;
+import nebula.plugin.metrics.model.Info;
 import nebula.plugin.metrics.model.Result;
 import nebula.plugin.metrics.model.Task;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Supplier;
+import org.gradle.BuildListener;
+import org.gradle.BuildResult;
+import org.gradle.StartParameter;
+import org.gradle.api.Plugin;
+import org.gradle.api.Project;
+import org.gradle.api.initialization.Settings;
+import org.gradle.api.invocation.Gradle;
 import org.gradle.api.tasks.TaskState;
 import org.gradle.profile.*;
 import org.joda.time.DateTime;
@@ -35,18 +43,67 @@ import java.util.concurrent.TimeoutException;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
- * Collector for Gradle build profiling metrics.
+ * Collector for Gradle.
+ * <p/>
+ * NOTE: Gradle listener event order appears to be non-deterministic when using multiple listeners, so we use one
+ * listener so it can keep track of of the events that have been fired, and the metrics dispatch and service lifecycle correctly.
  *
  * @author Danny Thomas
  */
-public final class GradleProfileCollector implements ProfileListener {
+public final class GradleCollector implements ProfileListener, BuildListener {
     private static final long SHUTDOWN_TIMEOUT_MS = 5000;
 
-    private final Logger logger = MetricsLoggerFactory.getLogger(GradleProfileCollector.class);
+    private final Logger logger = MetricsLoggerFactory.getLogger(GradleCollector.class);
     private final Supplier<MetricsDispatcher> dispatcherSupplier;
 
-    public GradleProfileCollector(Supplier<MetricsDispatcher> dispatcherSupplier) {
+    public GradleCollector(Supplier<MetricsDispatcher> dispatcherSupplier) {
         this.dispatcherSupplier = checkNotNull(dispatcherSupplier);
+    }
+
+    @Override
+    public void projectsEvaluated(Gradle gradle) {
+        checkNotNull(gradle);
+        StartParameter startParameter = gradle.getStartParameter();
+        if (startParameter.isOffline()) {
+            logger.warn("Build is running offline. Metrics will not be collected");
+            return;
+        } else {
+            try {
+                dispatcherSupplier.get().startAsync().awaitRunning();
+            } catch (IllegalStateException e) {
+                logger.error("Error while starting metrics dispatcher. Metrics collection disabled.", e);
+                return;
+            }
+        }
+
+        try {
+            Project gradleProject = gradle.getRootProject();
+            String name = gradleProject.getName();
+            String version = String.valueOf(gradleProject.getVersion());
+            nebula.plugin.metrics.model.Project project = new nebula.plugin.metrics.model.Project(name, version);
+            MetricsDispatcher dispatcher = dispatcherSupplier.get();
+            dispatcher.started(project); // We register this listener after the build has started, so we fire the start event here instead
+
+            nebula.plugin.metrics.model.Gradle tool = new nebula.plugin.metrics.model.Gradle(gradle.getStartParameter());
+            Plugin plugin = gradleProject.getPlugins().findPlugin("info-broker");
+            if (plugin == null) {
+                logger.info("Gradle info plugin not found. SCM and CI information will not be collected");
+                dispatcher.environment(Info.create(tool));
+            } else {
+                GradleInfoCollector collector = new GradleInfoCollector(plugin);
+                dispatcher.environment(Info.create(tool, collector.getSCM(), collector.getCI()));
+            }
+        } catch (Exception e) {
+            logger.error("Unexpected exception in evaluation listener", e);
+        }
+    }
+
+    @Override
+    public void buildFinished(BuildResult buildResult) {
+        Throwable failure = buildResult.getFailure();
+        Result result = failure == null ? Result.success() : Result.failure(failure);
+        logger.info("Build finished with result " + result);
+        dispatcherSupplier.get().result(result);
     }
 
     @Override
@@ -134,5 +191,20 @@ public final class GradleProfileCollector implements ProfileListener {
             }
         }
         return result;
+    }
+
+    @Override
+    public void buildStarted(Gradle gradle) {
+        checkNotNull(gradle);
+    }
+
+    @Override
+    public void settingsEvaluated(Settings settings) {
+        checkNotNull(settings);
+    }
+
+    @Override
+    public void projectsLoaded(Gradle gradle) {
+        checkNotNull(gradle);
     }
 }

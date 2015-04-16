@@ -17,8 +17,7 @@
 
 package nebula.plugin.metrics;
 
-import nebula.plugin.metrics.collector.GradleBuildCollector;
-import nebula.plugin.metrics.collector.GradleProfileCollector;
+import nebula.plugin.metrics.collector.GradleCollector;
 import nebula.plugin.metrics.collector.GradleTestSuiteCollector;
 import nebula.plugin.metrics.collector.LogbackCollector;
 import nebula.plugin.metrics.dispatcher.ESClientMetricsDispatcher;
@@ -94,8 +93,7 @@ public final class MetricsPlugin implements Plugin<Project> {
     private void configureRootProjectCollectors(Project rootProject) {
         Gradle gradle = rootProject.getGradle();
         LogbackCollector.configureLogbackCollection(dispatcherSupplier);
-        gradle.addListener(new GradleBuildCollector(dispatcherSupplier));
-        gradle.addListener(new GradleProfileCollector(dispatcherSupplier));
+        gradle.addListener(new GradleCollector(dispatcherSupplier));
     }
 
     private void configureProjectCollectors(Set<Project> projects) {
