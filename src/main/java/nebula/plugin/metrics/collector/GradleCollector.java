@@ -39,14 +39,12 @@ import org.slf4j.Logger;
 
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
  * Collector for Gradle.
- * <p/>
- * NOTE: Gradle listener event order appears to be non-deterministic when using multiple listeners, so we use one
- * listener so it can keep track of of the events that have been fired, and the metrics dispatch and service lifecycle correctly.
  *
  * @author Danny Thomas
  */
@@ -55,6 +53,7 @@ public final class GradleCollector implements ProfileListener, BuildListener {
 
     private final Logger logger = MetricsLoggerFactory.getLogger(GradleCollector.class);
     private final Supplier<MetricsDispatcher> dispatcherSupplier;
+    private final AtomicBoolean complete = new AtomicBoolean();
 
     public GradleCollector(Supplier<MetricsDispatcher> dispatcherSupplier) {
         this.dispatcherSupplier = checkNotNull(dispatcherSupplier);
@@ -104,6 +103,7 @@ public final class GradleCollector implements ProfileListener, BuildListener {
         Result result = failure == null ? Result.success() : Result.failure(failure);
         logger.info("Build finished with result " + result);
         dispatcherSupplier.get().result(result);
+        shutdownIfComplete();
     }
 
     @Override
@@ -163,18 +163,28 @@ public final class GradleCollector implements ProfileListener, BuildListener {
             dispatcher.event("unknown", "other", difference);
         }
 
-        // This always appears to be called after the build result listener, so we shutdown here
-        logger.info("Shutting down dispatcher");
-        if (dispatcher.isRunning()) {
-            try {
-                dispatcher.stopAsync().awaitTerminated(SHUTDOWN_TIMEOUT_MS, TimeUnit.MILLISECONDS);
-            } catch (TimeoutException e) {
-                logger.error("Timed out after {}ms while waiting for metrics dispatcher to terminate", SHUTDOWN_TIMEOUT_MS);
-            } catch (IllegalStateException e) {
-                logger.error("Could not stop metrics dispatcher service", e);
+        shutdownIfComplete();
+    }
+
+    /**
+     * Conditionally shutdown the dispatcher, because Gradle listener event order appears to be non-deterministic.
+     */
+    private void shutdownIfComplete() {
+        MetricsDispatcher dispatcher = this.dispatcherSupplier.get();
+        if (!complete.compareAndSet(false, true)) {
+            // This always appears to be called after the build result listener, so we shutdown here
+            logger.info("Shutting down dispatcher");
+            if (dispatcher.isRunning()) {
+                try {
+                    dispatcher.stopAsync().awaitTerminated(SHUTDOWN_TIMEOUT_MS, TimeUnit.MILLISECONDS);
+                } catch (TimeoutException e) {
+                    logger.error("Timed out after {}ms while waiting for metrics dispatcher to terminate", SHUTDOWN_TIMEOUT_MS);
+                } catch (IllegalStateException e) {
+                    logger.error("Could not stop metrics dispatcher service", e);
+                }
             }
+            LogbackCollector.resetLogbackCollection();
         }
-        LogbackCollector.resetLogbackCollection();
     }
 
     @VisibleForTesting
