@@ -92,6 +92,7 @@ public final class GradleBuildCollector implements BuildListener {
     public void buildFinished(BuildResult buildResult) {
         Throwable failure = buildResult.getFailure();
         Result result = failure == null ? Result.success() : Result.failure(failure);
+        logger.info("Build finished with result " + result);
         dispatcherSupplier.get().result(result);
     }
 

@@ -107,6 +107,7 @@ public final class GradleProfileCollector implements ProfileListener {
         }
 
         // This always appears to be called after the build result listener, so we shutdown here
+        logger.info("Shutting down dispatcher");
         if (dispatcher.isRunning()) {
             try {
                 dispatcher.stopAsync().awaitTerminated(SHUTDOWN_TIMEOUT_MS, TimeUnit.MILLISECONDS);
