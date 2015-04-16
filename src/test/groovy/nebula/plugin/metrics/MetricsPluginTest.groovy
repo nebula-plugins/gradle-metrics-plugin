@@ -62,13 +62,12 @@ class MetricsPluginTest extends ProjectSpec {
         thrown(IllegalStateException)
     }
 
-    def 'build lifecycle events control dispatcher lifecycle'() {
+    def 'build lifecycle events control dispatcher startup lifecycle'() {
         def dispatcher = applyPluginWithMockedDispatcher(project)
         1 * dispatcher.startAsync() >> {
             dispatcher.isRunning() >> true
             dispatcher
         }
-        1 * dispatcher.stopAsync() >> dispatcher
 
         DefaultGradle gradle = project.gradle
 
