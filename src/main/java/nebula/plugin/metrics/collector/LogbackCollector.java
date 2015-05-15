@@ -29,6 +29,7 @@ import ch.qos.logback.core.spi.FilterReply;
 import com.google.common.base.Supplier;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Marker;
+import org.slf4j.MarkerFactory;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -50,6 +51,11 @@ public class LogbackCollector {
     };
 
     /**
+     * Logging marker to indicate messages that should be collected, regardless of logging level.
+     */
+    private static final Marker MARKER = MarkerFactory.getMarker("metrics");
+
+    /**
      * Configure a logback filter to capture all root logging events.
      * </p>
      * Avoids having to depend on a particular Gradle logging level being set. Gradle's logging is such that
@@ -66,7 +72,7 @@ public class LogbackCollector {
                 }
                 try {
                     IN_FILTER.set(true);
-                    if (level.isGreaterOrEqual(Level.INFO)) { // TODO make configurable
+                    if (level.isGreaterOrEqual(Level.INFO) || MARKER.equals(marker)) { // TODO make level configurable
                         LoggingEvent event = new LoggingEvent(Logger.class.getCanonicalName(), logger, level, s, throwable, objects);
                         dispatcherSupplier.get().logbackEvent(event);
                     }
