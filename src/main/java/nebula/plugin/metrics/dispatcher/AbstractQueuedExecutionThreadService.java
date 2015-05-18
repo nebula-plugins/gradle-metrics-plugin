@@ -32,6 +32,7 @@ import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
@@ -47,6 +48,7 @@ public abstract class AbstractQueuedExecutionThreadService<E> extends AbstractEx
     private final Logger logger = MetricsLoggerFactory.getLogger(AbstractExecutionThreadService.class);
     private final BlockingQueue<E> queue;
     private final boolean failOnError;
+    private final AtomicBoolean failed = new AtomicBoolean();
 
     public AbstractQueuedExecutionThreadService(boolean failOnError) {
         this(new LinkedBlockingQueue<E>(), failOnError);
@@ -80,9 +82,14 @@ public abstract class AbstractQueuedExecutionThreadService<E> extends AbstractEx
             if (failOnError) {
                 logger.info("Shutting down {} due to previous failure", this);
                 queue.clear();
+                failed.set(true);
                 throw Throwables.propagate(e);
             }
         }
+    }
+
+    protected final boolean hasFailed() {
+        return failed.get();
     }
 
     @Override

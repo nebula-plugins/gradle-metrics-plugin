@@ -197,11 +197,24 @@ public final class ESClientMetricsDispatcher extends AbstractQueuedExecutionThre
         logstashLayout.stop();
     }
 
-    private void flushLogbackEvents() {
+    private void appendAndFlushLogbackEvents(LoggingEvent event) {
+        checkNotNull(event);
+        // We need the buildId for the logging event source, so we need to defer logging events until the buildId is set
         if (buildId == null) {
             logger.debug("Skipping logback event flush, as buildId has not been set");
             return;
         }
+        // Be paranoid and flush any logging events if the dispatcher service has failed
+        if (hasFailed()) {
+            logbackEvents.clear();
+            return;
+        }
+
+        logbackEvents.add(event);
+        flushLogbackEvents();
+    }
+
+    private void flushLogbackEvents() {
         if (!logstashLayout.isStarted()) {
             logstashLayout.setTimeZone("UTC");
             logstashLayout.setCustomFields(String.format("{\"@source\":\"%s\"}", buildId));
@@ -318,9 +331,7 @@ public final class ESClientMetricsDispatcher extends AbstractQueuedExecutionThre
 
     @Override
     public void logbackEvent(LoggingEvent event) {
-        // We need the buildId for the logging event source, so we need to defer logging events until the buildId is set
-        logbackEvents.add(event);
-        flushLogbackEvents();
+        appendAndFlushLogbackEvents(event);
     }
 
     @Override

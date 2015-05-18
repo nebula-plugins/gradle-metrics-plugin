@@ -25,6 +25,7 @@ import nebula.plugin.metrics.dispatcher.MetricsDispatcher;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Supplier;
+import org.gradle.StartParameter;
 import org.gradle.api.Action;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
@@ -37,6 +38,7 @@ import org.gradle.api.tasks.testing.Test;
 import org.gradle.initialization.ClassLoaderRegistry;
 import org.gradle.internal.classloader.FilteringClassLoader;
 import org.gradle.invocation.DefaultGradle;
+import org.slf4j.Logger;
 
 import java.util.Set;
 
@@ -49,6 +51,7 @@ import static com.google.common.base.Preconditions.checkState;
  * @author Danny Thomas
  */
 public final class MetricsPlugin implements Plugin<Project> {
+    private final Logger logger = MetricsLoggerFactory.getLogger(MetricsPlugin.class);
     private MetricsDispatcher dispatcher;
     /**
      * Supplier allowing the dispatcher to be fetched lazily, so we can replace the instance for testing.
@@ -67,15 +70,21 @@ public final class MetricsPlugin implements Plugin<Project> {
         allowLogbackClassLoading(project);
         ExtensionContainer extensions = project.getExtensions();
         extensions.add("metrics", new MetricsPluginExtension());
-        MetricsPluginExtension extension = extensions.getByType(MetricsPluginExtension.class);
-        dispatcher = new ESClientMetricsDispatcher(extension);
-        configureRootProjectCollectors(project);
-        project.afterEvaluate(new Action<Project>() {
-            @Override
-            public void execute(Project project) {
-                configureProjectCollectors(project.getAllprojects());
-            }
-        });
+        Gradle gradle = project.getGradle();
+        StartParameter startParameter = gradle.getStartParameter();
+        if (startParameter.isOffline()) {
+            logger.warn("Build is running offline. Metrics will not be collected");
+        } else {
+            MetricsPluginExtension extension = extensions.getByType(MetricsPluginExtension.class);
+            dispatcher = new ESClientMetricsDispatcher(extension);
+            configureRootProjectCollectors(project);
+            project.afterEvaluate(new Action<Project>() {
+                @Override
+                public void execute(Project project) {
+                    configureProjectCollectors(project.getAllprojects());
+                }
+            });
+        }
     }
 
     @VisibleForTesting

@@ -80,24 +80,6 @@ class MetricsPluginTest extends ProjectSpec {
         noExceptionThrown()
     }
 
-    def 'running build offline causes dispatcher not to be started'() {
-        def dispatcher = applyPluginWithMockedDispatcher(project)
-        def broadcaster = buildListenerBroadcaster(project)
-        def gradle = Mock(Gradle)
-        1 * gradle.getStartParameter() >> {
-            def parameter = Mock(StartParameter)
-            parameter.isOffline() >> true
-            parameter
-        }
-
-        when:
-        broadcaster.projectsEvaluated(gradle)
-
-        then:
-        0 * dispatcher.startAsync()
-    }
-
-
     def 'project evaluation dispatches started event'() {
         def dispatcher = applyPluginWithMockedDispatcher(project)
         1 * dispatcher.startAsync() >> dispatcher

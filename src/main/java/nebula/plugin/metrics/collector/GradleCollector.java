@@ -42,6 +42,7 @@ import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Preconditions.checkState;
 
 /**
  * Collector for Gradle.
@@ -63,16 +64,12 @@ public final class GradleCollector implements ProfileListener, BuildListener {
     public void projectsEvaluated(Gradle gradle) {
         checkNotNull(gradle);
         StartParameter startParameter = gradle.getStartParameter();
-        if (startParameter.isOffline()) {
-            logger.warn("Build is running offline. Metrics will not be collected");
+        checkState(!startParameter.isOffline(), "Collectors should not be registered when Gradle is running offline");
+        try {
+            dispatcherSupplier.get().startAsync().awaitRunning();
+        } catch (IllegalStateException e) {
+            logger.error("Error while starting metrics dispatcher. Metrics collection disabled.", e);
             return;
-        } else {
-            try {
-                dispatcherSupplier.get().startAsync().awaitRunning();
-            } catch (IllegalStateException e) {
-                logger.error("Error while starting metrics dispatcher. Metrics collection disabled.", e);
-                return;
-            }
         }
 
         try {
