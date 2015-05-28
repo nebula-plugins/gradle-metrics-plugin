@@ -32,6 +32,8 @@ import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.databind.ser.std.StdSerializer;
 import com.fasterxml.jackson.datatype.joda.JodaModule;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Supplier;
+import com.google.common.base.Suppliers;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
@@ -83,7 +85,16 @@ public final class ESClientMetricsDispatcher extends AbstractQueuedExecutionThre
     private final ObjectMapper mapper;
     private final boolean async;
     private final Build build;
-    private final LogstashLayout logstashLayout;
+    private final Supplier<LogstashLayout> logstashLayoutSupplier = Suppliers.memoize(new Supplier<LogstashLayout>() {
+        @Override
+        public LogstashLayout get() {
+            LogstashLayout layout = new LogstashLayout();
+            layout.setTimeZone("UTC");
+            layout.setCustomFields(String.format("{\"@source\":\"%s\"}", buildId));
+            layout.start();
+            return layout;
+        }
+    });
     private final BlockingQueue<LoggingEvent> logbackEvents;
     private Client client;
     private String buildId;
@@ -99,7 +110,6 @@ public final class ESClientMetricsDispatcher extends AbstractQueuedExecutionThre
         this.mapper = getObjectMapper();
         this.async = async;
         this.build = new Build();
-        logstashLayout = new LogstashLayout();
         logbackEvents = new LinkedBlockingQueue<>();
         this.client = client;
     }
@@ -194,7 +204,7 @@ public final class ESClientMetricsDispatcher extends AbstractQueuedExecutionThre
     @Override
     protected void postShutDown() throws Exception {
         client.close();
-        logstashLayout.stop();
+        logstashLayoutSupplier.get().stop();
     }
 
     private void appendAndFlushLogbackEvents(LoggingEvent event) {
@@ -215,11 +225,6 @@ public final class ESClientMetricsDispatcher extends AbstractQueuedExecutionThre
     }
 
     private void flushLogbackEvents() {
-        if (!logstashLayout.isStarted()) {
-            logstashLayout.setTimeZone("UTC");
-            logstashLayout.setCustomFields(String.format("{\"@source\":\"%s\"}", buildId));
-            logstashLayout.start();
-        }
         final List<LoggingEvent> events = Lists.newArrayListWithExpectedSize(logbackEvents.size());
         logbackEvents.drainTo(events);
         if (!events.isEmpty()) {
@@ -229,7 +234,7 @@ public final class ESClientMetricsDispatcher extends AbstractQueuedExecutionThre
                     BulkRequestBuilder bulk = client.prepareBulk();
                     for (LoggingEvent event : events) {
                         IndexRequestBuilder index = client.prepareIndex(extension.getIndexName(), LOG_TYPE);
-                        index.setSource(logstashLayout.doLayout(event));
+                        index.setSource(logstashLayoutSupplier.get().doLayout(event));
                         bulk.add(index);
                     }
                     bulk.execute().actionGet();
