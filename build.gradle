@@ -20,6 +20,7 @@ buildscript {
     dependencies {
         classpath "com.netflix.nebula:nebula-plugin-plugin:${gradle.gradleVersion}.+"
         classpath 'com.github.ben-manes:gradle-versions-plugin:0.8'
+        classpath 'com.github.jengelman.gradle.plugins:shadow:1.2.1'
     }
 }
 
@@ -28,6 +29,7 @@ apply plugin: 'nebula-plugin'
 
 apply plugin: 'idea'
 apply plugin: 'com.github.ben-manes.versions'
+apply plugin: 'com.github.johnrengelman.shadow'
 
 apply from: 'gradle/dependencies.gradle'
 apply from: 'gradle/idea.gradle'
