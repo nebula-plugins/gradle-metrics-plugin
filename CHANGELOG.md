@@ -1,3 +1,11 @@
+# 2.2.4
+
+- Disable _all field to prevent 'Document contains at least one immense term in field="_all"'
+
+# 2.2.3
+
+- Shade Guava to prevent side effects (occured internally with a buildSrc project bringing in gradleApi())
+
 # 2.2.2
 
 - Avoid possibility of a rare ConcurrentModificationException caused by concurrent logging events during LogstashLayout start
