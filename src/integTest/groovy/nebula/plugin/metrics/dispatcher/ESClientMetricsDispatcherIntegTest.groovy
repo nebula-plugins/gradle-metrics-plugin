@@ -76,14 +76,7 @@ class ESClientMetricsDispatcherIntegTest extends LogbackAssertSpecification {
     }
 
     def 'nested mappings are configured correctly'() {
-        when:
-        dispatcher.started(new Project('', ''))
-        dispatcher.event('description', 'type', 0)
-        Gradle tool = new Gradle(new StartParameter());
-        dispatcher.environment(Info.create(tool));
-        dispatcher.result(Result.success())
-
-        then:
+        expect:
         def indices = client.admin().indices()
         def response = indices.prepareGetMappings(MetricsPluginExtension.DEFAULT_INDEX_NAME).setTypes(BUILD_TYPE).get()
         def source = response.mappings.get(MetricsPluginExtension.DEFAULT_INDEX_NAME).get(BUILD_TYPE).source().string()
@@ -156,7 +149,7 @@ class ESClientMetricsDispatcherIntegTest extends LogbackAssertSpecification {
     }
 
     def checkTypeIsNested(TreeNode treeNode) {
-        TextNode type = treeNode.get('type')
+        TextNode type = treeNode.get('type') as TextNode
         assert type != null: "$treeNode  did not have a type"
         assert type.asText() == "nested": "Type was not 'nested', found '$type.asText'"
     }
