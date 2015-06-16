@@ -77,6 +77,6 @@ public class MetricsPluginExtension {
     }
 
     public void setLogLevel(String logLevel) {
-        this.logLevel = Level.toLevel(logLevel, DEFAULT_LOG_LEVEL);
+        this.logLevel = Level.toLevel(checkNotNull(logLevel), DEFAULT_LOG_LEVEL);
     }
 }

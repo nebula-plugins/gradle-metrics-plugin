@@ -112,17 +112,27 @@ class MetricsPluginTest extends ProjectSpec {
         1 * dispatcher.result(_)
     }
 
-    def 'project logger dispatches logback event'() {
+    def 'project logger dispatches logback event at the log level'() {
+        def dispatcher = applyPluginWithMockedDispatcher(project)
+
+        when:
+        project.logger.warn('log message')
+
+        then:
+        1 * dispatcher.logbackEvent(_) >> { LoggingEvent event ->
+            assert event.message == 'log message'
+            assert event.level == Level.WARN
+        }
+    }
+
+    def 'project logger does not dispatch logback event belong the log level'() {
         def dispatcher = applyPluginWithMockedDispatcher(project)
 
         when:
         project.logger.info('log message')
 
         then:
-        1 * dispatcher.logbackEvent(_) >> { LoggingEvent event ->
-            assert event.message == 'log message'
-            assert event.level == Level.INFO
-        }
+        0 * dispatcher.logbackEvent(_)
     }
 
     def 'afterTest notification dispatches test event'() {

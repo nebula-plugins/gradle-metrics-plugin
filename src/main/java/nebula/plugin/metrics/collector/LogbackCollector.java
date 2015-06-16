@@ -64,6 +64,7 @@ public class LogbackCollector {
      */
     public static void configureLogbackCollection(final Supplier<MetricsDispatcher> dispatcherSupplier, final Level logLevel) {
         checkNotNull(dispatcherSupplier);
+        checkNotNull(logLevel);
         TurboFilter metricsFilter = new TurboFilter() {
             @Override
             public FilterReply decide(Marker marker, Logger logger, Level level, String s, Object[] objects, Throwable throwable) {
