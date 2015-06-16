@@ -1,3 +1,9 @@
+# 2.2.5
+
+- Improve dispatcher service startup and shutdown behaviour; particularly avoid leading ES threads due to a failed shutdown
+- Index mapping change - maps were making their way into the document and extending mappings in unexpected ways
+- Allow logging level to be configured via extension. Set default log level to WARN instead of INFO
+
 # 2.2.4
 
 - Disable _all field to prevent 'Document contains at least one immense term in field="_all"'
