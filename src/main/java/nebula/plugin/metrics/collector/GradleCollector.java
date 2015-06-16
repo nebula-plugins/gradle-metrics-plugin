@@ -50,7 +50,7 @@ import static com.google.common.base.Preconditions.checkState;
  * @author Danny Thomas
  */
 public final class GradleCollector implements ProfileListener, BuildListener {
-    private static final long SHUTDOWN_TIMEOUT_MS = 5000;
+    private static final long TIMEOUT_MS = 5000;
 
     private final Logger logger = MetricsLoggerFactory.getLogger(GradleCollector.class);
     private final Supplier<MetricsDispatcher> dispatcherSupplier;
@@ -66,8 +66,8 @@ public final class GradleCollector implements ProfileListener, BuildListener {
         StartParameter startParameter = gradle.getStartParameter();
         checkState(!startParameter.isOffline(), "Collectors should not be registered when Gradle is running offline");
         try {
-            dispatcherSupplier.get().startAsync().awaitRunning();
-        } catch (IllegalStateException e) {
+            dispatcherSupplier.get().startAsync().awaitRunning(TIMEOUT_MS, TimeUnit.MILLISECONDS);
+        } catch (IllegalStateException | TimeoutException e) {
             logger.error("Error while starting metrics dispatcher. Metrics collection disabled.", e);
             return;
         }
@@ -173,9 +173,9 @@ public final class GradleCollector implements ProfileListener, BuildListener {
             logger.info("Shutting down dispatcher");
             if (dispatcher.isRunning()) {
                 try {
-                    dispatcher.stopAsync().awaitTerminated(SHUTDOWN_TIMEOUT_MS, TimeUnit.MILLISECONDS);
+                    dispatcher.stopAsync().awaitTerminated(TIMEOUT_MS, TimeUnit.MILLISECONDS);
                 } catch (TimeoutException e) {
-                    logger.error("Timed out after {}ms while waiting for metrics dispatcher to terminate", SHUTDOWN_TIMEOUT_MS);
+                    logger.error("Timed out after {}ms while waiting for metrics dispatcher to terminate", TIMEOUT_MS);
                 } catch (IllegalStateException e) {
                     logger.error("Could not stop metrics dispatcher service", e);
                 }
