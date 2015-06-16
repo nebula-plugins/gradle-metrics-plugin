@@ -283,7 +283,15 @@ public final class ESClientMetricsDispatcher extends AbstractQueuedExecutionThre
     private void createBuildIndex(Map<String, List<String>> nestedTypes) {
         try {
             XContentBuilder jsonBuilder = jsonBuilder();
-            jsonBuilder.startObject().startObject("mappings");
+            jsonBuilder.startObject();
+
+            jsonBuilder.startObject("settings");
+            jsonBuilder.startObject("analysis").startObject("analyzer");
+            jsonBuilder.startObject("default").field("type", "standard").endObject();
+            jsonBuilder.endObject().endObject();
+            jsonBuilder.endObject();
+
+            jsonBuilder.startObject("mappings");
 
             jsonBuilder.startObject("_default_");
             jsonBuilder.startObject("_all").field("enabled", false).endObject();
