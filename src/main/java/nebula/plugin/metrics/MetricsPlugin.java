@@ -17,14 +17,13 @@
 
 package nebula.plugin.metrics;
 
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Supplier;
 import nebula.plugin.metrics.collector.GradleCollector;
 import nebula.plugin.metrics.collector.GradleTestSuiteCollector;
 import nebula.plugin.metrics.collector.LogbackCollector;
 import nebula.plugin.metrics.dispatcher.ESClientMetricsDispatcher;
 import nebula.plugin.metrics.dispatcher.MetricsDispatcher;
-
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Supplier;
 import org.gradle.StartParameter;
 import org.gradle.api.Action;
 import org.gradle.api.Plugin;
@@ -77,7 +76,7 @@ public final class MetricsPlugin implements Plugin<Project> {
         } else {
             MetricsPluginExtension extension = extensions.getByType(MetricsPluginExtension.class);
             dispatcher = new ESClientMetricsDispatcher(extension);
-            configureRootProjectCollectors(project);
+            configureRootProjectCollectors(project, extension);
             project.afterEvaluate(new Action<Project>() {
                 @Override
                 public void execute(Project project) {
@@ -99,9 +98,9 @@ public final class MetricsPlugin implements Plugin<Project> {
         classLoader.allowPackage("ch.qos.logback");
     }
 
-    private void configureRootProjectCollectors(Project rootProject) {
+    private void configureRootProjectCollectors(Project rootProject, MetricsPluginExtension extension) {
         Gradle gradle = rootProject.getGradle();
-        LogbackCollector.configureLogbackCollection(dispatcherSupplier);
+        LogbackCollector.configureLogbackCollection(dispatcherSupplier, extension.getLogLevel());
         gradle.addListener(new GradleCollector(dispatcherSupplier));
     }
 

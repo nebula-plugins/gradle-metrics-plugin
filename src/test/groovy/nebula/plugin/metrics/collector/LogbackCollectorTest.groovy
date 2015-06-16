@@ -17,6 +17,7 @@
 
 package nebula.plugin.metrics.collector
 
+import ch.qos.logback.classic.Level
 import com.google.common.base.Supplier
 import nebula.plugin.metrics.dispatcher.MetricsDispatcher
 import nebula.test.ProjectSpec
@@ -34,7 +35,7 @@ class LogbackCollectorTest extends ProjectSpec {
             MetricsDispatcher get() {
                 return dispatcher
             }
-        })
+        }, Level.INFO)
     }
 
     def cleanup() {

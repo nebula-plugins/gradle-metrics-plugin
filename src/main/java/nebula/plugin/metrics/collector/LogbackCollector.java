@@ -62,7 +62,7 @@ public class LogbackCollector {
      * encoders/layouts/etc aren't an option and LogbackLoggingConfigurer.doConfigure() adds a TurboFilter which
      * prevents us getting at those events, so we re-wire the filters so ours comes first.
      */
-    public static void configureLogbackCollection(final Supplier<MetricsDispatcher> dispatcherSupplier) {
+    public static void configureLogbackCollection(final Supplier<MetricsDispatcher> dispatcherSupplier, final Level logLevel) {
         checkNotNull(dispatcherSupplier);
         TurboFilter metricsFilter = new TurboFilter() {
             @Override
@@ -72,7 +72,7 @@ public class LogbackCollector {
                 }
                 try {
                     IN_FILTER.set(true);
-                    if (level.isGreaterOrEqual(Level.INFO) || MARKER.equals(marker)) { // TODO make level configurable
+                    if (level.isGreaterOrEqual(logLevel) || MARKER.equals(marker)) { // TODO make level configurable
                         LoggingEvent event = new LoggingEvent(Logger.class.getCanonicalName(), logger, level, s, throwable, objects);
                         dispatcherSupplier.get().logbackEvent(event);
                     }

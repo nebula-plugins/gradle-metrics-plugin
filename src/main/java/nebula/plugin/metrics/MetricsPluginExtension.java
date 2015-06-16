@@ -17,6 +17,8 @@
 
 package nebula.plugin.metrics;
 
+import ch.qos.logback.classic.Level;
+
 import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
@@ -30,11 +32,13 @@ public class MetricsPluginExtension {
      */
     public static final String METRICS_EXTENSION_NAME = "metrics";
     public static final String DEFAULT_INDEX_NAME = "build-metrics";
+    private static final Level DEFAULT_LOG_LEVEL = Level.WARN;
 
     private String hostname = "localhost";
     private int port = 9300;
     private String clusterName = "elasticsearch";
     private String indexName = DEFAULT_INDEX_NAME;
+    private Level logLevel = DEFAULT_LOG_LEVEL;
 
     public String getHostname() {
         return hostname;
@@ -66,5 +70,13 @@ public class MetricsPluginExtension {
 
     public void setIndexName(String indexName) {
         this.indexName = checkNotNull(indexName);
+    }
+
+    public Level getLogLevel() {
+        return logLevel;
+    }
+
+    public void setLogLevel(String logLevel) {
+        this.logLevel = Level.toLevel(logLevel, DEFAULT_LOG_LEVEL);
     }
 }
