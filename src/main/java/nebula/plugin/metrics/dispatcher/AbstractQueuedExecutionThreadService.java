@@ -94,14 +94,19 @@ public abstract class AbstractQueuedExecutionThreadService<E> extends AbstractEx
 
     @Override
     protected final void shutDown() throws Exception {
-        beforeShutDown();
-        logger.debug("Shutting down queued execution service {}. Draining queue...", this);
-        List<E> remaining = Lists.newArrayListWithCapacity(queue.size());
-        queue.drainTo(remaining);
-        for (E e : remaining) {
-            execute(e);
+        try {
+            beforeShutDown(); // We want any problems with the before shutdown hook to prevent queue draining, so we handle that inside this try
+
+            logger.debug("Shutting down queued execution service {}. Draining queue...", this);
+            List<E> remaining = Lists.newArrayListWithCapacity(queue.size());
+            queue.drainTo(remaining);
+            for (E e : remaining) {
+                execute(e);
+            }
+            checkState(queue.isEmpty(), "The queue should have been drained before shutdown");
+        } catch (Exception e) {
+            logger.error("An error occurred during shutdown", e);
         }
-        checkState(queue.isEmpty(), "The queue should have been drained before shutdown");
         postShutDown();
     }
 
