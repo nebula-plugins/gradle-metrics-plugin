@@ -23,16 +23,11 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.node.TextNode
 import com.github.tlrx.elasticsearch.test.EsSetup
 import nebula.plugin.metrics.MetricsPluginExtension
-import nebula.plugin.metrics.model.Gradle
-import nebula.plugin.metrics.model.Info
-import nebula.plugin.metrics.model.Project
-import nebula.plugin.metrics.model.Result
 import org.elasticsearch.client.Client
 import org.elasticsearch.client.transport.TransportClient
 import org.elasticsearch.common.settings.ImmutableSettings
 import org.elasticsearch.common.settings.Settings
 import org.elasticsearch.common.transport.InetSocketTransportAddress
-import org.gradle.StartParameter
 import spock.lang.Timeout
 
 import static junit.framework.Assert.assertFalse

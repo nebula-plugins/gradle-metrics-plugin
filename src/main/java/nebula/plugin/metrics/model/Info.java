@@ -18,15 +18,12 @@
 package nebula.plugin.metrics.model;
 
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.collect.Lists;
 import lombok.NonNull;
 import lombok.Value;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 /**
  * Environment.
@@ -34,7 +31,7 @@ import java.util.Set;
 @Value
 @JsonPropertyOrder({"build", "scm", "ci", "environmentVariables", "systemProperties"})
 public class Info {
-    public static Info create(Gradle tool) {
+    public static Info create(GradleToolContainer tool) {
         return create(tool, new UnknownTool(), new UnknownTool());
     }
 
@@ -44,26 +41,9 @@ public class Info {
 
     public static Info create(Tool tool, Tool scm, Tool ci, Map<String, String> env, Map<String, String> systemProperties) {
         // TODO do we need to blacklist/redact certain properties?
-        List<KeyValue> envList = mapToKeyValueList(env);
-        List<KeyValue> systemPropertiesList = mapToKeyValueList(systemProperties);
+        List<KeyValue> envList = KeyValue.mapToKeyValueList(env);
+        List<KeyValue> systemPropertiesList = KeyValue.mapToKeyValueList(systemProperties);
         return new Info(tool, scm, ci, envList, systemPropertiesList);
-    }
-
-    @VisibleForTesting
-    static List<KeyValue> mapToKeyValueList(Map<String, String> map) {
-        Set<Map.Entry<String, String>> entries = map.entrySet();
-        List<KeyValue> keyValues = Lists.newArrayListWithCapacity(entries.size());
-        for (Map.Entry<String, String> entry : entries) {
-            keyValues.add(entryToKeyValue(entry));
-        }
-        return keyValues;
-    }
-
-    @VisibleForTesting
-    static KeyValue entryToKeyValue(Map.Entry<String, String> entry) {
-        String key = String.valueOf(entry.getKey());
-        String value = String.valueOf(entry.getValue());
-        return new KeyValue(key, value);
     }
 
     @NonNull

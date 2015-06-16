@@ -17,8 +17,13 @@
 
 package nebula.plugin.metrics.model;
 
+import com.google.common.collect.Lists;
 import lombok.NonNull;
 import lombok.Value;
+
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * Key/value.
@@ -30,4 +35,19 @@ public class KeyValue {
 
     @NonNull
     private String value;
+
+    static List<KeyValue> mapToKeyValueList(Map<String, String> map) {
+        Set<Map.Entry<String, String>> entries = map.entrySet();
+        List<KeyValue> keyValues = Lists.newArrayListWithCapacity(entries.size());
+        for (Map.Entry<String, String> entry : entries) {
+            keyValues.add(entryToKeyValue(entry));
+        }
+        return keyValues;
+    }
+
+    static KeyValue entryToKeyValue(Map.Entry<String, String> entry) {
+        String key = String.valueOf(entry.getKey());
+        String value = String.valueOf(entry.getValue());
+        return new KeyValue(key, value);
+    }
 }
