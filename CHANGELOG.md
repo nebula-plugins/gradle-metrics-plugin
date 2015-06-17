@@ -1,3 +1,7 @@
+# 2.2.6
+
+- Set 'standard' analyzer explicitly for the index to avoid issues with immense terms on instances that configure 'keyword' analyzers by default
+
 # 2.2.5
 
 - Improve dispatcher service startup and shutdown behaviour; particularly avoid leading ES threads due to a failed shutdown
