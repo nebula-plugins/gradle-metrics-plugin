@@ -35,8 +35,6 @@ configurations {
 
 dependencies {
     plugin libraries.guava
-    plugin 'org.projectlombok:lombok:1.16.4'
-    plugin 'com.google.code.findbugs:jsr305:3.0.0'
     plugin 'joda-time:joda-time:2.8.1'
 
     plugin "com.fasterxml.jackson.core:jackson-core:$versions.jackson"
@@ -49,11 +47,14 @@ dependencies {
     }
 
     plugin ("io.searchbox:jest:0.1.6") {
-        exclude group: 'commons-logging'
+        exclude group: 'commons-logging', module: 'commons-logging'
     }
     plugin "org.elasticsearch:elasticsearch:$versions.es", optional
 
     plugin 'com.netflix.nebula:gradle-info-plugin:1.9.+', optional
+
+    provided 'org.projectlombok:lombok:1.16.4'
+    provided 'com.google.code.findbugs:jsr305:3.0.0'
 
     testCompile "com.netflix.nebula:nebula-test:$gradle.gradleVersion.+"
     testCompile "com.google.guava:guava-testlib:$versions.guava"

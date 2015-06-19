@@ -28,6 +28,7 @@ buildscript {
 description 'Gradle metrics plugin'
 apply plugin: 'nebula-plugin'
 
+apply plugin: 'provided-base'
 apply plugin: 'optional-base'
 apply plugin: 'idea'
 apply plugin: 'com.github.ben-manes.versions'
