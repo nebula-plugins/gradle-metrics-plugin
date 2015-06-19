@@ -170,9 +170,8 @@ public final class GradleCollector implements ProfileListener, BuildListener {
     private void shutdownIfComplete() {
         MetricsDispatcher dispatcher = this.dispatcherSupplier.get();
         if (!complete.compareAndSet(false, true)) {
-            // This always appears to be called after the build result listener, so we shutdown here
-            logger.info("Shutting down dispatcher");
             if (dispatcher.isRunning()) {
+                logger.info("Shutting down dispatcher");
                 try {
                     dispatcher.stopAsync().awaitTerminated(TIMEOUT_MS, TimeUnit.MILLISECONDS);
                 } catch (TimeoutException e) {
