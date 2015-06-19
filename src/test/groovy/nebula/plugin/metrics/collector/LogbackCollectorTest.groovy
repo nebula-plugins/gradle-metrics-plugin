@@ -17,8 +17,8 @@
 
 package nebula.plugin.metrics.collector
 
-import ch.qos.logback.classic.Level
 import com.google.common.base.Supplier
+import nebula.plugin.metrics.MetricsPluginExtension
 import nebula.plugin.metrics.dispatcher.MetricsDispatcher
 import nebula.test.ProjectSpec
 import org.slf4j.MarkerFactory
@@ -30,12 +30,14 @@ class LogbackCollectorTest extends ProjectSpec {
     def dispatcher = Mock(MetricsDispatcher)
 
     def setup() {
+        def extension = new MetricsPluginExtension()
+        extension.setLogLevel('info')
         LogbackCollector.configureLogbackCollection(new Supplier<MetricsDispatcher>() {
             @Override
             MetricsDispatcher get() {
                 return dispatcher
             }
-        }, Level.INFO)
+        }, extension)
     }
 
     def cleanup() {

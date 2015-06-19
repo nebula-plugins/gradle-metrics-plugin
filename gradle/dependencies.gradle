@@ -20,54 +20,47 @@ ext {
     libraries = [:]
 }
 
-// The plugin-plugin adds gradleApi and localGroovy first, which leads to problems with classpaths and the shadow plugin.
-
-// Attempt to get out of Gradle dependency hell (at least somewhat reflect the runtime classloading scheme ) by
-// reordering the runtime classpath so gradleApi() comes after other runtime classpath dependencies, and using a configuration
-// that doesn't include the Gradle runtime stuff
-
-configurations {
-    gradleApi // Ideally, this would be provided, conflict resolved configuration, but all of Gradle's libraries are not published
-    provided
-    plugin
-    compile.extendsFrom plugin
-}
-
-dependencies {
-    gradleApi gradleApi()
-    gradleApi localGroovy()
-}
-
-sourceSets {
-    main {
-        compileClasspath += configurations.provided
-    }
-}
-
-sourceSets.each {
-    it.compileClasspath = it.compileClasspath - configurations.gradleApi + configurations.gradleApi
-    it.runtimeClasspath = it.runtimeClasspath - configurations.gradleApi + configurations.gradleApi
-}
-
-javadoc {
-    classpath += configurations.provided
-}
-
-idea {
-    module {
-        scopes.PROVIDED.plus += [configurations.provided]
-    }
-}
-
-versions.es = '1.4.4'
+versions.es = '1.6.0'
 versions.guava = '18.0'
-versions.jackson = '2.5.1'
-versions.slf4j = '1.7.7'
+versions.jackson = '2.5.4'
+versions.slf4j = '1.7.12'
 
 libraries.guava = "com.google.guava:guava:$versions.guava"
 libraries.hamcrest = "org.hamcrest:hamcrest-all:1.3"
 
-configurations.all {
+configurations {
+    plugin.description = 'The compile dependencies for the plugin, excluding the local dependencies to avoid problems with Shadow'
+    compile.extendsFrom plugin
+}
+
+dependencies {
+    plugin libraries.guava
+    plugin 'org.projectlombok:lombok:1.16.4'
+    plugin 'com.google.code.findbugs:jsr305:3.0.0'
+    plugin 'joda-time:joda-time:2.8.1'
+
+    plugin "com.fasterxml.jackson.core:jackson-core:$versions.jackson"
+    plugin "com.fasterxml.jackson.core:jackson-databind:$versions.jackson"
+    plugin "com.fasterxml.jackson.core:jackson-annotations:$versions.jackson"
+    plugin "com.fasterxml.jackson.datatype:jackson-datatype-joda:$versions.jackson"
+
+    plugin('net.logstash.logback:logstash-logback-encoder:4.3') {
+        exclude group: 'ch.qos.logback', module: 'logback-core' // Already on Gradle classpath
+    }
+
+    plugin ("io.searchbox:jest:0.1.6") {
+        exclude group: 'commons-logging'
+    }
+    plugin "org.elasticsearch:elasticsearch:$versions.es", optional
+
+    plugin 'com.netflix.nebula:gradle-info-plugin:1.9.+', optional
+
+    testCompile "com.netflix.nebula:nebula-test:$gradle.gradleVersion.+"
+    testCompile "com.google.guava:guava-testlib:$versions.guava"
+    testCompile 'com.github.tlrx:elasticsearch-test:1.2.1'
+}
+
+configurations.all ({
     resolutionStrategy {
         eachDependency { details ->
             switch (details.requested.name) {
@@ -78,15 +71,6 @@ configurations.all {
                 case 'junit-dep':
                     details.useTarget 'junit:junit:4.11'
                     break
-                case 'slf4j-api':
-                    details.useVersion versions.slf4j
-                    break
-                case 'log4j':
-                    details.useTarget "org.slf4j:log4j-over-slf4j:$versions.slf4j"
-                    break
-                case 'commons-logging':
-                    details.useTarget "org.slf4j:jcl-over-slf4j:$versions.slf4j"
-                    break
                 case 'hamcrest-core':
                     // ElasticSearchIntegrationTest requires hamcrest-all, but it doesn't come in transitively
                     details.useTarget libraries.hamcrest
@@ -94,27 +78,7 @@ configurations.all {
             }
         }
     }
-}
-
-dependencies {
-    plugin libraries.guava
-    plugin 'org.projectlombok:lombok:1.16.2'
-    plugin 'com.google.code.findbugs:jsr305:3.0.0'
-
-    plugin "org.elasticsearch:elasticsearch:$versions.es"
-    plugin 'joda-time:joda-time:2.7'
-    plugin('net.logstash.logback:logstash-logback-encoder:4.2') {
-        exclude group: 'ch.qos.logback', module: 'logback-core' // Already on Gradle classpath
-    }
-    plugin "com.fasterxml.jackson.core:jackson-databind:$versions.jackson"
-    plugin "com.fasterxml.jackson.datatype:jackson-datatype-joda:$versions.jackson"
-
-    provided 'com.netflix.nebula:gradle-info-plugin:1.9.+'
-
-    testCompile "com.netflix.nebula:nebula-test:$gradle.gradleVersion.+"
-    testCompile "com.google.guava:guava-testlib:$versions.guava"
-    testCompile 'com.github.tlrx:elasticsearch-test:1.2.1'
-}
+})
 
 // Drop the classifier and delete jar task actions to replace the regular jar artifact with the shadow artifact
 shadowJar {
@@ -123,8 +87,26 @@ shadowJar {
     dependencies {
         include(dependency(libraries.guava)) // Relocate Guava because it's a real bear if we get downgraded or upgraded downstream
     }
-    relocate 'com.google', 'nebula.plugin.metrics.com.google'
+    relocate 'com.google.common', 'nebula.plugin.metrics.com.google.common'
+    relocate 'com.google.thirdparty', 'nebula.plugin.metrics.com.google.thirdparty'
 }
 
 jar.deleteAllActions()
 jar.dependsOn shadowJar
+
+// Attempt to get out of Gradle dependency hell (at least somewhat reflect the runtime classloading scheme) by filtering out certain dependencies
+// because it turns out that runtime classpath order isn't predictable
+
+configurations {
+    gradleApi
+}
+
+dependencies {
+    gradleApi gradleApi()
+    gradleApi localGroovy()
+}
+
+sourceSets.each {
+    it.compileClasspath = it.compileClasspath - configurations.gradleApi + configurations.gradleApi
+    it.runtimeClasspath = it.runtimeClasspath - configurations.gradleApi + configurations.gradleApi
+}

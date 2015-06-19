@@ -39,6 +39,7 @@ public class MetricsPluginExtension {
     private String clusterName = "elasticsearch";
     private String indexName = DEFAULT_INDEX_NAME;
     private Level logLevel = DEFAULT_LOG_LEVEL;
+    private DispatcherType dispatcherType = DispatcherType.ES_HTTP;
 
     public String getHostname() {
         return hostname;
@@ -78,5 +79,18 @@ public class MetricsPluginExtension {
 
     public void setLogLevel(String logLevel) {
         this.logLevel = Level.toLevel(checkNotNull(logLevel), DEFAULT_LOG_LEVEL);
+    }
+
+    public DispatcherType getDispatcherType() {
+        return dispatcherType;
+    }
+
+    public void setDispatcherType(String dispatcherType) {
+        this.dispatcherType = DispatcherType.valueOf(dispatcherType.toUpperCase());
+    }
+
+    public enum DispatcherType {
+        ES_CLIENT,
+        ES_HTTP
     }
 }

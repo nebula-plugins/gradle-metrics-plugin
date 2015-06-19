@@ -31,18 +31,18 @@ import org.elasticsearch.common.transport.InetSocketTransportAddress
 import spock.lang.Issue
 import spock.lang.Timeout
 
+import static ClientESMetricsDispatcher.BUILD_TYPE
+import static ClientESMetricsDispatcher.NESTED_MAPPINGS
 import static junit.framework.Assert.assertFalse
 import static nebula.plugin.metrics.MetricsPluginExtension.DEFAULT_INDEX_NAME
-import static nebula.plugin.metrics.dispatcher.ESClientMetricsDispatcher.BUILD_TYPE
-import static nebula.plugin.metrics.dispatcher.ESClientMetricsDispatcher.NESTED_MAPPINGS
 
 /**
- * Integration tests for {@link ESClientMetricsDispatcher}.
+ * Integration tests for {@link ClientESMetricsDispatcher}.
  */
-class ESClientMetricsDispatcherIntegTest extends LogbackAssertSpecification {
+class ClientESMetricsDispatcherIntegTest extends LogbackAssertSpecification {
     EsSetup esSetup
     Client client
-    ESClientMetricsDispatcher dispatcher
+    ClientESMetricsDispatcher dispatcher
 
     def setup() {
         esSetup = new EsSetup()
@@ -59,7 +59,7 @@ class ESClientMetricsDispatcherIntegTest extends LogbackAssertSpecification {
     }
 
     def createDispatcher(extension, client) {
-        def dispatcher = new ESClientMetricsDispatcher(extension, client, false)
+        def dispatcher = new ClientESMetricsDispatcher(extension, client, false)
         dispatcher
     }
 
@@ -132,7 +132,7 @@ class ESClientMetricsDispatcherIntegTest extends LogbackAssertSpecification {
     }
 
     @Timeout(value = 10)
-    def 'transport client times out when node is unresponsible on configured port'() {
+    def 'transport client times out when node is unresponsive on configured port'() {
         setup:
         super.cleanup() // Detach the logging asserter for this test
         def extension = new MetricsPluginExtension()

@@ -17,14 +17,15 @@
 
 package nebula.plugin.metrics.collector;
 
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Supplier;
 import nebula.plugin.metrics.MetricsLoggerFactory;
 import nebula.plugin.metrics.dispatcher.MetricsDispatcher;
 import nebula.plugin.metrics.model.GradleToolContainer;
 import nebula.plugin.metrics.model.Info;
 import nebula.plugin.metrics.model.Result;
 import nebula.plugin.metrics.model.Task;
+
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Supplier;
 import org.gradle.BuildListener;
 import org.gradle.BuildResult;
 import org.gradle.StartParameter;

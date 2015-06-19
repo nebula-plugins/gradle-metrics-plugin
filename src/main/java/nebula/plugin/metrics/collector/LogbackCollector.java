@@ -17,6 +17,7 @@
 
 package nebula.plugin.metrics.collector;
 
+import nebula.plugin.metrics.MetricsPluginExtension;
 import nebula.plugin.metrics.dispatcher.MetricsDispatcher;
 
 import ch.qos.logback.classic.Level;
@@ -27,9 +28,13 @@ import ch.qos.logback.classic.spi.TurboFilterList;
 import ch.qos.logback.classic.turbo.TurboFilter;
 import ch.qos.logback.core.spi.FilterReply;
 import com.google.common.base.Supplier;
+import com.google.common.util.concurrent.Service;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Marker;
 import org.slf4j.MarkerFactory;
+
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -62,9 +67,10 @@ public class LogbackCollector {
      * encoders/layouts/etc aren't an option and LogbackLoggingConfigurer.doConfigure() adds a TurboFilter which
      * prevents us getting at those events, so we re-wire the filters so ours comes first.
      */
-    public static void configureLogbackCollection(final Supplier<MetricsDispatcher> dispatcherSupplier, final Level logLevel) {
+    public static void configureLogbackCollection(final Supplier<MetricsDispatcher> dispatcherSupplier, final MetricsPluginExtension extension) {
         checkNotNull(dispatcherSupplier);
-        checkNotNull(logLevel);
+        checkNotNull(extension);
+        final BlockingQueue<LoggingEvent> logbackEvents = new LinkedBlockingQueue<>();
         TurboFilter metricsFilter = new TurboFilter() {
             @Override
             public FilterReply decide(Marker marker, Logger logger, Level level, String s, Object[] objects, Throwable throwable) {
@@ -73,9 +79,19 @@ public class LogbackCollector {
                 }
                 try {
                     IN_FILTER.set(true);
-                    if (level.isGreaterOrEqual(logLevel) || MARKER.equals(marker)) { // TODO make level configurable
+                    if (level.isGreaterOrEqual(extension.getLogLevel()) || MARKER.equals(marker)) {
                         LoggingEvent event = new LoggingEvent(Logger.class.getCanonicalName(), logger, level, s, throwable, objects);
-                        dispatcherSupplier.get().logbackEvent(event);
+                        MetricsDispatcher dispatcher = dispatcherSupplier.get();
+                        if (dispatcher.state() == Service.State.NEW || dispatcher.state() == Service.State.STARTING) {
+                            logbackEvents.add(event);
+                        } else {
+                            if (!logbackEvents.isEmpty()) {
+                                for (LoggingEvent loggingEvent : logbackEvents) {
+                                    dispatcher.logbackEvent(loggingEvent);
+                                }
+                            }
+                            dispatcher.logbackEvent(event);
+                        }
                     }
                     return FilterReply.NEUTRAL;
                 } finally {

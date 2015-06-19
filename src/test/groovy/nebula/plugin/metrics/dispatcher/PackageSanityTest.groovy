@@ -15,12 +15,23 @@
  *
  */
 
-package nebula.plugin.metrics.dispatcher;
+package nebula.plugin.metrics.dispatcher
 
-import com.google.common.testing.AbstractPackageSanityTests;
+import com.google.common.base.Predicate;
+import com.google.common.testing.AbstractPackageSanityTests
+
+import javax.annotation.Nullable;
 
 /**
  * Sanity checks for {@link nebula.plugin.metrics.collector}.
  */
 public class PackageSanityTest extends AbstractPackageSanityTests {
+    PackageSanityTest() {
+        ignoreClasses(new Predicate<Class<?>>() {
+            @Override
+            boolean apply(@Nullable Class<?> input) {
+                return input == UninitializedMetricsDispatcher // Methods that take arguments throw UnsupportedOperationException
+            }
+        })
+    }
 }

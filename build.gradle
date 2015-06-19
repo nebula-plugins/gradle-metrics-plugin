@@ -19,14 +19,16 @@ buildscript {
     repositories { jcenter() }
     dependencies {
         classpath "com.netflix.nebula:nebula-plugin-plugin:${gradle.gradleVersion}.+"
-        classpath 'com.github.ben-manes:gradle-versions-plugin:0.8'
+        classpath 'com.github.ben-manes:gradle-versions-plugin:0.10.1'
         classpath 'com.github.jengelman.gradle.plugins:shadow:1.2.1'
+        classpath 'com.netflix.nebula:gradle-extra-configurations-plugin:2.2.+'
     }
 }
 
 description 'Gradle metrics plugin'
 apply plugin: 'nebula-plugin'
 
+apply plugin: 'optional-base'
 apply plugin: 'idea'
 apply plugin: 'com.github.ben-manes.versions'
 apply plugin: 'com.github.johnrengelman.shadow'

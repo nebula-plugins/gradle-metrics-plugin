@@ -17,13 +17,16 @@
 
 package nebula.plugin.metrics;
 
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Supplier;
 import nebula.plugin.metrics.collector.GradleCollector;
 import nebula.plugin.metrics.collector.GradleTestSuiteCollector;
 import nebula.plugin.metrics.collector.LogbackCollector;
-import nebula.plugin.metrics.dispatcher.ESClientMetricsDispatcher;
+import nebula.plugin.metrics.dispatcher.ClientESMetricsDispatcher;
+import nebula.plugin.metrics.dispatcher.HttpESMetricsDispatcher;
 import nebula.plugin.metrics.dispatcher.MetricsDispatcher;
+import nebula.plugin.metrics.dispatcher.UninitializedMetricsDispatcher;
+
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Supplier;
 import org.gradle.StartParameter;
 import org.gradle.api.Action;
 import org.gradle.api.Plugin;
@@ -51,14 +54,14 @@ import static com.google.common.base.Preconditions.checkState;
  */
 public final class MetricsPlugin implements Plugin<Project> {
     private final Logger logger = MetricsLoggerFactory.getLogger(MetricsPlugin.class);
-    private MetricsDispatcher dispatcher;
+    private MetricsDispatcher dispatcher = new UninitializedMetricsDispatcher();
     /**
      * Supplier allowing the dispatcher to be fetched lazily, so we can replace the instance for testing.
      */
     private Supplier<MetricsDispatcher> dispatcherSupplier = new Supplier<MetricsDispatcher>() {
         @Override
         public MetricsDispatcher get() {
-            return checkNotNull(dispatcher, "Dispatcher has not yet been initialised");
+            return dispatcher;
         }
     };
 
@@ -74,12 +77,23 @@ public final class MetricsPlugin implements Plugin<Project> {
         if (startParameter.isOffline()) {
             logger.warn("Build is running offline. Metrics will not be collected");
         } else {
-            MetricsPluginExtension extension = extensions.getByType(MetricsPluginExtension.class);
-            dispatcher = new ESClientMetricsDispatcher(extension);
+            final MetricsPluginExtension extension = extensions.getByType(MetricsPluginExtension.class);
             configureRootProjectCollectors(project, extension);
             project.afterEvaluate(new Action<Project>() {
                 @Override
                 public void execute(Project project) {
+                    if (dispatcher instanceof UninitializedMetricsDispatcher) {
+                        switch (extension.getDispatcherType()) {
+                            case ES_CLIENT: {
+                                dispatcher = new ClientESMetricsDispatcher(extension);
+                                break;
+                            }
+                            case ES_HTTP: {
+                                dispatcher = new HttpESMetricsDispatcher(extension);
+                                break;
+                            }
+                        }
+                    }
                     configureProjectCollectors(project.getAllprojects());
                 }
             });
@@ -100,7 +114,7 @@ public final class MetricsPlugin implements Plugin<Project> {
 
     private void configureRootProjectCollectors(Project rootProject, MetricsPluginExtension extension) {
         Gradle gradle = rootProject.getGradle();
-        LogbackCollector.configureLogbackCollection(dispatcherSupplier, extension.getLogLevel());
+        LogbackCollector.configureLogbackCollection(dispatcherSupplier, extension);
         gradle.addListener(new GradleCollector(dispatcherSupplier));
     }
 

@@ -31,17 +31,16 @@ import org.elasticsearch.common.joda.time.format.DateTimeFormatter
 import org.elasticsearch.common.xcontent.XContentBuilder
 import org.joda.time.DateTime
 
-import static nebula.plugin.metrics.dispatcher.ESClientMetricsDispatcher.BUILD_METRICS_INDEX
-import static nebula.plugin.metrics.dispatcher.ESClientMetricsDispatcher.BUILD_TYPE
+import static ClientESMetricsDispatcher.BUILD_TYPE
 
 /**
- * Tests for {@link ESClientMetricsDispatcher}.
+ * Tests for {@link ClientESMetricsDispatcher}.
  */
-class ESClientMetricsDispatcherTest extends LogbackAssertSpecification {
+class ClientESMetricsDispatcherTest extends LogbackAssertSpecification {
     def extension = new MetricsPluginExtension()
     def project = new Project("project", "1.0")
 
-    ESClientMetricsDispatcher dispatcher
+    ClientESMetricsDispatcher dispatcher
 
     def 'build start response sets buildId'() {
         def builder = mockIndexRequestBuilder()
@@ -80,7 +79,7 @@ class ESClientMetricsDispatcherTest extends LogbackAssertSpecification {
 
     def 'mapper formats dates using the same format as content builder'() {
         DateTimeFormatter datePrinter = XContentBuilder.defaultDatePrinter
-        def mapper = ESClientMetricsDispatcher.getObjectMapper()
+        def mapper = ClientESMetricsDispatcher.getObjectMapper()
 
         expect:
         def dateTime = new DateTime()
@@ -89,14 +88,14 @@ class ESClientMetricsDispatcherTest extends LogbackAssertSpecification {
         printedDate == mappedDate.replace('"', '')
     }
 
-    def ESClientMetricsDispatcher createStartedDispatcher() {
+    def ClientESMetricsDispatcher createStartedDispatcher() {
         def builder = mockIndexRequestBuilder()
         createStartedDispatcher(builder)
     }
 
-    def ESClientMetricsDispatcher createStartedDispatcher(IndexRequestBuilder builder) {
+    def ClientESMetricsDispatcher createStartedDispatcher(IndexRequestBuilder builder) {
         def client = mockClient(builder)
-        def dispatcher = new ESClientMetricsDispatcher(extension, client, false)
+        def dispatcher = new ClientESMetricsDispatcher(extension, client, false)
         dispatcher.startAsync().awaitRunning()
         dispatcher
     }

@@ -32,42 +32,23 @@ import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.databind.ser.std.StdSerializer;
 import com.fasterxml.jackson.datatype.joda.JodaModule;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Optional;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
-import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import net.logstash.logback.layout.LogstashLayout;
-import org.elasticsearch.action.admin.indices.create.CreateIndexRequestBuilder;
-import org.elasticsearch.action.admin.indices.exists.indices.IndicesExistsRequestBuilder;
-import org.elasticsearch.action.admin.indices.exists.indices.IndicesExistsResponse;
-import org.elasticsearch.action.bulk.BulkRequestBuilder;
-import org.elasticsearch.action.index.IndexRequestBuilder;
-import org.elasticsearch.action.index.IndexResponse;
-import org.elasticsearch.client.Client;
-import org.elasticsearch.client.transport.TransportClient;
-import org.elasticsearch.common.settings.ImmutableSettings;
-import org.elasticsearch.common.settings.Settings;
-import org.elasticsearch.common.transport.InetSocketTransportAddress;
 import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.slf4j.Logger;
 
-import javax.annotation.Nullable;
 import java.io.IOException;
 import java.util.*;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.LinkedBlockingQueue;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Preconditions.checkState;
 import static org.elasticsearch.common.xcontent.XContentFactory.jsonBuilder;
 
-/**
- * Elasticsearch client {@link nebula.plugin.metrics.dispatcher.MetricsDispatcher}.
- *
- * @author Danny Thomas
- */
-public final class ESClientMetricsDispatcher extends AbstractQueuedExecutionThreadService<Runnable> implements MetricsDispatcher {
+public abstract class AbstractESMetricsDispatcher extends AbstractQueuedExecutionThreadService<Runnable> implements MetricsDispatcher {
     protected static final String BUILD_TYPE = "build";
     protected static final String LOG_TYPE = "log";
     protected static final Map<String, List<String>> NESTED_MAPPINGS;
@@ -81,37 +62,34 @@ public final class ESClientMetricsDispatcher extends AbstractQueuedExecutionThre
     }
 
     protected final Logger logger = MetricsLoggerFactory.getLogger(this.getClass());
-    private final MetricsPluginExtension extension;
+    protected final MetricsPluginExtension extension;
+
     private final ObjectMapper mapper;
     private final boolean async;
     private final Build build;
     private final Supplier<LogstashLayout> logstashLayoutSupplier = Suppliers.memoize(new Supplier<LogstashLayout>() {
         @Override
         public LogstashLayout get() {
+            checkState(buildId.isPresent(), "buildId has not been set");
             LogstashLayout layout = new LogstashLayout();
             layout.setTimeZone("UTC");
-            layout.setCustomFields(String.format("{\"@source\":\"%s\"}", buildId));
+            layout.setCustomFields(String.format("{\"@source\":\"%s\"}", buildId.get()));
             layout.start();
             return layout;
         }
     });
-    private final BlockingQueue<LoggingEvent> logbackEvents;
-    private Client client;
-    private String buildId;
+    private Optional<String> buildId = Optional.absent();
 
-    public ESClientMetricsDispatcher(MetricsPluginExtension extension) {
-        this(extension, null, true);
+    protected AbstractESMetricsDispatcher(MetricsPluginExtension extension) {
+        this(extension, true);
     }
 
-    @VisibleForTesting
-    ESClientMetricsDispatcher(MetricsPluginExtension extension, @Nullable Client client, boolean async) {
+    protected AbstractESMetricsDispatcher(MetricsPluginExtension extension, boolean async) {
         super(true);
         this.extension = checkNotNull(extension);
         this.mapper = getObjectMapper();
         this.async = async;
         this.build = new Build();
-        logbackEvents = new LinkedBlockingQueue<>();
-        this.client = client;
     }
 
     @VisibleForTesting
@@ -155,115 +133,56 @@ public final class ESClientMetricsDispatcher extends AbstractQueuedExecutionThre
     }
 
     @Override
-    protected boolean isAsync() {
+    protected final boolean isAsync() {
         return async;
     }
 
     @Override
-    protected void startUp() throws Exception {
-        if (client == null) {
-            client = createTransportClient(extension);
-        }
-        createIndexesIfNeeded();
-    }
-
-    private Client createTransportClient(MetricsPluginExtension extension) {
-        ImmutableSettings.Builder builder = ImmutableSettings.settingsBuilder();
-        builder.classLoader(Settings.class.getClassLoader());
-        builder.put("cluster.name", extension.getClusterName());
-        InetSocketTransportAddress address = new InetSocketTransportAddress(extension.getHostname(), extension.getPort());
-        return new TransportClient(builder.build()).addTransportAddress(address);
-    }
-
-    @Override
-    protected void execute(Runnable runnable) throws Exception {
+    protected final void execute(Runnable runnable) throws Exception {
         runnable.run();
     }
 
     @Override
-    protected void beforeShutDown() {
-        Runnable runnable = new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    String json = mapper.writeValueAsString(build);
-                    IndexRequestBuilder index = client.prepareIndex(extension.getIndexName(), BUILD_TYPE).setSource(json).setId(buildId);
-                    index.execute().actionGet();
-                } catch (JsonProcessingException e) {
-                    Throwables.propagate(e);
-                }
-            }
-        };
-        queue(runnable);
-        flushLogbackEvents(); // One last flush to to make sure we got everything
-        if (!logbackEvents.isEmpty()) {
-            logger.error("Not all logback events were successfully flushed. {} events lost", logbackEvents.size());
-        }
+    protected final void startUp() throws Exception {
+        // This won't be accurate, but we at least want a value here if we have a failure that causes the duration not to be fired
+        build.setStartTime(System.currentTimeMillis());
+        startUpClient();
+        createIndexesIfNeeded();
+        indexBuild();
     }
 
+    protected abstract void startUpClient();
+
     @Override
-    protected void postShutDown() throws Exception {
-        client.close();
+    protected final void postShutDown() throws Exception {
+        shutDownClient();
         logstashLayoutSupplier.get().stop();
     }
 
-    private void appendAndFlushLogbackEvents(LoggingEvent event) {
-        checkNotNull(event);
-        // We need the buildId for the logging event source, so we need to defer logging events until the buildId is set
-        if (buildId == null) {
-            logger.debug("Skipping logback event flush, as buildId has not been set");
-            return;
-        }
-        // Be paranoid and flush any logging events if the dispatcher service has failed
-        if (hasFailed()) {
-            logbackEvents.clear();
-            return;
-        }
+    protected abstract void shutDownClient();
 
-        logbackEvents.add(event);
-        flushLogbackEvents();
-    }
-
-    private void flushLogbackEvents() {
-        final List<LoggingEvent> events = Lists.newArrayListWithExpectedSize(logbackEvents.size());
-        logbackEvents.drainTo(events);
-        if (!events.isEmpty()) {
-            Runnable runnable = new Runnable() {
-                @Override
-                public void run() {
-                    BulkRequestBuilder bulk = client.prepareBulk();
-                    for (LoggingEvent event : events) {
-                        IndexRequestBuilder index = client.prepareIndex(extension.getIndexName(), LOG_TYPE);
-                        index.setSource(logstashLayoutSupplier.get().doLayout(event));
-                        bulk.add(index);
-                    }
-                    bulk.execute().actionGet();
-                }
-            };
-            queue(runnable);
-        }
+    @Override
+    protected void beforeShutDown() {
+        indexBuild();
     }
 
     @VisibleForTesting
-    String getBuildId() {
-        return buildId;
+    final String getBuildId() {
+        return buildId.get();
     }
 
-    @Override
-    public void started(Project project) {
-        build.setProject(project);
-        // This won't be accurate, but we at least want a value here if we have a failure that causes the duration not to be fired
-        build.setStartTime(System.currentTimeMillis());
+    private void indexBuild() {
         Runnable runnable = new Runnable() {
             @Override
             public void run() {
                 try {
                     String json = mapper.writeValueAsString(build);
-                    IndexRequestBuilder index = client.prepareIndex(extension.getIndexName(), BUILD_TYPE).setSource(json);
-                    IndexResponse indexResponse = index.execute().actionGet();
-                    assert indexResponse.isCreated() : "Response should always be created";
-                    buildId = indexResponse.getId();
-                    logger.warn("Build id is {}", buildId);
+                    if (buildId.isPresent()) {
+                        index(extension.getIndexName(), BUILD_TYPE, json, buildId);
+                    } else {
+                        buildId = Optional.of(index(extension.getIndexName(), BUILD_TYPE, json));
+                        logger.warn("Build id is {}", buildId.get());
+                    }
                 } catch (JsonProcessingException e) {
                     logger.error("Unable to write JSON string value: " + e.getMessage(), e);
                 }
@@ -272,10 +191,14 @@ public final class ESClientMetricsDispatcher extends AbstractQueuedExecutionThre
         queue(runnable);
     }
 
+    @Override
+    public final void started(Project project) {
+        build.setProject(project);
+        indexBuild();
+    }
+
     private void createIndexesIfNeeded() {
-        final IndicesExistsRequestBuilder indicesExists = client.admin().indices().prepareExists(extension.getIndexName());
-        IndicesExistsResponse indicesExistsResponse = indicesExists.execute().actionGet();
-        if (!indicesExistsResponse.isExists()) {
+        if (!exists(extension.getIndexName())) {
             createBuildIndex(NESTED_MAPPINGS);
         }
     }
@@ -313,46 +236,66 @@ public final class ESClientMetricsDispatcher extends AbstractQueuedExecutionThre
                 }
             }
             jsonBuilder.endObject().endObject().endObject().endObject();
-            CreateIndexRequestBuilder indexCreate = client.admin().indices().prepareCreate(extension.getIndexName()).setSource(jsonBuilder);
-            indexCreate.execute().actionGet();
+            createIndex(extension.getIndexName(), jsonBuilder.string());
         } catch (IOException e) {
             throw com.google.common.base.Throwables.propagate(e);
         }
     }
 
+    protected abstract void createIndex(String indexName, String source);
+
+    protected final String index(String indexName, String type, String source) {
+        return index(indexName, type, source, Optional.<String>absent());
+    }
+
+    protected abstract String index(String indexName, String type, String source, Optional<String> id);
+
+    protected abstract void bulkIndex(String indexName, String type, Collection<String> sources);
+
+    protected abstract boolean exists(String indexName);
+
     @Override
-    public void duration(long startTime, long elapsedTime) {
+    public final void duration(long startTime, long elapsedTime) {
         build.setStartTime(startTime);
         build.setElapsedTime(elapsedTime);
     }
 
     @Override
-    public void environment(Info info) {
+    public final void environment(Info info) {
         build.setInfo(info);
     }
 
     @Override
-    public void result(Result result) {
+    public final void result(Result result) {
         build.setResult(result);
     }
 
     @Override
-    public void event(String description, String type, long elapsedTime) {
+    public final void event(String description, String type, long elapsedTime) {
         build.addEvent(new Event(description, type, elapsedTime));
     }
 
     @Override
-    public void task(Task task) {
+    public final void task(Task task) {
         build.addTask(task);
     }
 
     @Override
-    public void logbackEvent(LoggingEvent event) {
-        appendAndFlushLogbackEvents(event);
+    public final void logbackEvent(final LoggingEvent event) {
+        checkNotNull(event);
+        Runnable runnable = new Runnable() {
+            @Override
+            public void run() {
+                LogstashLayout logstashLayout = logstashLayoutSupplier.get();
+                String json = logstashLayout.doLayout(event);
+                index(extension.getIndexName(), LOG_TYPE, json);
+            }
+        };
+        queue(runnable);
     }
 
     @Override
-    public void test(Test test) {
+    public final void test(Test test) {
         build.addTest(test);
     }
 }
