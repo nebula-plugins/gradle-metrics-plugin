@@ -35,10 +35,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Maps;
 import net.logstash.logback.layout.LogstashLayout;
-import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.slf4j.Logger;
 
 import java.io.IOException;
@@ -46,20 +43,10 @@ import java.util.*;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
-import static org.elasticsearch.common.xcontent.XContentFactory.jsonBuilder;
 
 public abstract class AbstractESMetricsDispatcher extends AbstractQueuedExecutionThreadService<Runnable> implements MetricsDispatcher {
     protected static final String BUILD_TYPE = "build";
     protected static final String LOG_TYPE = "log";
-    protected static final Map<String, List<String>> NESTED_MAPPINGS;
-
-    static {
-        NESTED_MAPPINGS = Maps.newLinkedHashMap();
-        for (String mapping : Arrays.asList("events", "tasks", "tests", "artifacts")) {
-            NESTED_MAPPINGS.put(mapping, Collections.<String>emptyList());
-        }
-        NESTED_MAPPINGS.put("environment", ImmutableList.of("environmentVariables", "systemProperties"));
-    }
 
     protected final Logger logger = MetricsLoggerFactory.getLogger(this.getClass());
     protected final MetricsPluginExtension extension;
@@ -147,7 +134,6 @@ public abstract class AbstractESMetricsDispatcher extends AbstractQueuedExecutio
         // This won't be accurate, but we at least want a value here if we have a failure that causes the duration not to be fired
         build.setStartTime(System.currentTimeMillis());
         startUpClient();
-        createIndexesIfNeeded();
         indexBuild();
     }
 
@@ -195,51 +181,6 @@ public abstract class AbstractESMetricsDispatcher extends AbstractQueuedExecutio
     public final void started(Project project) {
         build.setProject(project);
         indexBuild();
-    }
-
-    private void createIndexesIfNeeded() {
-        if (!exists(extension.getIndexName())) {
-            createBuildIndex(NESTED_MAPPINGS);
-        }
-    }
-
-    private void createBuildIndex(Map<String, List<String>> nestedTypes) {
-        try {
-            XContentBuilder jsonBuilder = jsonBuilder();
-            jsonBuilder.startObject();
-
-            jsonBuilder.startObject("settings");
-            jsonBuilder.startObject("analysis").startObject("analyzer");
-            jsonBuilder.startObject("default").field("type", "standard").endObject();
-            jsonBuilder.endObject().endObject();
-            jsonBuilder.endObject();
-
-            jsonBuilder.startObject("mappings");
-
-            jsonBuilder.startObject("_default_");
-            jsonBuilder.startObject("_all").field("enabled", false).endObject();
-            jsonBuilder.endObject();
-
-            jsonBuilder.startObject(BUILD_TYPE);
-            jsonBuilder.startObject("properties");
-            for (Map.Entry<String, List<String>> entry : nestedTypes.entrySet()) {
-                String type = entry.getKey();
-                Collection<String> children = entry.getValue();
-                if (children.isEmpty()) {
-                    jsonBuilder.startObject(type).field("type", "nested").endObject();
-                } else {
-                    jsonBuilder.startObject(type).startObject("properties");
-                    for (String child : children) {
-                        jsonBuilder.startObject(child).field("type", "nested").endObject();
-                    }
-                    jsonBuilder.endObject().endObject();
-                }
-            }
-            jsonBuilder.endObject().endObject().endObject().endObject();
-            createIndex(extension.getIndexName(), jsonBuilder.string());
-        } catch (IOException e) {
-            throw com.google.common.base.Throwables.propagate(e);
-        }
     }
 
     protected abstract void createIndex(String indexName, String source);

@@ -1,0 +1,29 @@
+{
+    "template": "build-metrics-*",
+    "settings": {
+        "analysis": {
+            "analyzer": {
+                "default": {
+                    "type": "standard"
+                }
+            }
+        }
+    },
+    "mappings": {
+        "_default_": {
+            "_all": { "enabled": false },
+            "properties": {
+                "events": { "type": "nested" },
+                "tasks": { "type": "nested" },
+                "tests": { "type": "nested" },
+                "artifacts": { "type": "nested" },
+                "info": {
+                    "properties": {
+                        "environmentVariables": { "type": "nested" },
+                        "systemProperties": { "type": "nested" }
+                    }
+                }
+            }
+        }
+    }
+}

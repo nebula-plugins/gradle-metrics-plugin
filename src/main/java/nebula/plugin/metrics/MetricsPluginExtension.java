@@ -31,7 +31,8 @@ public class MetricsPluginExtension {
      * The name used when adding this extension to the extension container.
      */
     public static final String METRICS_EXTENSION_NAME = "metrics";
-    public static final String DEFAULT_INDEX_NAME = "build-metrics";
+    private static final String INDEX_PREFIX = "build-metrics-";
+    public static final String DEFAULT_INDEX_NAME = INDEX_PREFIX + "default";
     private static final Level DEFAULT_LOG_LEVEL = Level.WARN;
 
     private String hostname = "localhost";
@@ -70,7 +71,7 @@ public class MetricsPluginExtension {
     }
 
     public void setIndexName(String indexName) {
-        this.indexName = checkNotNull(indexName);
+        this.indexName = INDEX_PREFIX + checkNotNull(indexName);
     }
 
     public Level getLogLevel() {

@@ -114,7 +114,7 @@ class ClientESMetricsDispatcherTest extends LogbackAssertSpecification {
     def IndexRequestBuilder mockIndexRequestBuilder() {
         def builder = Mock(IndexRequestBuilder)
         def future = Mock(ListenableActionFuture)
-        def response = new IndexResponse(MetricsPluginExtension.DEFAULT_INDEX_NAME, BUILD_TYPE, 'id', 1, true)
+        def response = new IndexResponse(MetricsPluginExtension.INDEX_PREFIX, BUILD_TYPE, 'id', 1, true)
         builder.setSource(_) >> builder
         builder.setId(_) >> builder
         builder.execute() >> future

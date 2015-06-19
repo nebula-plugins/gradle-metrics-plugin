@@ -19,7 +19,6 @@
 package nebula.plugin.metrics.dispatcher
 
 import com.fasterxml.jackson.core.TreeNode
-import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.node.TextNode
 import com.github.tlrx.elasticsearch.test.EsSetup
 import nebula.plugin.metrics.MetricsPluginExtension
@@ -28,12 +27,8 @@ import org.elasticsearch.client.transport.TransportClient
 import org.elasticsearch.common.settings.ImmutableSettings
 import org.elasticsearch.common.settings.Settings
 import org.elasticsearch.common.transport.InetSocketTransportAddress
-import spock.lang.Issue
 import spock.lang.Timeout
 
-import static ClientESMetricsDispatcher.BUILD_TYPE
-import static ClientESMetricsDispatcher.NESTED_MAPPINGS
-import static junit.framework.Assert.assertFalse
 import static nebula.plugin.metrics.MetricsPluginExtension.DEFAULT_INDEX_NAME
 
 /**
@@ -47,7 +42,7 @@ class ClientESMetricsDispatcherIntegTest extends LogbackAssertSpecification {
     def setup() {
         esSetup = new EsSetup()
         // Execute a dummy request so the ES client is initialised
-        assertFalse(esSetup.exists(DEFAULT_INDEX_NAME))
+        assert !esSetup.exists(DEFAULT_INDEX_NAME)
         client = esSetup.client()
         dispatcher = createStartedDispatcher(client)
     }
@@ -68,50 +63,9 @@ class ClientESMetricsDispatcherIntegTest extends LogbackAssertSpecification {
         esSetup.terminate()
     }
 
-    def 'starting the service results in index and mappings being created'() {
+    def 'starting the service results in index being created'() {
         expect:
         esSetup.exists(DEFAULT_INDEX_NAME)
-    }
-
-    def '_all is disabled by default mapping'() {
-        expect:
-        def indices = client.admin().indices()
-        def response = indices.prepareGetMappings(DEFAULT_INDEX_NAME).setTypes(BUILD_TYPE).get()
-        def source = response.mappings.get(DEFAULT_INDEX_NAME).get(BUILD_TYPE).sourceAsMap()
-
-        def all = source['_all']
-        all['enabled'] == false
-    }
-
-    @Issue('NEBULA-265')
-    def 'default analyzer is explicitly set to the standard analyzer'() {
-        expect:
-        def indices = client.admin().indices()
-        def response = indices.prepareGetSettings(DEFAULT_INDEX_NAME).get()
-        response.getSetting(DEFAULT_INDEX_NAME, 'index.analysis.analyzer.default.type') == 'standard'
-    }
-
-    def 'nested mappings are configured correctly'() {
-        expect:
-        def indices = client.admin().indices()
-        def response = indices.prepareGetMappings(DEFAULT_INDEX_NAME).setTypes(BUILD_TYPE).get()
-        def source = response.mappings.get(DEFAULT_INDEX_NAME).get(BUILD_TYPE).source().string()
-
-        // The ES apis don't seem to let us get at the type definitions for nested types via sourceAsMap, so we'll just parse as a tree ourselves
-        def mapper = new ObjectMapper()
-        def jp = mapper.getFactory().createParser(source)
-        def root = mapper.readTree(jp)
-        def properties = root.get('build').get('properties')
-        NESTED_MAPPINGS.each { type, children ->
-            if (children.isEmpty()) {
-                checkTypeIsNested(properties.get(type))
-            } else {
-                def parent = properties.get(type).get('properties')
-                children.each { child ->
-                    checkTypeIsNested(parent.get(child))
-                }
-            }
-        }
     }
 
     @Timeout(value = 10)
