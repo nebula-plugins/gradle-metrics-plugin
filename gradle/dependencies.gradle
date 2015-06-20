@@ -48,7 +48,6 @@ dependencies {
 
     plugin ("io.searchbox:jest:0.1.6") {
         exclude group: 'commons-logging', module: 'commons-logging'
-        exclude group: 'org.apache.httpcomponents', module: 'httpasyncclient'
     }
     plugin "org.elasticsearch:elasticsearch:$versions.es", optional
 
