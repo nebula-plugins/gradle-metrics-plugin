@@ -1,6 +1,8 @@
 package nebula.plugin.metrics
 
 import ch.qos.logback.classic.Level
+import org.joda.time.DateTime
+import org.joda.time.format.DateTimeFormat
 import spock.lang.Shared
 import spock.lang.Specification
 
@@ -22,5 +24,17 @@ class MetricsPluginExtensionTest extends Specification {
 
         then:
         extension.logLevel == Level.INFO
+    }
+
+    def 'logstash rolling formats as expected'() {
+        expect:
+        DateTime yearMonth = MetricsPluginExtension.ROLLING_FORMATTER.parseDateTime('201501')
+        MetricsPluginExtension.ROLLING_FORMATTER.print(yearMonth) == '201501'
+    }
+
+    def 'logstash index name is rolling'() {
+        expect:
+        def pattern = MetricsPluginExtension.ROLLING_FORMATTER.print(DateTime.now())
+        extension.logstashIndexName == 'logstash-build-metrics-default-' + pattern
     }
 }

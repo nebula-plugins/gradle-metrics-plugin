@@ -18,6 +18,9 @@
 package nebula.plugin.metrics;
 
 import ch.qos.logback.classic.Level;
+import org.joda.time.DateTime;
+import org.joda.time.format.DateTimeFormat;
+import org.joda.time.format.DateTimeFormatter;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -32,6 +35,8 @@ public class MetricsPluginExtension {
      */
     public static final String METRICS_EXTENSION_NAME = "metrics";
     private static final String INDEX_PREFIX = "build-metrics-";
+    private static final String LOGSTASH_INDEX_PREFIX = "logstash-";
+    public static final DateTimeFormatter ROLLING_FORMATTER = DateTimeFormat.forPattern("yyyyMM");
     public static final String DEFAULT_INDEX_NAME = INDEX_PREFIX + "default";
     private static final Level DEFAULT_LOG_LEVEL = Level.WARN;
 
@@ -68,6 +73,11 @@ public class MetricsPluginExtension {
 
     public String getIndexName() {
         return indexName;
+    }
+
+    public String getLogstashIndexName() {
+        String rollingSuffix = "-" + ROLLING_FORMATTER.print(DateTime.now());
+        return LOGSTASH_INDEX_PREFIX + indexName + rollingSuffix;
     }
 
     public void setIndexName(String indexName) {

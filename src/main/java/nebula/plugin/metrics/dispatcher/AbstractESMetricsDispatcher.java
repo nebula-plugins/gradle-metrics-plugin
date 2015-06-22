@@ -229,7 +229,7 @@ public abstract class AbstractESMetricsDispatcher extends AbstractQueuedExecutio
             public void run() {
                 LogstashLayout logstashLayout = logstashLayoutSupplier.get();
                 String json = logstashLayout.doLayout(event);
-                index(extension.getIndexName(), LOG_TYPE, json);
+                index(extension.getLogstashIndexName(), LOG_TYPE, json);
             }
         };
         queue(runnable);
