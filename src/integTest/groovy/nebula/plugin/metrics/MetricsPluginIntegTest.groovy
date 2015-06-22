@@ -30,7 +30,6 @@ import spock.lang.Unroll
 /**
  * Integration tests for {@link MetricsPlugin}.
  */
-@Ignore('Nebula test is making running these tests impossible, due to the way it handles building the classpath init script')
 class MetricsPluginIntegTest extends IntegrationSpec {
     @Shared
     File dataDir
