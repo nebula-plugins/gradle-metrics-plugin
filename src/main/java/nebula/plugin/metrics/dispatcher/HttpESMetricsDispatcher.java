@@ -105,7 +105,11 @@ public final class HttpESMetricsDispatcher extends AbstractESMetricsDispatcher {
 
     private <T extends JestResult> T execute(Action<T> clientRequest) {
         try {
-            return client.execute(clientRequest);
+            T result = client.execute(clientRequest);
+            if (result.isSucceeded()) {
+                throw new RuntimeException("Jest request failed with " + result.getErrorMessage());
+            }
+            return result;
         } catch (IOException e) {
             throw Throwables.propagate(e);
         }

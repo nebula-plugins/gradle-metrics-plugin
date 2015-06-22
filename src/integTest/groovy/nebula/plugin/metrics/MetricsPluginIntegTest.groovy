@@ -27,6 +27,8 @@ import spock.lang.Ignore
 import spock.lang.Shared
 import spock.lang.Unroll
 
+import static nebula.plugin.metrics.MetricsPluginExtension.DEFAULT_INDEX_NAME
+
 /**
  * Integration tests for {@link MetricsPlugin}.
  */
@@ -54,14 +56,14 @@ class MetricsPluginIntegTest extends IntegrationSpec {
         if (indexExists()) {
             def admin = node.client().admin()
             def indices = admin.indices()
-            indices.prepareDelete('build-metrics').execute().actionGet()
+            indices.prepareDelete(DEFAULT_INDEX_NAME).execute().actionGet()
         }
     }
 
     boolean indexExists() {
         def admin = node.client().admin()
         def indices = admin.indices()
-        indices.prepareExists('build-metrics').execute().actionGet().isExists()
+        indices.prepareExists(DEFAULT_INDEX_NAME).execute().actionGet().isExists()
     }
 
     def cleanupSpec() {
@@ -100,7 +102,7 @@ class MetricsPluginIntegTest extends IntegrationSpec {
         def m = runResult.standardOutput =~ /Build id is (.*)/
         def buildId = m[0][1] as String
         def client = node.client()
-        def result = client.prepareGet('build-metrics', 'build', buildId).execute().actionGet()
+        def result = client.prepareGet(DEFAULT_INDEX_NAME, 'build', buildId).execute().actionGet()
         result.isExists()
 
         def source = result.source
