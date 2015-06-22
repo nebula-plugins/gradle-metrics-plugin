@@ -1,0 +1,17 @@
+{
+  "com.fasterxml.jackson.core:jackson-annotations": { "locked": "2.5.4", "requested": "2.5.4" },
+  "com.fasterxml.jackson.core:jackson-core": { "locked": "2.5.4", "requested": "2.5.4" },
+  "com.fasterxml.jackson.core:jackson-databind": { "locked": "2.5.4", "requested": "2.5.4" },
+  "com.fasterxml.jackson.datatype:jackson-datatype-joda": { "locked": "2.5.4", "requested": "2.5.4" },
+  "com.github.tlrx:elasticsearch-test": { "locked": "1.2.1", "requested": "1.2.1" },
+  "com.google.code.findbugs:jsr305": { "locked": "3.0.0", "requested": "3.0.0" },
+  "com.google.guava:guava": { "locked": "18.0", "requested": "18.0" },
+  "com.google.guava:guava-testlib": { "locked": "18.0", "requested": "18.0" },
+  "com.netflix.nebula:gradle-info-plugin": { "locked": "1.9.5", "requested": "1.9.+" },
+  "com.netflix.nebula:nebula-test": { "locked": "2.2.1", "requested": "2.2.+" },
+  "io.searchbox:jest": { "locked": "0.1.6", "requested": "0.1.6" },
+  "joda-time:joda-time": { "locked": "2.8.1", "requested": "2.8.1" },
+  "net.logstash.logback:logstash-logback-encoder": { "locked": "4.3", "requested": "4.3" },
+  "org.elasticsearch:elasticsearch": { "locked": "1.6.0", "requested": "1.6.0" },
+  "org.projectlombok:lombok": { "locked": "1.16.4", "requested": "1.16.4" }
+}
