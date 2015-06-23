@@ -172,10 +172,6 @@ public final class GradleCollector implements ProfileListener, BuildListener {
         MetricsDispatcher dispatcher = this.dispatcherSupplier.get();
         if (!complete.compareAndSet(false, true)) {
             if (dispatcher.isRunning()) {
-                Optional<String> receipt = dispatcher.receipt();
-                if (receipt.isPresent()) {
-                    logger.warn(receipt.get());
-                }
                 logger.info("Shutting down dispatcher");
                 try {
                     dispatcher.stopAsync().awaitTerminated(TIMEOUT_MS, TimeUnit.MILLISECONDS);
@@ -186,6 +182,10 @@ public final class GradleCollector implements ProfileListener, BuildListener {
                 }
             }
             LogbackCollector.resetLogbackCollection();
+            Optional<String> receipt = dispatcher.receipt();
+            if (receipt.isPresent()) {
+                logger.warn(receipt.get());
+            }
         }
     }
 
