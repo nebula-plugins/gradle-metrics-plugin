@@ -22,6 +22,8 @@ import nebula.plugin.metrics.model.*;
 import ch.qos.logback.classic.spi.LoggingEvent;
 import com.google.common.util.concurrent.Service;
 
+import java.util.Collection;
+
 /**
  * @author Danny Thomas
  */
@@ -37,6 +39,8 @@ public interface MetricsDispatcher extends Service {
     void task(Task task);
 
     void logbackEvent(LoggingEvent event);
+
+    void logbackEvents(Collection<LoggingEvent> events);
 
     void test(Test test);
 

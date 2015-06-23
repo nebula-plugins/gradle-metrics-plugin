@@ -28,11 +28,13 @@ import ch.qos.logback.classic.spi.TurboFilterList;
 import ch.qos.logback.classic.turbo.TurboFilter;
 import ch.qos.logback.core.spi.FilterReply;
 import com.google.common.base.Supplier;
+import com.google.common.collect.Lists;
 import com.google.common.util.concurrent.Service;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Marker;
 import org.slf4j.MarkerFactory;
 
+import java.util.List;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
@@ -86,9 +88,9 @@ public class LogbackCollector {
                             logbackEvents.add(event);
                         } else {
                             if (!logbackEvents.isEmpty()) {
-                                for (LoggingEvent loggingEvent : logbackEvents) {
-                                    dispatcher.logbackEvent(loggingEvent);
-                                }
+                                List<LoggingEvent> events = Lists.newArrayListWithCapacity(logbackEvents.size());
+                                logbackEvents.drainTo(events);
+                                dispatcher.logbackEvents(events);
                             }
                             dispatcher.logbackEvent(event);
                         }

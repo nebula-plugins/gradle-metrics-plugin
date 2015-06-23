@@ -35,6 +35,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
+import com.google.common.collect.Lists;
 import net.logstash.logback.layout.LogstashLayout;
 import org.slf4j.Logger;
 
@@ -227,12 +228,32 @@ public abstract class AbstractESMetricsDispatcher extends AbstractQueuedExecutio
         Runnable runnable = new Runnable() {
             @Override
             public void run() {
-                LogstashLayout logstashLayout = logstashLayoutSupplier.get();
-                String json = logstashLayout.doLayout(event);
+                String json = layoutLogbackEvent(event);
                 index(extension.getLogstashIndexName(), LOG_TYPE, json);
             }
         };
         queue(runnable);
+    }
+
+    @Override
+    public final void logbackEvents(final Collection<LoggingEvent> events) {
+        checkNotNull(events);
+        Runnable runnable = new Runnable() {
+            @Override
+            public void run() {
+                List<String> jsons = Lists.newArrayListWithCapacity(events.size());
+                for (LoggingEvent event : events) {
+                    jsons.add(layoutLogbackEvent(event));
+                }
+                bulkIndex(extension.getLogstashIndexName(), LOG_TYPE, jsons);
+            }
+        };
+        queue(runnable);
+    }
+
+    private String layoutLogbackEvent(LoggingEvent event) {
+        LogstashLayout logstashLayout = logstashLayoutSupplier.get();
+        return logstashLayout.doLayout(event);
     }
 
     @Override

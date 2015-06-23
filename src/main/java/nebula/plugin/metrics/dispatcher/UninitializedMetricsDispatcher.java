@@ -22,6 +22,7 @@ import nebula.plugin.metrics.model.*;
 import ch.qos.logback.classic.spi.LoggingEvent;
 import com.google.common.util.concurrent.Service;
 
+import java.util.Collection;
 import java.util.concurrent.Executor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -72,6 +73,11 @@ public class UninitializedMetricsDispatcher implements MetricsDispatcher {
 
     @Override
     public void logbackEvent(LoggingEvent event) {
+        throw unsupported();
+    }
+
+    @Override
+    public void logbackEvents(Collection<LoggingEvent> events) {
         throw unsupported();
     }
 
