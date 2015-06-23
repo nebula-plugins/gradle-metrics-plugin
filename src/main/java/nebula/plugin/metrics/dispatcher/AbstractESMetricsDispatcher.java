@@ -183,7 +183,7 @@ public abstract class AbstractESMetricsDispatcher extends AbstractQueuedExecutio
                         index(extension.getIndexName(), BUILD_TYPE, json, buildId);
                     } else {
                         buildId = Optional.of(index(extension.getIndexName(), BUILD_TYPE, json));
-                        logger.warn("Build id is {}", buildId.get());
+                        logger.info("Build id is {}", buildId.get());
                     }
                 } catch (JsonProcessingException e) {
                     logger.error("Unable to write JSON string value: " + e.getMessage(), e);
