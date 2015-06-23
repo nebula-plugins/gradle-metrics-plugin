@@ -27,10 +27,6 @@ versions.slf4j = '1.7.12'
 versions.httpcomponents = '4.4.1'
 
 libraries.guava = "com.google.guava:guava:$versions.guava"
-libraries.httpcorenio = "org.apache.httpcomponents:httpcore-nio:${versions.httpcomponents}"
-libraries.httpcore = "org.apache.httpcomponents:httpcore:${versions.httpcomponents}"
-libraries.httpclient = "org.apache.httpcomponents:httpclient:${versions.httpcomponents}"
-libraries.httpasyncclient = "org.apache.httpcomponents:httpasyncclient:4.1"
 libraries.hamcrest = "org.hamcrest:hamcrest-all:1.3"
 
 configurations {
@@ -54,11 +50,6 @@ dependencies {
     plugin ("io.searchbox:jest:0.1.6") {
         exclude group: 'commons-logging', module: 'commons-logging'
     }
-
-    plugin libraries.httpcorenio
-    plugin libraries.httpcore
-    plugin libraries.httpclient
-    plugin libraries.httpasyncclient
 
     plugin "org.elasticsearch:elasticsearch:$versions.es", optional
 
@@ -99,10 +90,7 @@ shadowJar {
     dependencies {
         // Relocate Guava and HTTP components because it's a real bear if we get downgraded or upgraded downstream, and dependency-lock unfortunately applies to every config
         include(dependency(libraries.guava))
-        include(dependency(libraries.httpcorenio))
-        include(dependency(libraries.httpcore))
-        include(dependency(libraries.httpclient))
-        include(dependency(libraries.httpasyncclient))
+        include(dependency('org.apache.httpcomponents:.*'))
     }
     relocate 'com.google.common', 'nebula.plugin.metrics.com.google.common'
     relocate 'com.google.thirdparty', 'nebula.plugin.metrics.com.google.thirdparty'
