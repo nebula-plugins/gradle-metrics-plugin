@@ -42,7 +42,7 @@ class ClientESMetricsDispatcherTest extends LogbackAssertSpecification {
 
     ClientESMetricsDispatcher dispatcher
 
-    def 'build start response sets buildId'() {
+    def 'build receipt is output'() {
         def builder = mockIndexRequestBuilder()
         dispatcher = createStartedDispatcher(builder)
 
@@ -51,7 +51,8 @@ class ClientESMetricsDispatcherTest extends LogbackAssertSpecification {
         dispatcher.stopAsync().awaitTerminated()
 
         then:
-        dispatcher.getBuildId() == 'id'
+        def receipt = dispatcher.receipt().get()
+        receipt == 'You can find the metrics for this build at http://localhost:9200/build-metrics-default/build/id'
     }
 
     def 'build start event contains the expected json representation'() {

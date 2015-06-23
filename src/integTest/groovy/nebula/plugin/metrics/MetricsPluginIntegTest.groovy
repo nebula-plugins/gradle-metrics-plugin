@@ -39,14 +39,8 @@ class MetricsPluginIntegTest extends IntegrationSpec {
     @Shared
     Node node
 
-    @Shared
-    Map<DispatcherType, Integer> dispatcherPorts;
-
     def setupSpec() {
         dataDir = Files.createTempDir()
-        dispatcherPorts = [:]
-        dispatcherPorts.put(DispatcherType.ES_HTTP, 19200)
-        dispatcherPorts.put(DispatcherType.ES_CLIENT, 19300)
         def settings = ImmutableSettings.settingsBuilder().put('path.data', dataDir).put('http.port', 19200).put('transport.tcp.port', 19300).put('cluster.name', 'elasticsearch_mpit').build()
         node = NodeBuilder.nodeBuilder().settings(settings).build()
         node.start()
@@ -142,7 +136,8 @@ class MetricsPluginIntegTest extends IntegrationSpec {
             ${applyPlugin(MetricsPlugin)}
 
             metrics {
-                port = ${dispatcherPorts.get(dispatcherType)}
+                httpPort = 19200
+                transportPort = 19300
                 clusterName = 'elasticsearch_mpit'
                 dispatcherType = '$dispatcherType'
             }

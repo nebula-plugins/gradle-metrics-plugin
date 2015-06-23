@@ -41,7 +41,8 @@ public class MetricsPluginExtension {
     private static final Level DEFAULT_LOG_LEVEL = Level.WARN;
 
     private String hostname = "localhost";
-    private int port = 9300;
+    private int transportPort = 9300;
+    private int httpPort = 9200;
     private String clusterName = "elasticsearch";
     private String indexName = DEFAULT_INDEX_NAME;
     private Level logLevel = DEFAULT_LOG_LEVEL;
@@ -55,12 +56,20 @@ public class MetricsPluginExtension {
         this.hostname = checkNotNull(hostname);
     }
 
-    public int getPort() {
-        return port;
+    public int getTransportPort() {
+        return transportPort;
     }
 
-    public void setPort(int port) {
-        this.port = port;
+    public void setTransportPort(int transportPort) {
+        this.transportPort = transportPort;
+    }
+
+    public int getHttpPort() {
+        return httpPort;
+    }
+
+    public void setHttpPort(int httpPort) {
+        this.httpPort = httpPort;
     }
 
     public String getClusterName() {

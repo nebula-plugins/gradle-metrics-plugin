@@ -50,7 +50,7 @@ public final class HttpESMetricsDispatcher extends AbstractESMetricsDispatcher {
     protected void startUpClient() {
         JestClientFactory factory = new JestClientFactory();
         factory.setHttpClientConfig(new HttpClientConfig
-                .Builder("http://" + extension.getHostname() + ":" + extension.getPort())
+                .Builder("http://" + extension.getHostname() + ":" + extension.getHttpPort())
                 .multiThreaded(false)
                 .build());
         client = factory.getObject();

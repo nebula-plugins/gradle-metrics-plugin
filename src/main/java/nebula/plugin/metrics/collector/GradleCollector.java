@@ -25,6 +25,7 @@ import nebula.plugin.metrics.model.Result;
 import nebula.plugin.metrics.model.Task;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Optional;
 import com.google.common.base.Supplier;
 import org.gradle.BuildListener;
 import org.gradle.BuildResult;
@@ -171,6 +172,10 @@ public final class GradleCollector implements ProfileListener, BuildListener {
         MetricsDispatcher dispatcher = this.dispatcherSupplier.get();
         if (!complete.compareAndSet(false, true)) {
             if (dispatcher.isRunning()) {
+                Optional<String> receipt = dispatcher.receipt();
+                if (receipt.isPresent()) {
+                    logger.warn(receipt.get());
+                }
                 logger.info("Shutting down dispatcher");
                 try {
                     dispatcher.stopAsync().awaitTerminated(TIMEOUT_MS, TimeUnit.MILLISECONDS);

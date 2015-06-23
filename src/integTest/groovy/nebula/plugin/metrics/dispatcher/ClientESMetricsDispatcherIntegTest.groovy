@@ -73,7 +73,7 @@ class ClientESMetricsDispatcherIntegTest extends LogbackAssertSpecification {
         super.cleanup() // Detach the logging asserter for this test
         def extension = new MetricsPluginExtension()
         def serverSocket = new ServerSocket(0)
-        extension.port = serverSocket.localPort
+        extension.transportPort = serverSocket.localPort
         serverSocket.close()
         def transportClient = createTransportClient(extension)
         def dispatcher = createDispatcher(extension, transportClient)
@@ -96,7 +96,7 @@ class ClientESMetricsDispatcherIntegTest extends LogbackAssertSpecification {
                 serverSocket.accept()
             }
         }).start();
-        extension.setPort(serverSocket.localPort)
+        extension.setTransportPort(serverSocket.localPort)
         def transportClient = createTransportClient(extension)
         def dispatcher = createDispatcher(extension, transportClient)
 
@@ -114,7 +114,7 @@ class ClientESMetricsDispatcherIntegTest extends LogbackAssertSpecification {
         ImmutableSettings.Builder builder = ImmutableSettings.settingsBuilder();
         builder.classLoader(Settings.class.getClassLoader());
         builder.put("cluster.name", extension.getClusterName());
-        InetSocketTransportAddress address = new InetSocketTransportAddress(extension.getHostname(), extension.getPort());
+        InetSocketTransportAddress address = new InetSocketTransportAddress(extension.getHostname(), extension.getTransportPort());
         new TransportClient(builder.build()).addTransportAddress(address);
     }
 

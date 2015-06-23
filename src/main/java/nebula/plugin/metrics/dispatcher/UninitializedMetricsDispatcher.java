@@ -20,6 +20,7 @@ package nebula.plugin.metrics.dispatcher;
 import nebula.plugin.metrics.model.*;
 
 import ch.qos.logback.classic.spi.LoggingEvent;
+import com.google.common.base.Optional;
 import com.google.common.util.concurrent.Service;
 
 import java.util.Collection;
@@ -88,6 +89,11 @@ public class UninitializedMetricsDispatcher implements MetricsDispatcher {
 
     @Override
     public void environment(Info info) {
+        throw unsupported();
+    }
+
+    @Override
+    public Optional<String> receipt() {
         throw unsupported();
     }
 

@@ -35,12 +35,16 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
+import com.google.common.base.Throwables;
 import com.google.common.collect.Lists;
 import net.logstash.logback.layout.LogstashLayout;
 import org.slf4j.Logger;
 
 import java.io.IOException;
-import java.util.*;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.util.Collection;
+import java.util.List;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
@@ -153,9 +157,20 @@ public abstract class AbstractESMetricsDispatcher extends AbstractQueuedExecutio
         indexBuild();
     }
 
-    @VisibleForTesting
-    final String getBuildId() {
-        return buildId.get();
+    @Override
+    public final Optional<String> receipt() {
+        if (buildId.isPresent()) {
+            String file = "/" + extension.getIndexName() + "/" + BUILD_TYPE + "/" + buildId.get();
+            URL url;
+            try {
+                url = new URL("http", extension.getHostname(), extension.getHttpPort(), file);
+            } catch (MalformedURLException e) {
+                throw Throwables.propagate(e);
+            }
+            return Optional.of("You can find the metrics for this build at " + url);
+        } else {
+            return buildId;
+        }
     }
 
     private void indexBuild() {

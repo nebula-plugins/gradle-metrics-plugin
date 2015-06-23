@@ -68,7 +68,7 @@ public final class ClientESMetricsDispatcher extends AbstractESMetricsDispatcher
         ImmutableSettings.Builder builder = ImmutableSettings.settingsBuilder();
         builder.classLoader(Settings.class.getClassLoader());
         builder.put("cluster.name", extension.getClusterName());
-        InetSocketTransportAddress address = new InetSocketTransportAddress(extension.getHostname(), extension.getPort());
+        InetSocketTransportAddress address = new InetSocketTransportAddress(extension.getHostname(), extension.getTransportPort());
         return new TransportClient(builder.build()).addTransportAddress(address);
     }
 
