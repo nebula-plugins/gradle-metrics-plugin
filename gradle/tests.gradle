@@ -36,6 +36,13 @@ task('checkSourceFiles') << {
 }
 compileJava.dependsOn checkSourceFiles
 
+facets {
+    integTest {
+        parentSourceSet = 'test'
+        testTaskName = 'integrationTest'
+    }
+}
+
 integrationTest {
     minHeapSize = '128m'
     maxHeapSize = '4g'

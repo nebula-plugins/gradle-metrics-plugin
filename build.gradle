@@ -18,19 +18,35 @@
 buildscript {
     repositories { jcenter() }
     dependencies {
-        classpath "com.netflix.nebula:nebula-plugin-plugin:${gradle.gradleVersion}.+"
         classpath 'com.github.ben-manes:gradle-versions-plugin:0.10.1'
         classpath 'com.github.jengelman.gradle.plugins:shadow:1.2.1'
         classpath 'com.netflix.nebula:gradle-extra-configurations-plugin:2.2.+'
     }
 }
 
+plugins {
+    id 'groovy'
+    id 'idea'
+    id 'jacoco'
+    id 'nebula.info' version '2.2.4'
+    id 'nebula.contacts' version '2.2.0'
+    id 'nebula.maven-publishing' version '3.0.2'
+    id 'nebula.nebula-release' version '2.2.7'
+    id 'nebula.nebula-bintray' version '3.0.1'
+    id 'nebula.nebula-facet' version '2.2.1'
+    id 'com.gradle.plugin-publish' version '0.9.1'
+    id 'nebula.javadoc-jar' version '3.0.2'
+    id 'nebula.source-jar' version '3.0.2'
+    id 'nebula.apache-license-pom' version '3.0.2'
+    id 'com.github.kt3k.coveralls' version '2.4.0'
+}
+
 description 'Gradle metrics plugin'
-apply plugin: 'nebula-plugin'
+
+apply from: 'https://raw.githubusercontent.com/nebula-plugins/nebula-core/1a495ccc109b1d226e7a8d4b3474eab0ac78abb2/common.gradle'
 
 apply plugin: 'provided-base'
 apply plugin: 'optional-base'
-apply plugin: 'idea'
 apply plugin: 'com.github.ben-manes.versions'
 apply plugin: 'com.github.johnrengelman.shadow'
 
@@ -45,6 +61,13 @@ contacts {
     }
 }
 
-task wrapper(type: Wrapper) {
-    gradleVersion = '2.2'
+pluginBundle {
+    plugins {
+        dependencyLock {
+            id = 'metrics'
+            displayName = 'Gradle Metrics plugin'
+            description = project.description
+            tags = ['nebula', 'metrics']
+        }
+    }
 }
