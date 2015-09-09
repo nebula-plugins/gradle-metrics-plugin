@@ -1,4 +1,3 @@
-buildscript { repositories { jcenter() } } // Some plugin dependencies (namely JFrog) are not in Maven Central
 /*
  * Copyright 2015 Netflix, Inc.
  *
@@ -65,7 +64,7 @@ contacts {
 pluginBundle {
     plugins {
         dependencyLock {
-            id = 'metrics'
+            id = 'nebula.metrics'
             displayName = 'Gradle Metrics plugin'
             description = project.description
             tags = ['nebula', 'metrics']
