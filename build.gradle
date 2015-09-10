@@ -34,6 +34,7 @@ plugins {
     id 'nebula.nebula-release' version '3.0.0'
     id 'nebula.nebula-bintray' version '3.1.0'
     id 'nebula.nebula-facet' version '2.2.1'
+    id 'nebula.dependency-lock' version '3.0.0'
     id 'com.gradle.plugin-publish' version '0.9.1'
     id 'nebula.javadoc-jar' version '4.0.1'
     id 'nebula.source-jar' version '4.0.1'
@@ -63,7 +64,7 @@ contacts {
 
 pluginBundle {
     plugins {
-        dependencyLock {
+        metrics {
             id = 'nebula.metrics'
             displayName = 'Gradle Metrics plugin'
             description = project.description

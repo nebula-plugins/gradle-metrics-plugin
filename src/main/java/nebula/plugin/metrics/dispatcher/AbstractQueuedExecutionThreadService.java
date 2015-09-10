@@ -132,6 +132,8 @@ public abstract class AbstractQueuedExecutionThreadService<E> extends AbstractEx
     /**
      * Allow service to run non-asynchronously to allow unit testing of concrete implementations, without needing to
      * deal with timing issues.
+     *
+     * @return true if the service is asynchronous
      */
     protected boolean isAsync() {
         return true;

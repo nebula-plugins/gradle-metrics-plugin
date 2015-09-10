@@ -25,7 +25,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
  * A wrapper for {@link org.slf4j.LoggerFactory} which allows the provided loggger to be wrapped to customise logging behaviour.
- * </p>
+ * <p>
  * Gradle only uses logback appenders to gather messages, and adding custom layouts and encoders for a plugin could be troublesome.
  *
  * @author Danny Thomas

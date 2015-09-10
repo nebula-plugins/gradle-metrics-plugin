@@ -43,7 +43,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 /**
  * Collector that intercepts Logback events by binding an appender to a provided {@link Logger}.
  *
- * @author Danny THomas
+ * @author Danny Thomas
  */
 public class LogbackCollector {
     /**
@@ -64,10 +64,13 @@ public class LogbackCollector {
 
     /**
      * Configure a logback filter to capture all root logging events.
-     * </p>
+     * <p>
      * Avoids having to depend on a particular Gradle logging level being set. Gradle's logging is such that
      * encoders/layouts/etc aren't an option and LogbackLoggingConfigurer.doConfigure() adds a TurboFilter which
      * prevents us getting at those events, so we re-wire the filters so ours comes first.
+     *
+     * @param dispatcherSupplier the dispatcher supplier
+     * @param extension the extension
      */
     public static void configureLogbackCollection(final Supplier<MetricsDispatcher> dispatcherSupplier, final MetricsPluginExtension extension) {
         checkNotNull(dispatcherSupplier);

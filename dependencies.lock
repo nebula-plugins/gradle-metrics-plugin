@@ -8,7 +8,7 @@
   "com.google.guava:guava": { "locked": "18.0", "requested": "18.0" },
   "com.google.guava:guava-testlib": { "locked": "18.0", "requested": "18.0" },
   "com.netflix.nebula:gradle-info-plugin": { "locked": "1.9.5", "requested": "1.9.+" },
-  "com.netflix.nebula:nebula-test": { "locked": "2.2.2", "requested": "2.2.+" },
+  "com.netflix.nebula:nebula-test": { "locked": "3.0.0", "requested": "latest.release" },
   "io.searchbox:jest": { "locked": "0.1.6", "requested": "0.1.6" },
   "joda-time:joda-time": { "locked": "2.8.1", "requested": "2.8.1" },
   "net.logstash.logback:logstash-logback-encoder": { "locked": "4.3", "requested": "4.3" },
