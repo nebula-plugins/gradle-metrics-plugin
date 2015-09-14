@@ -18,6 +18,7 @@
 package nebula.plugin.metrics.collector
 
 import com.google.common.base.Supplier
+import nebula.plugin.metrics.MetricsLoggerFactory
 import nebula.plugin.metrics.MetricsPluginExtension
 import nebula.plugin.metrics.dispatcher.MetricsDispatcher
 import nebula.test.ProjectSpec
@@ -62,5 +63,14 @@ class LoggingCollectorTest extends ProjectSpec {
 
         then:
         0 * dispatcher.logEvent(_)
+    }
+
+    def 'events below threshold are collected, if they contain the metrics logging prefix'() {
+        when:
+        def logger = MetricsLoggerFactory.getLogger(LoggingCollectorTest)
+        logger.debug("debug")
+
+        then:
+        1 * dispatcher.logEvent(_)
     }
 }

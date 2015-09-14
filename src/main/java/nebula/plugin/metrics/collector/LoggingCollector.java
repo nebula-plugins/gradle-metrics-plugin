@@ -17,6 +17,7 @@
 
 package nebula.plugin.metrics.collector;
 
+import nebula.plugin.metrics.MetricsLoggerFactory;
 import nebula.plugin.metrics.MetricsPluginExtension;
 import nebula.plugin.metrics.dispatcher.MetricsDispatcher;
 
@@ -29,10 +30,7 @@ import org.gradle.logging.internal.OutputEvent;
 import org.gradle.logging.internal.OutputEventListener;
 import org.gradle.logging.internal.slf4j.OutputEventListenerBackedLoggerContext;
 import org.slf4j.LoggerFactory;
-import org.slf4j.Marker;
-import org.slf4j.MarkerFactory;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -47,7 +45,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public class LoggingCollector {
     /**
      * Configure a logback filter to capture all root logging events.
-     * <p>
+     * <p/>
      * Avoids having to depend on a particular Gradle logging level being set. Gradle's logging is such that
      * encoders/layouts/etc aren't an option and LogbackLoggingConfigurer.doConfigure() adds a TurboFilter which
      * prevents us getting at those events, so we re-wire the filters so ours comes first.
@@ -65,24 +63,30 @@ public class LoggingCollector {
         OutputEventListener listener = new WrappedOutputEventListener(originalListener) {
             @Override
             public void onOutput(OutputEvent outputEvent) {
-                if (outputEvent instanceof LogEvent && outputEvent.getLogLevel().compareTo(extension.getLogLevel()) >= 0 /* || MARKER.equals(marker) */) {
+                if (outputEvent instanceof LogEvent) {
                     LogEvent logEvent = (LogEvent) outputEvent;
-                    MetricsDispatcher dispatcher = dispatcherSupplier.get();
-                    if (dispatcher.state() == Service.State.NEW || dispatcher.state() == Service.State.STARTING) {
-                        logEvents.add(logEvent);
-                    } else {
-                        if (!logEvents.isEmpty()) {
-                            List<LogEvent> drainedEvents = Lists.newArrayListWithCapacity(logEvents.size());
-                            logEvents.drainTo(drainedEvents);
-                            dispatcher.logEvents(drainedEvents);
+                    if (levelGreaterOrEqual(outputEvent, extension.getLogLevel()) || logEvent.getMessage().startsWith(MetricsLoggerFactory.LOGGING_PREFIX)) {
+                        MetricsDispatcher dispatcher = dispatcherSupplier.get();
+                        if (dispatcher.state() == Service.State.NEW || dispatcher.state() == Service.State.STARTING) {
+                            logEvents.add(logEvent);
+                        } else {
+                            if (!logEvents.isEmpty()) {
+                                List<LogEvent> drainedEvents = Lists.newArrayListWithCapacity(logEvents.size());
+                                logEvents.drainTo(drainedEvents);
+                                dispatcher.logEvents(drainedEvents);
+                            }
+                            dispatcher.logEvent(logEvent);
                         }
-                        dispatcher.logEvent(logEvent);
                     }
                 }
                 super.onOutput(outputEvent);
             }
         };
         context.setOutputEventListener(listener);
+    }
+
+    private static boolean levelGreaterOrEqual(OutputEvent outputEvent, LogLevel logLevel) {
+        return outputEvent.getLogLevel().compareTo(logLevel) >= 0;
     }
 
     public static void reset() {

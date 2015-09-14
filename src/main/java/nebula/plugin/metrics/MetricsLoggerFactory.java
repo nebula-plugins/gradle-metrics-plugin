@@ -36,6 +36,8 @@ public class MetricsLoggerFactory {
         return new MetricsLogger(logger);
     }
 
+    public static final String LOGGING_PREFIX = "[metrics] ";
+
     public static Logger getLogger(Class clazz) {
         return getLogger(clazz.getName());
     }
@@ -58,7 +60,7 @@ public class MetricsLoggerFactory {
         }
 
         private String addPrefix(String s) {
-            return "[metrics] " + s;
+            return LOGGING_PREFIX + s;
         }
 
         @Override
