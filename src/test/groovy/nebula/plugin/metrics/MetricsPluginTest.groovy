@@ -17,21 +17,22 @@
 
 package nebula.plugin.metrics
 
-import ch.qos.logback.classic.Level
-import ch.qos.logback.classic.spi.LoggingEvent
 import nebula.plugin.metrics.dispatcher.MetricsDispatcher
 import nebula.test.ProjectSpec
 import org.gradle.BuildListener
 import org.gradle.BuildResult
 import org.gradle.api.Project
+import org.gradle.api.internal.plugins.PluginApplicationException
 import org.gradle.api.internal.project.DefaultProject
+import org.gradle.api.logging.LogLevel
 import org.gradle.api.plugins.JavaPlugin
 import org.gradle.api.tasks.testing.Test
 import org.gradle.api.tasks.testing.TestDescriptor
 import org.gradle.api.tasks.testing.TestListener
 import org.gradle.api.tasks.testing.TestResult
+import org.gradle.internal.event.ListenerBroadcast
 import org.gradle.invocation.DefaultGradle
-import org.gradle.listener.ListenerBroadcast
+import org.gradle.logging.internal.LogEvent
 
 /*
  * Tests for {@link MetricsPlugin}.
@@ -57,7 +58,7 @@ class MetricsPluginTest extends ProjectSpec {
         subproject.plugins.apply(MetricsPlugin)
 
         then:
-        thrown(IllegalStateException)
+        thrown(PluginApplicationException)
     }
 
     def 'build lifecycle events control dispatcher startup lifecycle'() {
@@ -110,16 +111,16 @@ class MetricsPluginTest extends ProjectSpec {
         1 * dispatcher.result(_)
     }
 
-    def 'project logger dispatches logback event at the log level'() {
+    def 'project logger dispatches loging event at the log level'() {
         def dispatcher = applyPluginWithMockedDispatcher(project)
 
         when:
         project.logger.warn('log message')
 
         then:
-        1 * dispatcher.logbackEvent(_) >> { LoggingEvent event ->
+        1 * dispatcher.logEvent(_) >> { LogEvent event ->
             assert event.message == 'log message'
-            assert event.level == Level.WARN
+            assert event.logLevel == LogLevel.WARN
         }
     }
 
@@ -130,7 +131,7 @@ class MetricsPluginTest extends ProjectSpec {
         project.logger.info('log message')
 
         then:
-        0 * dispatcher.logbackEvent(_)
+        0 * dispatcher.logEvent(_)
     }
 
     def 'afterTest notification dispatches test event'() {

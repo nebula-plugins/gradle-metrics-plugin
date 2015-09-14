@@ -34,7 +34,7 @@ import static nebula.plugin.metrics.MetricsPluginExtension.DEFAULT_INDEX_NAME
 /**
  * Integration tests for {@link ClientESMetricsDispatcher}.
  */
-class ClientESMetricsDispatcherIntegTest extends LogbackAssertSpecification {
+class ClientESMetricsDispatcherIntegTest extends LoggingCaptureSpecification {
     EsSetup esSetup
     Client client
     ClientESMetricsDispatcher dispatcher
@@ -59,18 +59,20 @@ class ClientESMetricsDispatcherIntegTest extends LogbackAssertSpecification {
     }
 
     def cleanup() {
-        dispatcher.stopAsync().awaitTerminated()
+        dispatcher?.stopAsync()?.awaitTerminated()
         esSetup.terminate()
     }
 
     def 'starting the service results in index being created'() {
-        expect:
+        when:
         esSetup.exists(DEFAULT_INDEX_NAME)
+
+        then:
+        noErrorsLogged()
     }
 
     @Timeout(value = 10)
     def 'transport client times out when node is not listening on configured port'() {
-        super.cleanup() // Detach the logging asserter for this test
         def extension = new MetricsPluginExtension()
         def serverSocket = new ServerSocket(0)
         extension.transportPort = serverSocket.localPort
@@ -88,7 +90,6 @@ class ClientESMetricsDispatcherIntegTest extends LogbackAssertSpecification {
     @Timeout(value = 10)
     def 'transport client times out when node is unresponsive on configured port'() {
         setup:
-        super.cleanup() // Detach the logging asserter for this test
         def extension = new MetricsPluginExtension()
         def serverSocket = new ServerSocket(0)
         new Thread(new Runnable() {

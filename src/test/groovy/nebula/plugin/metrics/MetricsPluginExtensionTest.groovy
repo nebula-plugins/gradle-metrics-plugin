@@ -1,8 +1,7 @@
 package nebula.plugin.metrics
 
-import ch.qos.logback.classic.Level
+import org.gradle.api.logging.LogLevel
 import org.joda.time.DateTime
-import org.joda.time.format.DateTimeFormat
 import spock.lang.Shared
 import spock.lang.Specification
 
@@ -15,7 +14,7 @@ class MetricsPluginExtensionTest extends Specification {
 
     def 'default log level is warning'() {
         expect:
-        extension.logLevel == Level.WARN
+        extension.logLevel == LogLevel.WARN
     }
 
     def 'setting log level is successful'() {
@@ -23,7 +22,7 @@ class MetricsPluginExtensionTest extends Specification {
         extension.logLevel = 'info'
 
         then:
-        extension.logLevel == Level.INFO
+        extension.logLevel == LogLevel.INFO
     }
 
     def 'logstash rolling formats as expected'() {

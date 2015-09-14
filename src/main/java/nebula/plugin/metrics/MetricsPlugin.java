@@ -19,7 +19,7 @@ package nebula.plugin.metrics;
 
 import nebula.plugin.metrics.collector.GradleCollector;
 import nebula.plugin.metrics.collector.GradleTestSuiteCollector;
-import nebula.plugin.metrics.collector.LogbackCollector;
+import nebula.plugin.metrics.collector.LoggingCollector;
 import nebula.plugin.metrics.dispatcher.ClientESMetricsDispatcher;
 import nebula.plugin.metrics.dispatcher.HttpESMetricsDispatcher;
 import nebula.plugin.metrics.dispatcher.MetricsDispatcher;
@@ -32,14 +32,10 @@ import org.gradle.api.Action;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 import org.gradle.api.Task;
-import org.gradle.api.internal.GradleInternal;
 import org.gradle.api.invocation.Gradle;
 import org.gradle.api.plugins.ExtensionContainer;
 import org.gradle.api.tasks.TaskContainer;
 import org.gradle.api.tasks.testing.Test;
-import org.gradle.initialization.ClassLoaderRegistry;
-import org.gradle.internal.classloader.FilteringClassLoader;
-import org.gradle.invocation.DefaultGradle;
 import org.slf4j.Logger;
 
 import java.util.Set;
@@ -69,7 +65,6 @@ public final class MetricsPlugin implements Plugin<Project> {
     public void apply(Project project) {
         checkNotNull(project);
         checkState(project == project.getRootProject(), "The metrics plugin may only be applied to the root project");
-        allowLogbackClassLoading(project);
         ExtensionContainer extensions = project.getExtensions();
         extensions.add("metrics", new MetricsPluginExtension());
         Gradle gradle = project.getGradle();
@@ -105,17 +100,9 @@ public final class MetricsPlugin implements Plugin<Project> {
         this.dispatcher = checkNotNull(dispatcher);
     }
 
-    private void allowLogbackClassLoading(Project project) {
-        GradleInternal gradle = (DefaultGradle) project.getGradle();
-        ClassLoaderRegistry registry = gradle.getServices().get(ClassLoaderRegistry.class);
-        FilteringClassLoader classLoader = (FilteringClassLoader) registry.getGradleApiClassLoader().getParent();
-        classLoader.allowPackage("ch.qos.logback");
-    }
-
     private void configureRootProjectCollectors(Project rootProject, MetricsPluginExtension extension) {
         Gradle gradle = rootProject.getGradle();
-        LogbackCollector.configureLogbackCollection(dispatcherSupplier, extension);
-        gradle.addListener(new GradleCollector(dispatcherSupplier));
+        gradle.addListener(new GradleCollector(dispatcherSupplier, extension));
     }
 
     private void configureProjectCollectors(Set<Project> projects) {

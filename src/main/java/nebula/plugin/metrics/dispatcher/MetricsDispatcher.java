@@ -19,9 +19,9 @@ package nebula.plugin.metrics.dispatcher;
 
 import nebula.plugin.metrics.model.*;
 
-import ch.qos.logback.classic.spi.LoggingEvent;
 import com.google.common.base.Optional;
 import com.google.common.util.concurrent.Service;
+import org.gradle.logging.internal.LogEvent;
 
 import java.util.Collection;
 
@@ -39,9 +39,9 @@ public interface MetricsDispatcher extends Service {
 
     void task(Task task);
 
-    void logbackEvent(LoggingEvent event);
+    void logEvent(LogEvent event);
 
-    void logbackEvents(Collection<LoggingEvent> events);
+    void logEvents(Collection<LogEvent> events);
 
     void test(Test test);
 

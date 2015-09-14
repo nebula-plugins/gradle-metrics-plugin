@@ -24,15 +24,15 @@ import nebula.test.ProjectSpec
 import org.slf4j.MarkerFactory
 
 /**
- * Tests for {@link LogbackCollector}.
+ * Tests for {@link LoggingCollector}.
  */
-class LogbackCollectorTest extends ProjectSpec {
+class LoggingCollectorTest extends ProjectSpec {
     def dispatcher = Mock(MetricsDispatcher)
 
     def setup() {
         def extension = new MetricsPluginExtension()
         extension.setLogLevel('info')
-        LogbackCollector.configureLogbackCollection(new Supplier<MetricsDispatcher>() {
+        LoggingCollector.configureCollection(new Supplier<MetricsDispatcher>() {
             @Override
             MetricsDispatcher get() {
                 return dispatcher
@@ -41,7 +41,7 @@ class LogbackCollectorTest extends ProjectSpec {
     }
 
     def cleanup() {
-        LogbackCollector.resetLogbackCollection()
+        LoggingCollector.reset()
     }
 
     def 'events equal or greater than threshold are collected'() {
@@ -53,7 +53,7 @@ class LogbackCollectorTest extends ProjectSpec {
         logger.info("info")
 
         then:
-        3 * dispatcher.logbackEvent(_)
+        3 * dispatcher.logEvent(_)
     }
 
     def 'events below threshold are not collected'() {
@@ -61,14 +61,6 @@ class LogbackCollectorTest extends ProjectSpec {
         project.logger.debug("debug")
 
         then:
-        0 * dispatcher.logbackEvent(_)
-    }
-
-    def 'events below threshold, but with marker, are collected'() {
-        when:
-        project.logger.debug(MarkerFactory.getMarker("metrics"), "debug")
-
-        then:
-        1 * dispatcher.logbackEvent(_)
+        0 * dispatcher.logEvent(_)
     }
 }

@@ -21,6 +21,7 @@ import nebula.plugin.metrics.MetricsLoggerFactory;
 import nebula.plugin.metrics.MetricsPluginExtension;
 import nebula.plugin.metrics.model.*;
 
+import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.spi.LoggingEvent;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.core.JsonGenerator;
@@ -38,6 +39,7 @@ import com.google.common.base.Suppliers;
 import com.google.common.base.Throwables;
 import com.google.common.collect.Lists;
 import net.logstash.logback.layout.LogstashLayout;
+import org.gradle.logging.internal.LogEvent;
 import org.slf4j.Logger;
 
 import java.io.IOException;
@@ -238,12 +240,12 @@ public abstract class AbstractESMetricsDispatcher extends AbstractQueuedExecutio
     }
 
     @Override
-    public final void logbackEvent(final LoggingEvent event) {
+    public final void logEvent(final LogEvent event) {
         checkNotNull(event);
         Runnable runnable = new Runnable() {
             @Override
             public void run() {
-                String json = layoutLogbackEvent(event);
+                String json = layoutLogEvent(event);
                 index(extension.getLogstashIndexName(), LOG_TYPE, json);
             }
         };
@@ -251,14 +253,14 @@ public abstract class AbstractESMetricsDispatcher extends AbstractQueuedExecutio
     }
 
     @Override
-    public final void logbackEvents(final Collection<LoggingEvent> events) {
+    public final void logEvents(final Collection<LogEvent> events) {
         checkNotNull(events);
         Runnable runnable = new Runnable() {
             @Override
             public void run() {
                 List<String> jsons = Lists.newArrayListWithCapacity(events.size());
-                for (LoggingEvent event : events) {
-                    jsons.add(layoutLogbackEvent(event));
+                for (LogEvent event : events) {
+                    jsons.add(layoutLogEvent(event));
                 }
                 bulkIndex(extension.getLogstashIndexName(), LOG_TYPE, jsons);
             }
@@ -266,9 +268,13 @@ public abstract class AbstractESMetricsDispatcher extends AbstractQueuedExecutio
         queue(runnable);
     }
 
-    private String layoutLogbackEvent(LoggingEvent event) {
+    private String layoutLogEvent(LogEvent event) {
         LogstashLayout logstashLayout = logstashLayoutSupplier.get();
-        return logstashLayout.doLayout(event);
+        String message = String.format("[%s] %s", event.getCategory(), event.getMessage());
+        @SuppressWarnings("ConstantConditions")
+        LoggingEvent loggingEvent = new LoggingEvent(Logger.class.getCanonicalName(), null, Level.valueOf(event.getLogLevel().name()),
+                message, event.getThrowable(), null);
+        return logstashLayout.doLayout(loggingEvent);
     }
 
     @Override

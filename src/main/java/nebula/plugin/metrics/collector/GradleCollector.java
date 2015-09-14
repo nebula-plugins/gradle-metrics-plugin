@@ -18,6 +18,7 @@
 package nebula.plugin.metrics.collector;
 
 import nebula.plugin.metrics.MetricsLoggerFactory;
+import nebula.plugin.metrics.MetricsPluginExtension;
 import nebula.plugin.metrics.dispatcher.MetricsDispatcher;
 import nebula.plugin.metrics.model.GradleToolContainer;
 import nebula.plugin.metrics.model.Info;
@@ -58,8 +59,9 @@ public final class GradleCollector implements ProfileListener, BuildListener {
     private final Supplier<MetricsDispatcher> dispatcherSupplier;
     private final AtomicBoolean complete = new AtomicBoolean();
 
-    public GradleCollector(Supplier<MetricsDispatcher> dispatcherSupplier) {
+    public GradleCollector(Supplier<MetricsDispatcher> dispatcherSupplier, MetricsPluginExtension extension) {
         this.dispatcherSupplier = checkNotNull(dispatcherSupplier);
+        LoggingCollector.configureCollection(dispatcherSupplier, checkNotNull(extension));
     }
 
     @Override
@@ -181,7 +183,7 @@ public final class GradleCollector implements ProfileListener, BuildListener {
                     logger.error("Could not stop metrics dispatcher service", e);
                 }
             }
-            LogbackCollector.resetLogbackCollection();
+            LoggingCollector.reset();
             Optional<String> receipt = dispatcher.receipt();
             if (receipt.isPresent()) {
                 logger.warn(receipt.get());

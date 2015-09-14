@@ -25,7 +25,7 @@ import spock.lang.Specification
  */
 class InfoTest extends Specification {
     def 'environment is json serialized in expected form'() {
-        def map = new HashMap<String, String>()
+        def map = new LinkedHashMap<String, String>()
         map.put("mykey1", "myvalue1")
         map.put("mykey2", "myvalue2")
         def tool = Mock(Tool)

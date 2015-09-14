@@ -17,7 +17,7 @@
 
 package nebula.plugin.metrics;
 
-import ch.qos.logback.classic.Level;
+import org.gradle.api.logging.LogLevel;
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
@@ -38,14 +38,14 @@ public class MetricsPluginExtension {
     private static final String LOGSTASH_INDEX_PREFIX = "logstash-";
     public static final DateTimeFormatter ROLLING_FORMATTER = DateTimeFormat.forPattern("yyyyMM");
     public static final String DEFAULT_INDEX_NAME = INDEX_PREFIX + "default";
-    private static final Level DEFAULT_LOG_LEVEL = Level.WARN;
+    private static final LogLevel DEFAULT_LOG_LEVEL = LogLevel.WARN;
 
     private String hostname = "localhost";
     private int transportPort = 9300;
     private int httpPort = 9200;
     private String clusterName = "elasticsearch";
     private String indexName = DEFAULT_INDEX_NAME;
-    private Level logLevel = DEFAULT_LOG_LEVEL;
+    private LogLevel logLevel = DEFAULT_LOG_LEVEL;
     private DispatcherType dispatcherType = DispatcherType.ES_HTTP;
 
     public String getHostname() {
@@ -93,12 +93,12 @@ public class MetricsPluginExtension {
         this.indexName = INDEX_PREFIX + checkNotNull(indexName);
     }
 
-    public Level getLogLevel() {
+    public LogLevel getLogLevel() {
         return logLevel;
     }
 
     public void setLogLevel(String logLevel) {
-        this.logLevel = Level.toLevel(checkNotNull(logLevel), DEFAULT_LOG_LEVEL);
+        this.logLevel = LogLevel.valueOf(logLevel.toUpperCase());
     }
 
     public DispatcherType getDispatcherType() {

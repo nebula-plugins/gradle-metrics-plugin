@@ -36,7 +36,7 @@ import static ClientESMetricsDispatcher.BUILD_TYPE
 /**
  * Tests for {@link ClientESMetricsDispatcher}.
  */
-class ClientESMetricsDispatcherTest extends LogbackAssertSpecification {
+class ClientESMetricsDispatcherTest extends LoggingCaptureSpecification {
     def extension = new MetricsPluginExtension()
     def project = new Project("project", "1.0")
 
@@ -53,6 +53,7 @@ class ClientESMetricsDispatcherTest extends LogbackAssertSpecification {
         then:
         def receipt = dispatcher.receipt().get()
         receipt == 'You can find the metrics for this build at http://localhost:9200/build-metrics-default/build/id'
+        noErrorsLogged()
     }
 
     def 'build start event contains the expected json representation'() {
@@ -76,6 +77,7 @@ class ClientESMetricsDispatcherTest extends LogbackAssertSpecification {
 
         then:
         noExceptionThrown()
+        noErrorsLogged()
     }
 
     def 'mapper formats dates using the same format as content builder'() {
