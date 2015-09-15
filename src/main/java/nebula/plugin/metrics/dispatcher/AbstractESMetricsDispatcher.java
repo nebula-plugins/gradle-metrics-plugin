@@ -22,6 +22,8 @@ import nebula.plugin.metrics.MetricsPluginExtension;
 import nebula.plugin.metrics.model.*;
 
 import ch.qos.logback.classic.Level;
+import ch.qos.logback.classic.LoggerContext;
+import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.classic.spi.LoggingEvent;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.core.JsonGenerator;
@@ -37,7 +39,11 @@ import com.google.common.base.Optional;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.base.Throwables;
+import com.google.common.collect.FluentIterable;
 import com.google.common.collect.Lists;
+import net.logstash.logback.composite.JsonProviders;
+import net.logstash.logback.composite.loggingevent.LoggingEventJsonProviders;
+import net.logstash.logback.composite.loggingevent.MdcJsonProvider;
 import net.logstash.logback.layout.LogstashLayout;
 import org.gradle.logging.internal.LogEvent;
 import org.slf4j.Logger;
@@ -48,8 +54,7 @@ import java.net.URL;
 import java.util.Collection;
 import java.util.List;
 
-import static com.google.common.base.Preconditions.checkNotNull;
-import static com.google.common.base.Preconditions.checkState;
+import static com.google.common.base.Preconditions.*;
 
 public abstract class AbstractESMetricsDispatcher extends AbstractQueuedExecutionThreadService<Runnable> implements MetricsDispatcher {
     protected static final String BUILD_TYPE = "build";
@@ -61,17 +66,27 @@ public abstract class AbstractESMetricsDispatcher extends AbstractQueuedExecutio
     private final ObjectMapper mapper;
     private final boolean async;
     private final Build build;
+
+    private final ch.qos.logback.classic.Logger logbackLogger = new LoggerContext().getLogger(Logger.ROOT_LOGGER_NAME);
     private final Supplier<LogstashLayout> logstashLayoutSupplier = Suppliers.memoize(new Supplier<LogstashLayout>() {
         @Override
         public LogstashLayout get() {
             checkState(buildId.isPresent(), "buildId has not been set");
-            LogstashLayout layout = new LogstashLayout();
+            final LogstashLayout layout = new LogstashLayout();
+            /**
+             * Gradle doesn't include a complete SLF4J implementation, so when the provider tries to access MDC
+             * features a warning is output. So we need to expose a method to remove the provider.
+             */
+            JsonProviders<ILoggingEvent> providers = layout.getProviders();
+            MdcJsonProvider provider = FluentIterable.from(providers.getProviders()).filter(MdcJsonProvider.class).first().get();
+            layout.getProviders().removeProvider(provider);
             layout.setTimeZone("UTC");
             layout.setCustomFields(String.format("{\"@source\":\"%s\"}", buildId.get()));
             layout.start();
             return layout;
         }
     });
+
     private Optional<String> buildId = Optional.absent();
 
     protected AbstractESMetricsDispatcher(MetricsPluginExtension extension) {
@@ -255,6 +270,7 @@ public abstract class AbstractESMetricsDispatcher extends AbstractQueuedExecutio
     @Override
     public final void logEvents(final Collection<LogEvent> events) {
         checkNotNull(events);
+        checkArgument(!events.isEmpty(), "Empty events list found: %s", events);
         Runnable runnable = new Runnable() {
             @Override
             public void run() {
@@ -272,7 +288,7 @@ public abstract class AbstractESMetricsDispatcher extends AbstractQueuedExecutio
         LogstashLayout logstashLayout = logstashLayoutSupplier.get();
         String message = String.format("[%s] %s", event.getCategory(), event.getMessage());
         @SuppressWarnings("ConstantConditions")
-        LoggingEvent loggingEvent = new LoggingEvent(Logger.class.getCanonicalName(), null, Level.valueOf(event.getLogLevel().name()),
+        LoggingEvent loggingEvent = new LoggingEvent(Logger.class.getCanonicalName(), logbackLogger, Level.valueOf(event.getLogLevel().name()),
                 message, event.getThrowable(), null);
         return logstashLayout.doLayout(loggingEvent);
     }

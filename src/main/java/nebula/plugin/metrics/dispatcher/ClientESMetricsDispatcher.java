@@ -35,6 +35,8 @@ import org.elasticsearch.common.transport.InetSocketTransportAddress;
 import javax.annotation.Nullable;
 import java.util.Collection;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
 /**
  * Elasticsearch client {@link nebula.plugin.metrics.dispatcher.MetricsDispatcher}.
  *
