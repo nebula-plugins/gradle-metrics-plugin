@@ -25,6 +25,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.common.util.concurrent.AbstractExecutionThreadService;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
 import java.util.List;
@@ -45,7 +46,8 @@ import static com.google.common.base.Preconditions.checkState;
  */
 public abstract class AbstractQueuedExecutionThreadService<E> extends AbstractExecutionThreadService {
     private static final Set<State> QUEUE_AVAILABLE_STATES = Sets.newHashSet(State.STARTING, State.RUNNING, State.STOPPING);
-    private final Logger logger = MetricsLoggerFactory.getLogger(AbstractExecutionThreadService.class);
+    // We can't use the MetricsLoggerFactory here, or we'll get a feedback loop from the debug statements in the indexing critical paths
+    private final Logger logger = LoggerFactory.getLogger(AbstractExecutionThreadService.class);
     private final BlockingQueue<E> queue;
     private final boolean failOnError;
     private final AtomicBoolean failed = new AtomicBoolean();

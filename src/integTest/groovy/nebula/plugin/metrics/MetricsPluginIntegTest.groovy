@@ -23,7 +23,6 @@ import nebula.test.IntegrationSpec
 import org.elasticsearch.common.settings.ImmutableSettings
 import org.elasticsearch.node.Node
 import org.elasticsearch.node.NodeBuilder
-import spock.lang.Ignore
 import spock.lang.Shared
 import spock.lang.Unroll
 
@@ -92,6 +91,7 @@ class MetricsPluginIntegTest extends IntegrationSpec {
 
         then:
         indexExists()
+        runResult.standardError.isEmpty()
 
         def m = runResult.standardOutput =~ /Build id is (.*)/
         def buildId = m[0][1] as String

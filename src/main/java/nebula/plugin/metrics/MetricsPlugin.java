@@ -19,7 +19,6 @@ package nebula.plugin.metrics;
 
 import nebula.plugin.metrics.collector.GradleCollector;
 import nebula.plugin.metrics.collector.GradleTestSuiteCollector;
-import nebula.plugin.metrics.collector.LoggingCollector;
 import nebula.plugin.metrics.dispatcher.ClientESMetricsDispatcher;
 import nebula.plugin.metrics.dispatcher.HttpESMetricsDispatcher;
 import nebula.plugin.metrics.dispatcher.MetricsDispatcher;
