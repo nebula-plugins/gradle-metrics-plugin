@@ -118,7 +118,7 @@ public class MetricsPluginExtension {
     }
 
     public void setSanitizedProperties(List<String> sanitizedProperties) {
-        this.sanitizedProperties = sanitizedProperties;
+        this.sanitizedProperties = checkNotNull(sanitizedProperties);
     }
 
     public enum DispatcherType {
