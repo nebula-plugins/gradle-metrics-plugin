@@ -71,7 +71,8 @@ class ClientESMetricsDispatcherTest extends LoggingCaptureSpecification {
         }
         // TODO Ignoring the tail because it includes timestamps which I'm being too lazy to match right now
         json.startsWith('{"project":{"name":"project","version":"1.0"},"events":[],"tasks":[],"tests":[],"result":{"status":"unknown"}')
-        json.contains('"eventsCount":0,"eventsElapsedTime":0,"taskCount":0,"tasksElapsedTime":0,"testCount":0,"testElapsedTime":0')
+        json.contains('"eventsCount":0')
+        json.contains('"eventsElapsedTime":0')
 
         when:
         dispatcher.stopAsync().awaitTerminated()

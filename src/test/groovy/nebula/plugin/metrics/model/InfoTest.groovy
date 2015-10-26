@@ -33,6 +33,6 @@ class InfoTest extends Specification {
         def mapper = new ObjectMapper()
 
         expect:
-        mapper.writeValueAsString(environment) == '{"build":{"type":null},"scm":{"type":null},"ci":{"type":null},"environmentVariables":[{"key":"mykey1","value":"myvalue1"},{"key":"mykey2","value":"myvalue2"}],"systemProperties":[]}'
+        mapper.writeValueAsString(environment) == '{"build":{"type":null},"scm":{"type":null},"ci":{"type":null},"environmentVariables":[{"key":"mykey1","value":"myvalue1"},{"key":"mykey2","value":"myvalue2"}],"systemProperties":[],"javaVersion":"unknown"}'
     }
 }
