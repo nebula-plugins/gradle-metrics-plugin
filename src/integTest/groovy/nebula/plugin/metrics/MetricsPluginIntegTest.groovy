@@ -115,6 +115,36 @@ class MetricsPluginIntegTest extends IntegrationSpec {
         dispatcherType << DispatcherType.values()
     }
 
+    @Unroll('properties are sanitized (#dispatcherType)')
+    def 'properties are sanitized'(DispatcherType dispatcherType) {
+        setValidBuildFile(dispatcherType)
+        buildFile << """
+                     metrics {
+                        sanitizedProperties = ['java.version']
+                     }
+                     """
+        def runResult
+
+        when:
+        runResult = runTasksSuccessfully('projects')
+
+        then:
+        indexExists()
+        runResult.standardError.isEmpty()
+
+        def m = runResult.standardOutput =~ /Build id is (.*)/
+        def buildId = m[0][1] as String
+        def client = node.client()
+        def result = client.prepareGet(DEFAULT_INDEX_NAME, 'build', buildId).execute().actionGet()
+        result.isExists()
+
+        def source = result.source
+        source.info.systemProperties.find { it.key == 'java.version' }.value == 'SANITIZED'
+
+        where:
+        dispatcherType << DispatcherType.values()
+    }
+
     @Unroll('running offline results in no metrics being recorded (#dispatcherType)')
     def 'running offline results in no metrics being recorded'(DispatcherType dispatcherType) {
         setValidBuildFile(dispatcherType)

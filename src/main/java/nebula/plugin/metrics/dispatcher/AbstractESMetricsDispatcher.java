@@ -195,6 +195,7 @@ public abstract class AbstractESMetricsDispatcher extends AbstractQueuedExecutio
             @Override
             public void run() {
                 try {
+                    sanitizeProperties(build);
                     String json = mapper.writeValueAsString(build);
                     if (buildId.isPresent()) {
                         index(extension.getIndexName(), BUILD_TYPE, json, buildId);
@@ -208,6 +209,13 @@ public abstract class AbstractESMetricsDispatcher extends AbstractQueuedExecutio
             }
         };
         queue(runnable);
+    }
+
+    private void sanitizeProperties(Build build) {
+        Info info = build.getInfo();
+        if (info != null) {
+            build.setInfo(Info.sanitize(info, extension.getSanitizedProperties()));
+        }
     }
 
     @Override

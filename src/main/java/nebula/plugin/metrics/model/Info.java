@@ -17,10 +17,13 @@
 
 package nebula.plugin.metrics.model;
 
+import nebula.plugin.metrics.MetricsPluginExtension;
+
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import lombok.NonNull;
 import lombok.Value;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -40,10 +43,27 @@ public class Info {
     }
 
     public static Info create(Tool tool, Tool scm, Tool ci, Map<String, String> env, Map<String, String> systemProperties) {
-        // TODO do we need to blacklist/redact certain properties?
         List<KeyValue> envList = KeyValue.mapToKeyValueList(env);
         List<KeyValue> systemPropertiesList = KeyValue.mapToKeyValueList(systemProperties);
         return new Info(tool, scm, ci, envList, systemPropertiesList);
+    }
+
+    public static Info sanitize(Info info, List<String> sanitizedProperties) {
+        List<KeyValue> systemProperties = sanitizeKeyValues(info.getSystemProperties(), sanitizedProperties);
+        List<KeyValue> environmentVariables = sanitizeKeyValues(info.getEnvironmentVariables(), sanitizedProperties);
+        return new Info(info.getBuild(), info.getScm(), info.getCi(), systemProperties, environmentVariables);
+    }
+
+    private static List<KeyValue> sanitizeKeyValues(List<KeyValue> keyValues, List<String> sanitizedProperties) {
+        List<KeyValue> sanitizedKeyValues = new ArrayList<>();
+        for (KeyValue keyValue : keyValues) {
+            if (sanitizedProperties.contains(keyValue.getKey())) {
+                sanitizedKeyValues.add(new KeyValue(keyValue.getKey(), "SANITIZED"));
+            } else {
+                sanitizedKeyValues.add(keyValue);
+            }
+        }
+        return sanitizedKeyValues;
     }
 
     @NonNull

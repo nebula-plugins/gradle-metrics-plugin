@@ -22,6 +22,9 @@ import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
@@ -47,6 +50,7 @@ public class MetricsPluginExtension {
     private String indexName = DEFAULT_INDEX_NAME;
     private LogLevel logLevel = DEFAULT_LOG_LEVEL;
     private DispatcherType dispatcherType = DispatcherType.ES_HTTP;
+    private List<String> sanitizedProperties = new ArrayList<>();
 
     public String getHostname() {
         return hostname;
@@ -107,6 +111,14 @@ public class MetricsPluginExtension {
 
     public void setDispatcherType(String dispatcherType) {
         this.dispatcherType = DispatcherType.valueOf(dispatcherType.toUpperCase());
+    }
+
+    public List<String> getSanitizedProperties() {
+        return sanitizedProperties;
+    }
+
+    public void setSanitizedProperties(List<String> sanitizedProperties) {
+        this.sanitizedProperties = sanitizedProperties;
     }
 
     public enum DispatcherType {

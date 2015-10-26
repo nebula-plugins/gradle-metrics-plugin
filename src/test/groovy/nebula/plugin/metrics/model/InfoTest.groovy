@@ -29,10 +29,22 @@ class InfoTest extends Specification {
         map.put("mykey1", "myvalue1")
         map.put("mykey2", "myvalue2")
         def tool = Mock(Tool)
-        def environment = Info.create(tool, tool, tool, map, Collections.emptyMap())
+        def info = Info.create(tool, tool, tool, map, Collections.emptyMap())
         def mapper = new ObjectMapper()
 
         expect:
-        mapper.writeValueAsString(environment) == '{"build":{"type":null},"scm":{"type":null},"ci":{"type":null},"environmentVariables":[{"key":"mykey1","value":"myvalue1"},{"key":"mykey2","value":"myvalue2"}],"systemProperties":[],"javaVersion":"unknown"}'
+        mapper.writeValueAsString(info) == '{"build":{"type":null},"scm":{"type":null},"ci":{"type":null},"environmentVariables":[{"key":"mykey1","value":"myvalue1"},{"key":"mykey2","value":"myvalue2"}],"systemProperties":[],"javaVersion":"unknown"}'
+    }
+
+    def 'properties are sanisited'() {
+        def map = new LinkedHashMap<String, String>()
+        map.put("mykey1", "myvalue1")
+        map.put("mykey2", "myvalue2")
+        def tool = Mock(Tool)
+        def info = Info.create(tool, tool, tool, map, Collections.emptyMap())
+
+        expect:
+        def sanitizedInfo = Info.sanitize(info, Arrays.asList("mykey1"))
+        sanitizedInfo.systemProperties.find{ it.key == "mykey1" }.value == "SANITIZED"
     }
 }
