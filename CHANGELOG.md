@@ -1,3 +1,8 @@
+# 3.1.0
+
+- sanitizedProperties extension property allows environment variables and system properties to be santitized
+- events, tasks and tests now have corresponding Count and ElapsedTime values that sum values in those arrays
+
 # 2.2.6
 
 - Set 'standard' analyzer explicitly for the index to avoid issues with immense terms on instances that configure 'keyword' analyzers by default
