@@ -23,6 +23,7 @@ import org.gradle.logging.internal.OutputEventListener;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -32,7 +33,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
  * @author Danny Thomas
  */
 public class SimpleOutputEventListener implements OutputEventListener {
-    private List<LogEvent> logEvents = new ArrayList<>();
+    private List<LogEvent> logEvents = new CopyOnWriteArrayList<>();
 
     @Override
     public void onOutput(OutputEvent outputEvent) {

@@ -56,6 +56,18 @@ public class Build {
         events.add(checkNotNull(event));
     }
 
+    public int getEventsCount() {
+        return events.size();
+    }
+
+    public long getEventsElapsedTime() {
+        long elapsedTime = 0;
+        for (Event event : events) {
+            elapsedTime += event.getElapsedTime();
+        }
+        return elapsedTime;
+    }
+
     public List<Task> getTasks() {
         return ImmutableList.copyOf(tasks);
     }
@@ -64,12 +76,36 @@ public class Build {
         tasks.add(checkNotNull(task));
     }
 
+    public int getTaskCount() {
+        return tasks.size();
+    }
+
+    public long getTasksElapsedTime() {
+        long elapsedTime = 0;
+        for (Task task : tasks) {
+            elapsedTime += task.getElapsedTime();
+        }
+        return elapsedTime;
+    }
+
     public List<Test> getTests() {
         return ImmutableList.copyOf(tests);
     }
 
     public void addTest(Test test) {
         tests.add(checkNotNull(test));
+    }
+
+    public int getTestCount() {
+        return tests.size();
+    }
+
+    public long getTestElapsedTime() {
+        long elapsedTime = 0;
+        for (Test test : tests) {
+            elapsedTime += test.getElapsedTime();
+        }
+        return elapsedTime;
     }
 
     public Info getInfo() {

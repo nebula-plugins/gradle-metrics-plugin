@@ -60,4 +60,13 @@ public class Info {
 
     @NonNull
     private List<KeyValue> systemProperties;
+
+    public String getJavaVersion() {
+        for (KeyValue systemProperty : systemProperties) {
+            if (systemProperty.getKey().equals("java.version")) {
+                return systemProperty.getValue();
+            }
+        }
+        return "unknown";
+    }
 }
