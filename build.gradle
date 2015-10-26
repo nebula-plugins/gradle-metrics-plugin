@@ -5,22 +5,16 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
-buildscript {
-    repositories { jcenter() }
-    dependencies {
-        classpath 'com.netflix.nebula:gradle-extra-configurations-plugin:2.2.+'
-    }
-}
+buildscript { repositories { jcenter() } } // Some plugin dependencies (namely JFrog) are not in Maven Central
 
 plugins {
     id 'groovy'
@@ -39,12 +33,11 @@ plugins {
     id 'nebula.maven-apache-license' version '4.2.2'
     id 'com.github.kt3k.coveralls' version '2.4.0'
 
+    id 'nebula.provided-base' version '3.0.3'
+    id 'nebula.optional-base' version '3.0.3'
     id 'com.github.ben-manes.versions' version '0.11.3'
     id 'com.github.johnrengelman.shadow' version '1.2.2'
 }
-
-apply plugin: 'provided-base'
-apply plugin: 'optional-base'
 
 apply from: 'gradle/tests.gradle'
 apply from: 'gradle/idea.gradle'

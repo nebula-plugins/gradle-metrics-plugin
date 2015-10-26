@@ -15,7 +15,6 @@
  *
  */
 
-
 package nebula.plugin.metrics.dispatcher
 
 import com.fasterxml.jackson.core.TreeNode
