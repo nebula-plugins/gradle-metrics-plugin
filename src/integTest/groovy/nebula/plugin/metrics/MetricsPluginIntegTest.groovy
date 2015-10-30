@@ -120,7 +120,7 @@ class MetricsPluginIntegTest extends IntegrationSpec {
         setValidBuildFile(dispatcherType)
         buildFile << """
                      metrics {
-                        sanitizedProperties = ['java.version']
+                        sanitizedProperties = ['PATH']
                      }
                      """
         def runResult
@@ -139,7 +139,7 @@ class MetricsPluginIntegTest extends IntegrationSpec {
         result.isExists()
 
         def source = result.source
-        source.info.systemProperties.find { it.key == 'java.version' }.value == 'SANITIZED'
+        source.info.systemProperties.find { it.key == 'PATH' }?.value == 'SANITIZED'
 
         where:
         dispatcherType << DispatcherType.values()
