@@ -17,10 +17,6 @@
 
 package nebula.plugin.metrics.dispatcher;
 
-import ch.qos.logback.classic.Level;
-import ch.qos.logback.classic.LoggerContext;
-import ch.qos.logback.classic.spi.ILoggingEvent;
-import ch.qos.logback.classic.spi.LoggingEvent;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonParser;
@@ -32,29 +28,22 @@ import com.fasterxml.jackson.databind.ser.std.StdSerializer;
 import com.fasterxml.jackson.datatype.joda.JodaModule;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
-import com.google.common.base.Supplier;
-import com.google.common.base.Suppliers;
-import com.google.common.base.Throwables;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.Lists;
 import nebula.plugin.metrics.MetricsLoggerFactory;
 import nebula.plugin.metrics.MetricsPluginExtension;
 import nebula.plugin.metrics.model.*;
-import net.logstash.logback.composite.JsonProviders;
-import net.logstash.logback.composite.loggingevent.MdcJsonProvider;
-import net.logstash.logback.layout.LogstashLayout;
 import org.gradle.logging.internal.LogEvent;
 import org.slf4j.Logger;
 
 import java.io.IOException;
-import java.net.MalformedURLException;
-import java.net.URL;
 import java.util.Collection;
 import java.util.List;
+import java.util.UUID;
 
-import static com.google.common.base.Preconditions.*;
+import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
 
-public abstract class AbstractESMetricsDispatcher extends AbstractQueuedExecutionThreadService<Runnable> implements MetricsDispatcher {
+public abstract class AbstractMetricsDispatcher extends AbstractQueuedExecutionThreadService<Runnable> implements MetricsDispatcher {
     protected static final String BUILD_TYPE = "build";
     protected static final String LOG_TYPE = "log";
 
@@ -65,33 +54,9 @@ public abstract class AbstractESMetricsDispatcher extends AbstractQueuedExecutio
     private final boolean async;
     private final Build build;
 
-    private final ch.qos.logback.classic.Logger logbackLogger = new LoggerContext().getLogger(Logger.ROOT_LOGGER_NAME);
-    private final Supplier<LogstashLayout> logstashLayoutSupplier = Suppliers.memoize(new Supplier<LogstashLayout>() {
-        @Override
-        public LogstashLayout get() {
-            checkState(buildId.isPresent(), "buildId has not been set");
-            final LogstashLayout layout = new LogstashLayout();
-            /**
-             * Gradle doesn't include a complete SLF4J implementation, so when the provider tries to access MDC
-             * features a warning is output. So we need to expose a method to remove the provider.
-             */
-            JsonProviders<ILoggingEvent> providers = layout.getProviders();
-            MdcJsonProvider provider = FluentIterable.from(providers.getProviders()).filter(MdcJsonProvider.class).first().get();
-            layout.getProviders().removeProvider(provider);
-            layout.setTimeZone("UTC");
-            layout.setCustomFields(String.format("{\"@source\":\"%s\"}", buildId.get()));
-            layout.start();
-            return layout;
-        }
-    });
+    protected Optional<String> buildId = Optional.absent();
 
-    private Optional<String> buildId = Optional.absent();
-
-    protected AbstractESMetricsDispatcher(MetricsPluginExtension extension) {
-        this(extension, true);
-    }
-
-    protected AbstractESMetricsDispatcher(MetricsPluginExtension extension, boolean async) {
+    protected AbstractMetricsDispatcher(MetricsPluginExtension extension, boolean async) {
         super(true);
         this.extension = checkNotNull(extension);
         this.mapper = getObjectMapper();
@@ -164,9 +129,8 @@ public abstract class AbstractESMetricsDispatcher extends AbstractQueuedExecutio
     protected abstract void startUpClient();
 
     @Override
-    protected final void postShutDown() throws Exception {
+    protected void postShutDown() throws Exception {
         shutDownClient();
-        logstashLayoutSupplier.get().stop();
     }
 
     protected abstract void shutDownClient();
@@ -177,19 +141,9 @@ public abstract class AbstractESMetricsDispatcher extends AbstractQueuedExecutio
     }
 
     @Override
-    public final Optional<String> receipt() {
-        if (buildId.isPresent()) {
-            String file = "/" + extension.getIndexName() + "/" + BUILD_TYPE + "/" + buildId.get();
-            URL url;
-            try {
-                url = new URL("http", extension.getHostname(), extension.getHttpPort(), file);
-            } catch (MalformedURLException e) {
-                throw Throwables.propagate(e);
-            }
-            return Optional.of("You can find the metrics for this build at " + url);
-        } else {
-            return buildId;
-        }
+    public Optional<String> receipt() {
+        // by default, metrics dispatchers cannot provide a receipt. Concrete classes may change this behavior.
+        return Optional.absent();
     }
 
     private void indexBuildModel(boolean executeSynchronously) {
@@ -199,12 +153,12 @@ public abstract class AbstractESMetricsDispatcher extends AbstractQueuedExecutio
                 try {
                     sanitizeProperties(build);
                     String json = mapper.writeValueAsString(build);
-                    if (buildId.isPresent()) {
-                        index(extension.getIndexName(), BUILD_TYPE, json, buildId);
-                    } else {
-                        buildId = Optional.of(index(extension.getIndexName(), BUILD_TYPE, json));
+                    if (!buildId.isPresent()) {
+                        buildId = Optional.of(UUID.randomUUID().toString());
                         logger.info("Build id is {}", buildId.get());
                     }
+                    index(extension.getIndexName(), BUILD_TYPE, json, buildId);
+
                 } catch (JsonProcessingException e) {
                     logger.error("Unable to write JSON string value: " + e.getMessage(), e);
                 }
@@ -231,17 +185,9 @@ public abstract class AbstractESMetricsDispatcher extends AbstractQueuedExecutio
         indexBuildModel(false);
     }
 
-    protected abstract void createIndex(String indexName, String source);
-
     protected final String index(String indexName, String type, String source) {
         return index(indexName, type, source, Optional.<String>absent());
     }
-
-    protected abstract String index(String indexName, String type, String source, Optional<String> id);
-
-    protected abstract void bulkIndex(String indexName, String type, Collection<String> sources);
-
-    protected abstract boolean exists(String indexName);
 
     @Override
     public final void duration(long startTime, long elapsedTime) {
@@ -270,12 +216,17 @@ public abstract class AbstractESMetricsDispatcher extends AbstractQueuedExecutio
     }
 
     @Override
+    public final void test(Test test) {
+        build.addTest(test);
+    }
+
+    @Override
     public final void logEvent(final LogEvent event) {
         checkNotNull(event);
         Runnable runnable = new Runnable() {
             @Override
             public void run() {
-                String json = layoutLogEvent(event);
+                String json = renderEvent(event);
                 index(extension.getLogstashIndexName(), LOG_TYPE, json);
             }
         };
@@ -291,26 +242,22 @@ public abstract class AbstractESMetricsDispatcher extends AbstractQueuedExecutio
             public void run() {
                 List<String> jsons = Lists.newArrayListWithCapacity(events.size());
                 for (LogEvent event : events) {
-                    jsons.add(layoutLogEvent(event));
+                    jsons.add(renderEvent(event));
                 }
-                bulkIndex(extension.getLogstashIndexName(), LOG_TYPE, jsons);
+                bulkIndex(getLogEventIndexName(), LOG_TYPE, jsons);
             }
         };
         queue(runnable);
     }
 
-    private String layoutLogEvent(LogEvent event) {
-        LogstashLayout logstashLayout = logstashLayoutSupplier.get();
-        String message = String.format("[%s] %s", event.getCategory(), event.getMessage());
-        @SuppressWarnings("ConstantConditions")
-        LoggingEvent loggingEvent = new LoggingEvent(Logger.class.getCanonicalName(), logbackLogger, Level.valueOf(event.getLogLevel().name()),
-                message, event.getThrowable(), null);
-        return logstashLayout.doLayout(loggingEvent);
+    protected String renderEvent(LogEvent event) {
+        return event.toString();
     }
 
-    @Override
-    public final void test(Test test) {
-        build.addTest(test);
-    }
+    protected abstract String getLogEventIndexName();
+
+    protected abstract String index(String indexName, String type, String source, Optional<String> id);
+
+    protected abstract void bulkIndex(String indexName, String type, Collection<String> sources);
 
 }

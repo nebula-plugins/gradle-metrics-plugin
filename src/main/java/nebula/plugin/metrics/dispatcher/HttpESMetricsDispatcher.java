@@ -17,8 +17,6 @@
 
 package nebula.plugin.metrics.dispatcher;
 
-import nebula.plugin.metrics.MetricsPluginExtension;
-
 import com.google.common.base.Optional;
 import com.google.common.base.Throwables;
 import io.searchbox.action.Action;
@@ -30,6 +28,7 @@ import io.searchbox.core.Bulk;
 import io.searchbox.core.Index;
 import io.searchbox.indices.CreateIndex;
 import io.searchbox.indices.IndicesExists;
+import nebula.plugin.metrics.MetricsPluginExtension;
 
 import java.io.IOException;
 import java.util.Collection;
@@ -39,11 +38,11 @@ import java.util.Collection;
  *
  * @author Danny Thomas
  */
-public final class HttpESMetricsDispatcher extends AbstractESMetricsDispatcher {
+public final class HttpESMetricsDispatcher extends AbstractEsMetricsDispatchr {
     private JestClient client;
 
     public HttpESMetricsDispatcher(MetricsPluginExtension extension) {
-        super(extension);
+        super(extension, true);
     }
 
     @Override

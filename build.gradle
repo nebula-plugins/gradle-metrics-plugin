@@ -52,6 +52,10 @@ contacts {
         moniker 'Danny Thomas'
         github 'DanielThomas'
     }
+    'nadavcoh@gmail.com' {
+        moniker 'Nadav Cohen'
+        github 'nadavc'
+    }
 }
 
 pluginBundle {

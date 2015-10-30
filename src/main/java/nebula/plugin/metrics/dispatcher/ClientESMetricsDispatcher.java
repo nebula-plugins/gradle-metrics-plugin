@@ -17,9 +17,8 @@
 
 package nebula.plugin.metrics.dispatcher;
 
-import nebula.plugin.metrics.MetricsPluginExtension;
-
 import com.google.common.base.Optional;
+import nebula.plugin.metrics.MetricsPluginExtension;
 import org.elasticsearch.action.admin.indices.create.CreateIndexRequestBuilder;
 import org.elasticsearch.action.admin.indices.exists.indices.IndicesExistsRequestBuilder;
 import org.elasticsearch.action.admin.indices.exists.indices.IndicesExistsResponse;
@@ -40,7 +39,7 @@ import java.util.Collection;
  *
  * @author Danny Thomas
  */
-public final class ClientESMetricsDispatcher extends AbstractESMetricsDispatcher {
+public final class ClientESMetricsDispatcher extends AbstractEsMetricsDispatchr {
     private Client client;
 
     public ClientESMetricsDispatcher(MetricsPluginExtension extension) {

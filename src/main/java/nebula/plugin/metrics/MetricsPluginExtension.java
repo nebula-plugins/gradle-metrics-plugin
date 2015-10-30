@@ -40,8 +40,11 @@ public class MetricsPluginExtension {
     private static final String INDEX_PREFIX = "build-metrics-";
     private static final String LOGSTASH_INDEX_PREFIX = "logstash-";
     public static final DateTimeFormatter ROLLING_FORMATTER = DateTimeFormat.forPattern("yyyyMM");
-    public static final String DEFAULT_INDEX_NAME = INDEX_PREFIX + "default";
     private static final LogLevel DEFAULT_LOG_LEVEL = LogLevel.WARN;
+
+    public static final String DEFAULT_INDEX_NAME = INDEX_PREFIX + "default";
+    private static final String DEFAULT_SURO_BUILD_EVENT_NAME = "build_metrics";
+    private static final String DEFAULT_SURO_BUILD_LOG_EVENT_NAME = "build_metrics_events";
 
     private String hostname = "localhost";
     private int transportPort = 9300;
@@ -49,6 +52,10 @@ public class MetricsPluginExtension {
     private String clusterName = "elasticsearch";
     private String indexName = DEFAULT_INDEX_NAME;
     private LogLevel logLevel = DEFAULT_LOG_LEVEL;
+
+    private String suroBuildEventName = DEFAULT_SURO_BUILD_EVENT_NAME;
+    private String suroBuildLogEventName = DEFAULT_SURO_BUILD_LOG_EVENT_NAME;
+
     private DispatcherType dispatcherType = DispatcherType.ES_HTTP;
     private List<String> sanitizedProperties = new ArrayList<>();
 
@@ -119,6 +126,22 @@ public class MetricsPluginExtension {
 
     public void setSanitizedProperties(List<String> sanitizedProperties) {
         this.sanitizedProperties = checkNotNull(sanitizedProperties);
+    }
+
+    public String getSuroBuildLogEventName() {
+        return suroBuildLogEventName;
+    }
+
+    public void setSuroBuildLogEventName(String suroBuildLogEventName) {
+        this.suroBuildLogEventName = checkNotNull(suroBuildLogEventName);
+    }
+
+    public String getSuroBuildEventName() {
+        return suroBuildEventName;
+    }
+
+    public void setSuroBuildEventName(String suroBuildEventName) {
+        this.suroBuildEventName = checkNotNull(suroBuildEventName);
     }
 
     public enum DispatcherType {
