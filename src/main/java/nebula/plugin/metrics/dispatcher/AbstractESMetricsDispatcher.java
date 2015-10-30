@@ -17,10 +17,6 @@
 
 package nebula.plugin.metrics.dispatcher;
 
-import nebula.plugin.metrics.MetricsLoggerFactory;
-import nebula.plugin.metrics.MetricsPluginExtension;
-import nebula.plugin.metrics.model.*;
-
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.LoggerContext;
 import ch.qos.logback.classic.spi.ILoggingEvent;
@@ -41,8 +37,10 @@ import com.google.common.base.Suppliers;
 import com.google.common.base.Throwables;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.Lists;
+import nebula.plugin.metrics.MetricsLoggerFactory;
+import nebula.plugin.metrics.MetricsPluginExtension;
+import nebula.plugin.metrics.model.*;
 import net.logstash.logback.composite.JsonProviders;
-import net.logstash.logback.composite.loggingevent.LoggingEventJsonProviders;
 import net.logstash.logback.composite.loggingevent.MdcJsonProvider;
 import net.logstash.logback.layout.LogstashLayout;
 import org.gradle.logging.internal.LogEvent;
@@ -156,7 +154,11 @@ public abstract class AbstractESMetricsDispatcher extends AbstractQueuedExecutio
         // This won't be accurate, but we at least want a value here if we have a failure that causes the duration not to be fired
         build.setStartTime(System.currentTimeMillis());
         startUpClient();
-        indexBuild();
+
+        // indexBuildModel must be executed synchronously and block the service from continuing to "Running" state
+        // because we want to record the state before the build started running. If we don't do this, we're risking
+        // a race condition where the build finishes by the time the model is actually indexed.
+        indexBuildModel(true);
     }
 
     protected abstract void startUpClient();
@@ -171,7 +173,7 @@ public abstract class AbstractESMetricsDispatcher extends AbstractQueuedExecutio
 
     @Override
     protected void beforeShutDown() {
-        indexBuild();
+        indexBuildModel(false);
     }
 
     @Override
@@ -190,7 +192,7 @@ public abstract class AbstractESMetricsDispatcher extends AbstractQueuedExecutio
         }
     }
 
-    private void indexBuild() {
+    private void indexBuildModel(boolean executeSynchronously) {
         Runnable runnable = new Runnable() {
             @Override
             public void run() {
@@ -208,7 +210,12 @@ public abstract class AbstractESMetricsDispatcher extends AbstractQueuedExecutio
                 }
             }
         };
-        queue(runnable);
+
+        if (executeSynchronously) {
+            executeSynchronously(runnable);
+        } else {
+            queue(runnable);
+        }
     }
 
     private void sanitizeProperties(Build build) {
@@ -221,7 +228,7 @@ public abstract class AbstractESMetricsDispatcher extends AbstractQueuedExecutio
     @Override
     public final void started(Project project) {
         build.setProject(project);
-        indexBuild();
+        indexBuildModel(false);
     }
 
     protected abstract void createIndex(String indexName, String source);
@@ -305,4 +312,5 @@ public abstract class AbstractESMetricsDispatcher extends AbstractQueuedExecutio
     public final void test(Test test) {
         build.addTest(test);
     }
+
 }

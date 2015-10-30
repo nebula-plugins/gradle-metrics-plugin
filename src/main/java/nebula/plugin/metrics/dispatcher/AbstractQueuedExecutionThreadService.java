@@ -17,8 +17,6 @@
 
 package nebula.plugin.metrics.dispatcher;
 
-import nebula.plugin.metrics.MetricsLoggerFactory;
-
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Throwables;
 import com.google.common.collect.Lists;
@@ -125,6 +123,15 @@ public abstract class AbstractQueuedExecutionThreadService<E> extends AbstractEx
         } else if (isAsync()) {
             logger.debug("Queueing {}", action);
             queue.add(action);
+        } else {
+            doExecute(action);
+        }
+    }
+
+    protected final void executeSynchronously(E action) {
+        checkNotNull(action);
+        if (!QUEUE_AVAILABLE_STATES.contains(state())) {
+            logger.debug("Dispatcher is not running, dropping action {}", action);
         } else {
             doExecute(action);
         }
