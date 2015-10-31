@@ -17,15 +17,14 @@
 
 package nebula.plugin.metrics;
 
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Supplier;
 import nebula.plugin.metrics.collector.GradleCollector;
 import nebula.plugin.metrics.collector.GradleTestSuiteCollector;
 import nebula.plugin.metrics.dispatcher.ClientESMetricsDispatcher;
 import nebula.plugin.metrics.dispatcher.HttpESMetricsDispatcher;
 import nebula.plugin.metrics.dispatcher.MetricsDispatcher;
 import nebula.plugin.metrics.dispatcher.UninitializedMetricsDispatcher;
-
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Supplier;
 import org.gradle.StartParameter;
 import org.gradle.api.Action;
 import org.gradle.api.Plugin;
@@ -68,30 +67,38 @@ public final class MetricsPlugin implements Plugin<Project> {
         extensions.add("metrics", new MetricsPluginExtension());
         Gradle gradle = project.getGradle();
         StartParameter startParameter = gradle.getStartParameter();
+        final MetricsPluginExtension extension = extensions.getByType(MetricsPluginExtension.class);
+
+        if (project.hasProperty("metrics.enabled") && "false".equals(project.property("metrics.enabled"))) {
+            logger.warn("Metrics have been disabled for this build.");
+            return;
+        }
+
         if (startParameter.isOffline()) {
-            logger.warn("Build is running offline. Metrics will not be collected");
-        } else {
-            final MetricsPluginExtension extension = extensions.getByType(MetricsPluginExtension.class);
-            configureRootProjectCollectors(project, extension);
-            project.afterEvaluate(new Action<Project>() {
-                @Override
-                public void execute(Project project) {
-                    if (dispatcher instanceof UninitializedMetricsDispatcher) {
-                        switch (extension.getDispatcherType()) {
-                            case ES_CLIENT: {
-                                dispatcher = new ClientESMetricsDispatcher(extension);
-                                break;
-                            }
-                            case ES_HTTP: {
-                                dispatcher = new HttpESMetricsDispatcher(extension);
-                                break;
-                            }
+            logger.warn("Build is running offline. Metrics will not be collected.");
+            return;
+        }
+
+        configureRootProjectCollectors(project, extension);
+        project.afterEvaluate(new Action<Project>() {
+            @Override
+            public void execute(Project project) {
+                if (dispatcher instanceof UninitializedMetricsDispatcher) {
+                    switch (extension.getDispatcherType()) {
+                        case ES_CLIENT: {
+                            dispatcher = new ClientESMetricsDispatcher(extension);
+                            break;
+                        }
+                        case ES_HTTP: {
+                            dispatcher = new HttpESMetricsDispatcher(extension);
+                            break;
                         }
                     }
-                    configureProjectCollectors(project.getAllprojects());
                 }
-            });
-        }
+                configureProjectCollectors(project.getAllprojects());
+            }
+        });
+
     }
 
     @VisibleForTesting
