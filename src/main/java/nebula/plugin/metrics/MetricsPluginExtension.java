@@ -43,8 +43,6 @@ public class MetricsPluginExtension {
     private static final LogLevel DEFAULT_LOG_LEVEL = LogLevel.WARN;
 
     public static final String DEFAULT_INDEX_NAME = INDEX_PREFIX + "default";
-    private static final String DEFAULT_SURO_BUILD_EVENT_NAME = "build_metrics";
-    private static final String DEFAULT_SURO_BUILD_LOG_EVENT_NAME = "build_metrics_events";
 
     private String hostname = "localhost";
     private int transportPort = 9300;
@@ -53,8 +51,10 @@ public class MetricsPluginExtension {
     private String indexName = DEFAULT_INDEX_NAME;
     private LogLevel logLevel = DEFAULT_LOG_LEVEL;
 
-    private String suroBuildEventName = DEFAULT_SURO_BUILD_EVENT_NAME;
-    private String suroBuildLogEventName = DEFAULT_SURO_BUILD_LOG_EVENT_NAME;
+    private int suroPort = 80;
+    private boolean suroHttps = true;
+    private String suroBuildEventName = "build_metrics";
+    private String suroBuildLogEventName = "build_metrics_events";
 
     private DispatcherType dispatcherType = DispatcherType.ES_HTTP;
     private List<String> sanitizedProperties = new ArrayList<>();
@@ -142,6 +142,22 @@ public class MetricsPluginExtension {
 
     public void setSuroBuildEventName(String suroBuildEventName) {
         this.suroBuildEventName = checkNotNull(suroBuildEventName);
+    }
+
+    public int getSuroPort() {
+        return suroPort;
+    }
+
+    public void setSuroPort(int suroPort) {
+        this.suroPort = suroPort;
+    }
+
+    public boolean isSuroHttps() {
+        return suroHttps;
+    }
+
+    public void setSuroHttps(boolean suroHttps) {
+        this.suroHttps = suroHttps;
     }
 
     public enum DispatcherType {

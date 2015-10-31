@@ -22,7 +22,7 @@ import java.net.URL;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
-public abstract class AbstractEsMetricsDispatchr extends AbstractMetricsDispatcher {
+public abstract class AbstractESMetricsDispatcher extends AbstractMetricsDispatcher {
 
     private final ch.qos.logback.classic.Logger logbackLogger = new LoggerContext().getLogger(Logger.ROOT_LOGGER_NAME);
     private final Supplier<LogstashLayout> logstashLayoutSupplier = Suppliers.memoize(new Supplier<LogstashLayout>() {
@@ -45,7 +45,7 @@ public abstract class AbstractEsMetricsDispatchr extends AbstractMetricsDispatch
     });
 
 
-    public AbstractEsMetricsDispatchr(MetricsPluginExtension extension, boolean async) {
+    public AbstractESMetricsDispatcher(MetricsPluginExtension extension, boolean async) {
         super(extension, async);
     }
 
@@ -83,7 +83,7 @@ public abstract class AbstractEsMetricsDispatchr extends AbstractMetricsDispatch
             }
             return Optional.of("You can find the metrics for this build at " + url);
         } else {
-            return buildId;
+            return Optional.absent();
         }
     }
 

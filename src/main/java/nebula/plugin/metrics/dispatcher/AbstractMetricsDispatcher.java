@@ -38,7 +38,6 @@ import org.slf4j.Logger;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
-import java.util.UUID;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -126,18 +125,16 @@ public abstract class AbstractMetricsDispatcher extends AbstractQueuedExecutionT
         indexBuildModel(true);
     }
 
-    protected abstract void startUpClient();
-
     @Override
     protected void postShutDown() throws Exception {
         shutDownClient();
     }
 
-    protected abstract void shutDownClient();
-
     @Override
     protected void beforeShutDown() {
-        indexBuildModel(false);
+        // this indexBuildModel also must be executed synchronously or Gradle might kill the Service before
+        // the dispatcher completes its work to upload the final build results.
+        indexBuildModel(true);
     }
 
     @Override
@@ -153,12 +150,8 @@ public abstract class AbstractMetricsDispatcher extends AbstractQueuedExecutionT
                 try {
                     sanitizeProperties(build);
                     String json = mapper.writeValueAsString(build);
-                    if (!buildId.isPresent()) {
-                        buildId = Optional.of(UUID.randomUUID().toString());
-                        logger.info("Build id is {}", buildId.get());
-                    }
-                    index(extension.getIndexName(), BUILD_TYPE, json, buildId);
-
+                    buildId = Optional.of(index(extension.getIndexName(), BUILD_TYPE, json, buildId));
+                    logger.info("Build id is {}", buildId.get());
                 } catch (JsonProcessingException e) {
                     logger.error("Unable to write JSON string value: " + e.getMessage(), e);
                 }
@@ -227,7 +220,7 @@ public abstract class AbstractMetricsDispatcher extends AbstractQueuedExecutionT
             @Override
             public void run() {
                 String json = renderEvent(event);
-                index(extension.getLogstashIndexName(), LOG_TYPE, json);
+                index(getLogEventIndexName(), LOG_TYPE, json, Optional.<String>absent());
             }
         };
         queue(runnable);
@@ -253,6 +246,11 @@ public abstract class AbstractMetricsDispatcher extends AbstractQueuedExecutionT
     protected String renderEvent(LogEvent event) {
         return event.toString();
     }
+
+
+    protected abstract void startUpClient();
+
+    protected abstract void shutDownClient();
 
     protected abstract String getLogEventIndexName();
 
