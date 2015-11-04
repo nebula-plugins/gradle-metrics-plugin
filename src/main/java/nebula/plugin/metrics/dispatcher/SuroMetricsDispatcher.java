@@ -17,15 +17,19 @@
 
 package nebula.plugin.metrics.dispatcher;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import nebula.plugin.metrics.MetricsPluginExtension;
 import org.apache.http.entity.ContentType;
 
 import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -34,8 +38,8 @@ import static org.apache.http.client.fluent.Request.Post;
 
 public class SuroMetricsDispatcher extends AbstractMetricsDispatcher {
 
-    protected SuroMetricsDispatcher(MetricsPluginExtension extension, boolean async) {
-        super(extension, async);
+    public SuroMetricsDispatcher(MetricsPluginExtension extension) {
+        super(extension, true);
     }
 
     @Override
@@ -49,8 +53,13 @@ public class SuroMetricsDispatcher extends AbstractMetricsDispatcher {
     }
 
     @Override
-    protected String getLogEventIndexName() {
-        return extension.getSuroBuildLogEventName();
+    protected String getLogCollectionName() {
+        return extension.getSuroLogEventName();
+    }
+
+    @Override
+    protected String getBuildCollectionName() {
+        return extension.getSuroBuildEventName();
     }
 
     @Override
@@ -100,16 +109,50 @@ public class SuroMetricsDispatcher extends AbstractMetricsDispatcher {
     }
 
     private String createPayloadJson(String indexName, String payload, String buildId) {
-        // I really dislike Java
-        return String.format("{ " +
-                "\"eventName\" : \"%s\", " +
-                "\"payload\" : { \"buildId\": \"%s\", \"build\": \"%s\" }" +
-                "}", indexName, buildId, payload);
+        Map<String, String> payloadMap = Maps.newHashMap();
+        payloadMap.put("buildId", buildId);
+        payloadMap.put("build", payload);
+        try {
+            SuroPayload sp = new SuroPayload(indexName, payloadMap);
+            return mapper.writeValueAsString(sp);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException("Unable to parse to Suro payload", e);
+        }
     }
 
     private String joinMultiplePayloads(Collection<String> payloads) {
         Joiner joiner = Joiner.on(", ").skipNulls();
         return String.format("[ %s ]", joiner.join(payloads));
+    }
+
+    @VisibleForTesting
+    public static class SuroPayload {
+        private String eventName;
+        private Map<String, String> payload;
+
+        public SuroPayload() {
+        }
+
+        public SuroPayload(String eventName, Map<String, String> payload) {
+            this.eventName = eventName;
+            this.payload = payload;
+        }
+
+        public String getEventName() {
+            return eventName;
+        }
+
+        public Map<String, String> getPayload() {
+            return payload;
+        }
+
+        public void setEventName(String eventName) {
+            this.eventName = eventName;
+        }
+
+        public void setPayload(Map<String, String> payload) {
+            this.payload = payload;
+        }
     }
 
 }

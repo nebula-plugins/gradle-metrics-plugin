@@ -49,11 +49,21 @@ public abstract class AbstractMetricsDispatcher extends AbstractQueuedExecutionT
     protected final Logger logger = MetricsLoggerFactory.getLogger(this.getClass());
     protected final MetricsPluginExtension extension;
 
-    private final ObjectMapper mapper;
+    protected final ObjectMapper mapper;
     private final boolean async;
     private final Build build;
 
     protected Optional<String> buildId = Optional.absent();
+
+    @VisibleForTesting
+    public static ObjectMapper getObjectMapper() {
+        ObjectMapper mapper = new ObjectMapper();
+        mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
+        mapper.configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
+        mapper.registerModule(new JodaModule());
+        registerEnumModule(mapper);
+        return mapper;
+    }
 
     protected AbstractMetricsDispatcher(MetricsPluginExtension extension, boolean async) {
         super(true);
@@ -61,16 +71,6 @@ public abstract class AbstractMetricsDispatcher extends AbstractQueuedExecutionT
         this.mapper = getObjectMapper();
         this.async = async;
         this.build = new Build();
-    }
-
-    @VisibleForTesting
-    static ObjectMapper getObjectMapper() {
-        ObjectMapper mapper = new ObjectMapper();
-        mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
-        mapper.configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
-        mapper.registerModule(new JodaModule());
-        registerEnumModule(mapper);
-        return mapper;
     }
 
     /**
@@ -149,8 +149,9 @@ public abstract class AbstractMetricsDispatcher extends AbstractQueuedExecutionT
             public void run() {
                 try {
                     sanitizeProperties(build);
-                    String json = mapper.writeValueAsString(build);
-                    buildId = Optional.of(index(extension.getIndexName(), BUILD_TYPE, json, buildId));
+                    Object transformed = transformBuild(build);
+                    String json = mapper.writeValueAsString(transformed);
+                    buildId = Optional.of(index(getBuildCollectionName(), BUILD_TYPE, json, buildId));
                     logger.info("Build id is {}", buildId.get());
                 } catch (JsonProcessingException e) {
                     logger.error("Unable to write JSON string value: " + e.getMessage(), e);
@@ -165,6 +166,15 @@ public abstract class AbstractMetricsDispatcher extends AbstractQueuedExecutionT
         }
     }
 
+    /*
+     * Override this method to transform the Build object into a different Build representation. For
+     * example, when the Build format needs to be flattened out.
+     */
+    protected Object transformBuild(Build build) {
+        checkNotNull(build);
+        return build;
+    }
+
     private void sanitizeProperties(Build build) {
         Info info = build.getInfo();
         if (info != null) {
@@ -176,10 +186,6 @@ public abstract class AbstractMetricsDispatcher extends AbstractQueuedExecutionT
     public final void started(Project project) {
         build.setProject(project);
         indexBuildModel(false);
-    }
-
-    protected final String index(String indexName, String type, String source) {
-        return index(indexName, type, source, Optional.<String>absent());
     }
 
     @Override
@@ -220,7 +226,7 @@ public abstract class AbstractMetricsDispatcher extends AbstractQueuedExecutionT
             @Override
             public void run() {
                 String json = renderEvent(event);
-                index(getLogEventIndexName(), LOG_TYPE, json, Optional.<String>absent());
+                index(getLogCollectionName(), LOG_TYPE, json, Optional.<String>absent());
             }
         };
         queue(runnable);
@@ -237,7 +243,7 @@ public abstract class AbstractMetricsDispatcher extends AbstractQueuedExecutionT
                 for (LogEvent event : events) {
                     jsons.add(renderEvent(event));
                 }
-                bulkIndex(getLogEventIndexName(), LOG_TYPE, jsons);
+                bulkIndex(getLogCollectionName(), LOG_TYPE, jsons);
             }
         };
         queue(runnable);
@@ -252,7 +258,13 @@ public abstract class AbstractMetricsDispatcher extends AbstractQueuedExecutionT
 
     protected abstract void shutDownClient();
 
-    protected abstract String getLogEventIndexName();
+    // the log collection name is where event log data gets uploaded to.
+    // In Elastic this is the index name. In Suro it's the eventName.
+    protected abstract String getLogCollectionName();
+
+    // the collection name is where the build data gets uploaded to.
+    // In Elastic this is the index name. In Suro it's the eventName.
+    protected abstract String getBuildCollectionName();
 
     protected abstract String index(String indexName, String type, String source, Optional<String> id);
 

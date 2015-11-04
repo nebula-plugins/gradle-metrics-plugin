@@ -21,10 +21,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Supplier;
 import nebula.plugin.metrics.collector.GradleCollector;
 import nebula.plugin.metrics.collector.GradleTestSuiteCollector;
-import nebula.plugin.metrics.dispatcher.ClientESMetricsDispatcher;
-import nebula.plugin.metrics.dispatcher.HttpESMetricsDispatcher;
-import nebula.plugin.metrics.dispatcher.MetricsDispatcher;
-import nebula.plugin.metrics.dispatcher.UninitializedMetricsDispatcher;
+import nebula.plugin.metrics.dispatcher.*;
 import org.gradle.StartParameter;
 import org.gradle.api.Action;
 import org.gradle.api.Plugin;
@@ -92,6 +89,9 @@ public final class MetricsPlugin implements Plugin<Project> {
                         case ES_HTTP: {
                             dispatcher = new HttpESMetricsDispatcher(extension);
                             break;
+                        }
+                        case SURO_REST: {
+                            dispatcher = new SuroMetricsDispatcher(extension);
                         }
                     }
                 }

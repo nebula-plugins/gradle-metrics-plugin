@@ -31,7 +31,7 @@ import static nebula.plugin.metrics.MetricsPluginExtension.DEFAULT_INDEX_NAME
 /**
  * Integration tests for {@link MetricsPlugin}.
  */
-class MetricsPluginIntegTest extends IntegrationSpec {
+class ESMetricsPluginIntegTest extends IntegrationSpec {
     @Shared
     File dataDir
 
@@ -78,7 +78,7 @@ class MetricsPluginIntegTest extends IntegrationSpec {
         result.standardOutput.contains('Build id is ')
 
         where:
-        dispatcherType << DispatcherType.values()
+        dispatcherType << [DispatcherType.ES_CLIENT, DispatcherType.ES_HTTP]
     }
 
     @Unroll('recorded build model is valid (#dispatcherType)')
@@ -112,7 +112,7 @@ class MetricsPluginIntegTest extends IntegrationSpec {
         source.tests.isEmpty()
 
         where:
-        dispatcherType << DispatcherType.values()
+        dispatcherType << [DispatcherType.ES_CLIENT, DispatcherType.ES_HTTP]
     }
 
     @Unroll('properties are sanitized (#dispatcherType)')
@@ -142,7 +142,7 @@ class MetricsPluginIntegTest extends IntegrationSpec {
         source.info.systemProperties.find { it.key == 'PATH' }?.value == 'SANITIZED'
 
         where:
-        dispatcherType << DispatcherType.values()
+        dispatcherType << [DispatcherType.ES_CLIENT, DispatcherType.ES_HTTP]
     }
 
     @Unroll('running offline results in no metrics being recorded (#dispatcherType)')
@@ -158,7 +158,7 @@ class MetricsPluginIntegTest extends IntegrationSpec {
         result.standardOutput.contains("Build is running offline")
 
         where:
-        dispatcherType << DispatcherType.values()
+        dispatcherType << [DispatcherType.ES_CLIENT, DispatcherType.ES_HTTP]
     }
 
     def setValidBuildFile(DispatcherType dispatcherType) {

@@ -51,10 +51,10 @@ public class MetricsPluginExtension {
     private String indexName = DEFAULT_INDEX_NAME;
     private LogLevel logLevel = DEFAULT_LOG_LEVEL;
 
-    private int suroPort = 80;
+    private int suroPort = 443;
     private boolean suroHttps = true;
     private String suroBuildEventName = "build_metrics";
-    private String suroBuildLogEventName = "build_metrics_events";
+    private String suroLogEventName = "build_metrics_events";
 
     private DispatcherType dispatcherType = DispatcherType.ES_HTTP;
     private List<String> sanitizedProperties = new ArrayList<>();
@@ -128,12 +128,12 @@ public class MetricsPluginExtension {
         this.sanitizedProperties = checkNotNull(sanitizedProperties);
     }
 
-    public String getSuroBuildLogEventName() {
-        return suroBuildLogEventName;
+    public String getSuroLogEventName() {
+        return suroLogEventName;
     }
 
-    public void setSuroBuildLogEventName(String suroBuildLogEventName) {
-        this.suroBuildLogEventName = checkNotNull(suroBuildLogEventName);
+    public void setSuroLogEventName(String suroLogEventName) {
+        this.suroLogEventName = checkNotNull(suroLogEventName);
     }
 
     public String getSuroBuildEventName() {
@@ -162,6 +162,7 @@ public class MetricsPluginExtension {
 
     public enum DispatcherType {
         ES_CLIENT,
-        ES_HTTP
+        ES_HTTP,
+        SURO_REST
     }
 }

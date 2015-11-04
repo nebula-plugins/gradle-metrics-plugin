@@ -61,9 +61,10 @@ dependencies {
     provided 'org.projectlombok:lombok:1.16.6'
     provided 'com.google.code.findbugs:jsr305:3.0.0'
 
-    testCompile "com.netflix.nebula:nebula-test:3.1.0"
+    testCompile 'com.netflix.nebula:nebula-test:3.1.0'
     testCompile "com.google.guava:guava-testlib:$versions.guava"
     testCompile 'com.github.tlrx:elasticsearch-test:1.2.1'
+
 }
 
 configurations.all ({

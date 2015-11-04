@@ -50,7 +50,7 @@ public abstract class AbstractESMetricsDispatcher extends AbstractMetricsDispatc
     }
 
     @Override
-    protected String getLogEventIndexName() {
+    protected String getLogCollectionName() {
         return extension.getLogstashIndexName();
     }
 
@@ -85,6 +85,11 @@ public abstract class AbstractESMetricsDispatcher extends AbstractMetricsDispatc
         } else {
             return Optional.absent();
         }
+    }
+
+    @Override
+    protected String getBuildCollectionName() {
+        return extension.getIndexName();
     }
 
     protected abstract void createIndex(String indexName, String source);
