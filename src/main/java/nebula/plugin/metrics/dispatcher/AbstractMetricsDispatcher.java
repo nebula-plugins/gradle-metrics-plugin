@@ -254,9 +254,13 @@ public abstract class AbstractMetricsDispatcher extends AbstractQueuedExecutionT
     }
 
 
-    protected abstract void startUpClient();
+    protected void startUpClient() {
+        // empty implementation. Concrete classes may override to add functionality.
+    }
 
-    protected abstract void shutDownClient();
+    protected void shutDownClient() {
+        // empty implementation. Concrete classes may override to add functionality.
+    }
 
     // the log collection name is where event log data gets uploaded to.
     // In Elastic this is the index name. In Suro it's the eventName.

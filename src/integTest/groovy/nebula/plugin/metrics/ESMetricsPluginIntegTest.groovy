@@ -119,11 +119,11 @@ class ESMetricsPluginIntegTest extends IntegrationSpec {
     def 'properties are sanitized'(DispatcherType dispatcherType) {
         setValidBuildFile(dispatcherType)
 
-        def firstSystemPropKey = System.getenv().keySet().getAt(0)
+        def propKey = 'user.home'
 
         buildFile << """
                      metrics {
-                        sanitizedProperties = ['${firstSystemPropKey}']
+                        sanitizedProperties = ['${propKey}']
                      }
                      """
         def runResult
@@ -142,7 +142,7 @@ class ESMetricsPluginIntegTest extends IntegrationSpec {
         result.isExists()
 
         def props = result.source.info.systemProperties
-        props.find { it.key == firstSystemPropKey }?.value == 'SANITIZED'
+        props.find { it.key == propKey }?.value == 'SANITIZED'
 
         where:
         dispatcherType << [DispatcherType.ES_CLIENT, DispatcherType.ES_HTTP]

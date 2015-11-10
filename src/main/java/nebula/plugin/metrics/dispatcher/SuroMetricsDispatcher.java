@@ -43,16 +43,6 @@ public class SuroMetricsDispatcher extends AbstractMetricsDispatcher {
     }
 
     @Override
-    protected void startUpClient() {
-        // safely ignore client startup. This is not needed for a REST client.
-    }
-
-    @Override
-    protected void shutDownClient() {
-        // safely ignore client shutdown. This is not needed for a REST client.
-    }
-
-    @Override
     protected String getLogCollectionName() {
         return extension.getSuroLogEventName();
     }
