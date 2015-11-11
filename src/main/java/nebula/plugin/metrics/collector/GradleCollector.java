@@ -17,6 +17,9 @@
 
 package nebula.plugin.metrics.collector;
 
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Optional;
+import com.google.common.base.Supplier;
 import nebula.plugin.metrics.MetricsLoggerFactory;
 import nebula.plugin.metrics.MetricsPluginExtension;
 import nebula.plugin.metrics.dispatcher.MetricsDispatcher;
@@ -24,10 +27,6 @@ import nebula.plugin.metrics.model.GradleToolContainer;
 import nebula.plugin.metrics.model.Info;
 import nebula.plugin.metrics.model.Result;
 import nebula.plugin.metrics.model.Task;
-
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Optional;
-import com.google.common.base.Supplier;
 import org.gradle.BuildListener;
 import org.gradle.BuildResult;
 import org.gradle.StartParameter;
@@ -57,7 +56,9 @@ public final class GradleCollector implements ProfileListener, BuildListener {
 
     private final Logger logger = MetricsLoggerFactory.getLogger(GradleCollector.class);
     private final Supplier<MetricsDispatcher> dispatcherSupplier;
-    private final AtomicBoolean complete = new AtomicBoolean();
+
+    private final AtomicBoolean buildProfileComplete = new AtomicBoolean(false);
+    private final AtomicBoolean buildResultComplete = new AtomicBoolean(false);
 
     public GradleCollector(Supplier<MetricsDispatcher> dispatcherSupplier, MetricsPluginExtension extension) {
         this.dispatcherSupplier = checkNotNull(dispatcherSupplier);
@@ -104,6 +105,8 @@ public final class GradleCollector implements ProfileListener, BuildListener {
         Result result = failure == null ? Result.success() : Result.failure(failure);
         logger.info("Build finished with result " + result);
         dispatcherSupplier.get().result(result);
+
+        buildResultComplete.getAndSet(true);
         shutdownIfComplete();
     }
 
@@ -164,6 +167,7 @@ public final class GradleCollector implements ProfileListener, BuildListener {
             dispatcher.event("unknown", "other", difference);
         }
 
+        buildProfileComplete.getAndSet(true);
         shutdownIfComplete();
     }
 
@@ -171,23 +175,26 @@ public final class GradleCollector implements ProfileListener, BuildListener {
      * Conditionally shutdown the dispatcher, because Gradle listener event order appears to be non-deterministic.
      */
     private void shutdownIfComplete() {
+        // only shut down if you have updated build results AND profile information
+        if (!buildProfileComplete.get() || !buildResultComplete.get()) {
+            return;
+        }
+
         MetricsDispatcher dispatcher = this.dispatcherSupplier.get();
-        if (!complete.compareAndSet(false, true)) {
-            if (dispatcher.isRunning()) {
-                logger.info("Shutting down dispatcher");
-                try {
-                    dispatcher.stopAsync().awaitTerminated(TIMEOUT_MS, TimeUnit.MILLISECONDS);
-                } catch (TimeoutException e) {
-                    logger.error("Timed out after {}ms while waiting for metrics dispatcher to terminate", TIMEOUT_MS);
-                } catch (IllegalStateException e) {
-                    logger.error("Could not stop metrics dispatcher service", e);
-                }
+        if (dispatcher.isRunning()) {
+            logger.info("Shutting down dispatcher");
+            try {
+                dispatcher.stopAsync().awaitTerminated(TIMEOUT_MS, TimeUnit.MILLISECONDS);
+            } catch (TimeoutException e) {
+                logger.error("Timed out after {}ms while waiting for metrics dispatcher to terminate", TIMEOUT_MS);
+            } catch (IllegalStateException e) {
+                logger.error("Could not stop metrics dispatcher service", e);
             }
-            LoggingCollector.reset();
-            Optional<String> receipt = dispatcher.receipt();
-            if (receipt.isPresent()) {
-                logger.warn(receipt.get());
-            }
+        }
+        LoggingCollector.reset();
+        Optional<String> receipt = dispatcher.receipt();
+        if (receipt.isPresent()) {
+            logger.warn(receipt.get());
         }
     }
 

@@ -40,8 +40,9 @@ public class MetricsPluginExtension {
     private static final String INDEX_PREFIX = "build-metrics-";
     private static final String LOGSTASH_INDEX_PREFIX = "logstash-";
     public static final DateTimeFormatter ROLLING_FORMATTER = DateTimeFormat.forPattern("yyyyMM");
-    public static final String DEFAULT_INDEX_NAME = INDEX_PREFIX + "default";
     private static final LogLevel DEFAULT_LOG_LEVEL = LogLevel.WARN;
+
+    public static final String DEFAULT_INDEX_NAME = INDEX_PREFIX + "default";
 
     private String hostname = "localhost";
     private int transportPort = 9300;
@@ -49,6 +50,12 @@ public class MetricsPluginExtension {
     private String clusterName = "elasticsearch";
     private String indexName = DEFAULT_INDEX_NAME;
     private LogLevel logLevel = DEFAULT_LOG_LEVEL;
+
+    private int suroPort = 443;
+    private boolean suroHttps = true;
+    private String suroBuildEventName = "build_metrics";
+    private String suroLogEventName = "build_metrics_events";
+
     private DispatcherType dispatcherType = DispatcherType.ES_HTTP;
     private List<String> sanitizedProperties = new ArrayList<>();
 
@@ -121,8 +128,41 @@ public class MetricsPluginExtension {
         this.sanitizedProperties = checkNotNull(sanitizedProperties);
     }
 
+    public String getSuroLogEventName() {
+        return suroLogEventName;
+    }
+
+    public void setSuroLogEventName(String suroLogEventName) {
+        this.suroLogEventName = checkNotNull(suroLogEventName);
+    }
+
+    public String getSuroBuildEventName() {
+        return suroBuildEventName;
+    }
+
+    public void setSuroBuildEventName(String suroBuildEventName) {
+        this.suroBuildEventName = checkNotNull(suroBuildEventName);
+    }
+
+    public int getSuroPort() {
+        return suroPort;
+    }
+
+    public void setSuroPort(int suroPort) {
+        this.suroPort = suroPort;
+    }
+
+    public boolean isSuroHttps() {
+        return suroHttps;
+    }
+
+    public void setSuroHttps(boolean suroHttps) {
+        this.suroHttps = suroHttps;
+    }
+
     public enum DispatcherType {
         ES_CLIENT,
-        ES_HTTP
+        ES_HTTP,
+        SURO_REST
     }
 }

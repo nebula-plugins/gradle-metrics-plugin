@@ -31,7 +31,7 @@ import static nebula.plugin.metrics.MetricsPluginExtension.DEFAULT_INDEX_NAME
 /**
  * Integration tests for {@link MetricsPlugin}.
  */
-class MetricsPluginIntegTest extends IntegrationSpec {
+class ESMetricsPluginIntegTest extends IntegrationSpec {
     @Shared
     File dataDir
 
@@ -78,7 +78,7 @@ class MetricsPluginIntegTest extends IntegrationSpec {
         result.standardOutput.contains('Build id is ')
 
         where:
-        dispatcherType << DispatcherType.values()
+        dispatcherType << [DispatcherType.ES_CLIENT, DispatcherType.ES_HTTP]
     }
 
     @Unroll('recorded build model is valid (#dispatcherType)')
@@ -112,15 +112,18 @@ class MetricsPluginIntegTest extends IntegrationSpec {
         source.tests.isEmpty()
 
         where:
-        dispatcherType << DispatcherType.values()
+        dispatcherType << [DispatcherType.ES_CLIENT, DispatcherType.ES_HTTP]
     }
 
     @Unroll('properties are sanitized (#dispatcherType)')
     def 'properties are sanitized'(DispatcherType dispatcherType) {
         setValidBuildFile(dispatcherType)
+
+        def propKey = 'user.home'
+
         buildFile << """
                      metrics {
-                        sanitizedProperties = ['java.version']
+                        sanitizedProperties = ['${propKey}']
                      }
                      """
         def runResult
@@ -138,11 +141,11 @@ class MetricsPluginIntegTest extends IntegrationSpec {
         def result = client.prepareGet(DEFAULT_INDEX_NAME, 'build', buildId).execute().actionGet()
         result.isExists()
 
-        def source = result.source
-        source.info.systemProperties.find { it.key == 'java.version' }.value == 'SANITIZED'
+        def props = result.source.info.systemProperties
+        props.find { it.key == propKey }?.value == 'SANITIZED'
 
         where:
-        dispatcherType << DispatcherType.values()
+        dispatcherType << [DispatcherType.ES_CLIENT, DispatcherType.ES_HTTP]
     }
 
     @Unroll('running offline results in no metrics being recorded (#dispatcherType)')
@@ -158,7 +161,7 @@ class MetricsPluginIntegTest extends IntegrationSpec {
         result.standardOutput.contains("Build is running offline")
 
         where:
-        dispatcherType << DispatcherType.values()
+        dispatcherType << [DispatcherType.ES_CLIENT, DispatcherType.ES_HTTP]
     }
 
     def setValidBuildFile(DispatcherType dispatcherType) {

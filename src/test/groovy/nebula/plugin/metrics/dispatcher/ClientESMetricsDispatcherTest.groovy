@@ -52,7 +52,8 @@ class ClientESMetricsDispatcherTest extends LoggingCaptureSpecification {
 
         then:
         def receipt = dispatcher.receipt().get()
-        receipt == 'You can find the metrics for this build at http://localhost:9200/build-metrics-default/build/id'
+        receipt.startsWith('You can find the metrics for this build at http://localhost:9200/build-metrics-default/build/')
+        receipt.split('/')[-1] ==~ /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/
         noErrorsLogged()
     }
 
@@ -119,7 +120,8 @@ class ClientESMetricsDispatcherTest extends LoggingCaptureSpecification {
     def IndexRequestBuilder mockIndexRequestBuilder() {
         def builder = Mock(IndexRequestBuilder)
         def future = Mock(ListenableActionFuture)
-        def response = new IndexResponse(MetricsPluginExtension.INDEX_PREFIX, BUILD_TYPE, 'id', 1, true)
+        String id = UUID.randomUUID().toString()
+        def response = new IndexResponse(MetricsPluginExtension.INDEX_PREFIX, BUILD_TYPE, id, 1, true)
         builder.setSource(_) >> builder
         builder.setId(_) >> builder
         builder.execute() >> future

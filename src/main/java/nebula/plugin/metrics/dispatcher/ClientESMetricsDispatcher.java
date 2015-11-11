@@ -17,9 +17,8 @@
 
 package nebula.plugin.metrics.dispatcher;
 
-import nebula.plugin.metrics.MetricsPluginExtension;
-
 import com.google.common.base.Optional;
+import nebula.plugin.metrics.MetricsPluginExtension;
 import org.elasticsearch.action.admin.indices.create.CreateIndexRequestBuilder;
 import org.elasticsearch.action.admin.indices.exists.indices.IndicesExistsRequestBuilder;
 import org.elasticsearch.action.admin.indices.exists.indices.IndicesExistsResponse;
@@ -34,6 +33,7 @@ import org.elasticsearch.common.transport.InetSocketTransportAddress;
 
 import javax.annotation.Nullable;
 import java.util.Collection;
+import java.util.UUID;
 
 /**
  * Elasticsearch client {@link nebula.plugin.metrics.dispatcher.MetricsDispatcher}.
@@ -81,13 +81,8 @@ public final class ClientESMetricsDispatcher extends AbstractESMetricsDispatcher
     @Override
     protected String index(String indexName, String type, String source, Optional<String> id) {
         IndexRequestBuilder index = client.prepareIndex(extension.getIndexName(), BUILD_TYPE).setSource(source);
-        if (id.isPresent()) {
-            index.setId(id.get());
-        }
+        index.setId(id.or(UUID.randomUUID().toString()));
         IndexResponse indexResponse = index.execute().actionGet();
-        if (!id.isPresent()) {
-            assert indexResponse.isCreated() : "Should have been created";
-        }
         return indexResponse.getId();
     }
 

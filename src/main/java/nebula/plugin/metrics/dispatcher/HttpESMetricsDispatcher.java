@@ -17,8 +17,6 @@
 
 package nebula.plugin.metrics.dispatcher;
 
-import nebula.plugin.metrics.MetricsPluginExtension;
-
 import com.google.common.base.Optional;
 import com.google.common.base.Throwables;
 import io.searchbox.action.Action;
@@ -30,9 +28,11 @@ import io.searchbox.core.Bulk;
 import io.searchbox.core.Index;
 import io.searchbox.indices.CreateIndex;
 import io.searchbox.indices.IndicesExists;
+import nebula.plugin.metrics.MetricsPluginExtension;
 
 import java.io.IOException;
 import java.util.Collection;
+import java.util.UUID;
 
 /**
  * Elasticsearch HTTP {@link nebula.plugin.metrics.dispatcher.MetricsDispatcher}.
@@ -43,7 +43,7 @@ public final class HttpESMetricsDispatcher extends AbstractESMetricsDispatcher {
     private JestClient client;
 
     public HttpESMetricsDispatcher(MetricsPluginExtension extension) {
-        super(extension);
+        super(extension, true);
     }
 
     @Override
@@ -69,20 +69,16 @@ public final class HttpESMetricsDispatcher extends AbstractESMetricsDispatcher {
 
     @Override
     protected String index(String indexName, String type, String source, Optional<String> id) {
-        Index index = buildIndex(indexName, type, source, id);
+        if (!id.isPresent()) {
+            id = Optional.of(UUID.randomUUID().toString());
+        }
+        Index index = buildIndex(indexName, type, source, id.get());
         JestResult result = execute(index);
         return result.getJsonObject().get("_id").getAsString();
     }
 
-    private Index buildIndex(String indexName, String type, String source) {
-        return buildIndex(indexName, type, source, Optional.<String>absent());
-    }
-
-    private Index buildIndex(String indexName, String type, String source, Optional<String> id) {
-        Index.Builder builder = new Index.Builder(source).index(indexName).type(type);
-        if (id.isPresent()) {
-            builder.id(id.get());
-        }
+    private Index buildIndex(String indexName, String type, String source, String id) {
+        Index.Builder builder = new Index.Builder(source).index(indexName).type(type).id(id);
         return builder.build();
     }
 
@@ -90,7 +86,8 @@ public final class HttpESMetricsDispatcher extends AbstractESMetricsDispatcher {
     protected void bulkIndex(String indexName, String type, Collection<String> sources) {
         Bulk.Builder builder = new Bulk.Builder();
         for (String source : sources) {
-            builder.addAction(buildIndex(indexName, type, source));
+            String id = UUID.randomUUID().toString();
+            builder.addAction(buildIndex(indexName, type, source, id));
         }
         Bulk bulk = builder.build();
         execute(bulk);

@@ -54,14 +54,17 @@ dependencies {
 
     plugin "org.elasticsearch:elasticsearch:$versions.es", optional
 
+    plugin 'org.apache.httpcomponents:fluent-hc:4.5.1'
+
     plugin 'com.netflix.nebula:gradle-info-plugin:1.9.+', optional
 
     provided 'org.projectlombok:lombok:1.16.6'
     provided 'com.google.code.findbugs:jsr305:3.0.0'
 
-    testCompile "com.netflix.nebula:nebula-test:3.1.0"
+    testCompile 'com.netflix.nebula:nebula-test:3.1.0'
     testCompile "com.google.guava:guava-testlib:$versions.guava"
     testCompile 'com.github.tlrx:elasticsearch-test:1.2.1'
+
 }
 
 configurations.all ({
