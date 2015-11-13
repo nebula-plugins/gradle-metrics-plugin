@@ -163,6 +163,7 @@ public class MetricsPluginExtension {
     public enum DispatcherType {
         ES_CLIENT,
         ES_HTTP,
-        SURO_REST
+        SURO_REST,
+        NOOP
     }
 }

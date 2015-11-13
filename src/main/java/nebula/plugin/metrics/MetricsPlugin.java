@@ -92,6 +92,11 @@ public final class MetricsPlugin implements Plugin<Project> {
                         }
                         case SURO_REST: {
                             dispatcher = new SuroMetricsDispatcher(extension);
+                            break;
+                        }
+                        case NOOP: {
+                            dispatcher = new NoopMetricsDispatcher(extension);
+                            break;
                         }
                     }
                 }
