@@ -119,8 +119,7 @@ class ESMetricsPluginIntegTest extends IntegrationSpec {
     def 'properties are sanitized'(DispatcherType dispatcherType) {
         setValidBuildFile(dispatcherType)
 
-        def propKey = 'user.home'
-
+        def propKey = 'java.version'
         buildFile << """
                      metrics {
                         sanitizedProperties = ['${propKey}']

@@ -5,7 +5,7 @@
 [![Gitter](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/nebula-plugins/gradle-metrics-plugin?utm_source=badgeutm_medium=badgeutm_campaign=pr-badge)
 [![Apache 2.0](https://img.shields.io/github/license/nebula-plugins/gradle-metrics-plugin.svg)](http://www.apache.org/licenses/LICENSE-2.0)
 
-Collect Gradle build metrics and persist them to an Elasticsearch index.
+Collect Gradle build metrics and persist them to an external datastore. 
 
 # Usage
 
@@ -14,7 +14,7 @@ To include, add the following to your build.gradle:
 If newer than Gradle 2.1 you may use
 
     plugins {
-        id 'nebula.metrics' version '3.1.0'
+        id 'nebula.metrics' version '3.2.0'
     }
 
 *or*
@@ -23,20 +23,34 @@ If newer than Gradle 2.1 you may use
         repositories { jcenter() }
 
         dependencies {
-            classpath 'com.netflix.nebula:gradle-metrics-plugin:3.1.0'
+            classpath 'com.netflix.nebula:gradle-metrics-plugin:3.2.0'
         }
     }
 
     apply plugin: 'nebula.metrics'
 
-By default, the plugin will attempt to persist to a local ES instance, on default ports. Use the following properties to change that behaviour:
+The metrics plugin can persist data into [Elasticsearch](https://www.elastic.co/products/elasticsearch) or [Suro](https://github.com/Netflix/suro). By default, the plugin will attempt to persist onto a local Elasticsearch instance on port `9200` with the templates under `templates/` applied. 
 
+# Configuration
+
+You may configure the plugin to use Elasticsearch or Suro for data persistence. Configuration should be done via the `metrics` Gradle extension. 
+ 
+### Elasticsearch configuration  
+ 
     metrics {
-        hostname = 'myescluster'
-        httpPort = 59300
+        hostname = 'myescluster'    // default is 'localhost'
+        httpPort = 59300            // default is 9200
+        indexName = 'myindexname'   // default is 'build-metrics-default'
     }
 
-The templates in the templates/ directory of the GitHub repository must be created before the plugin can be used for the first time.
+### Suro configuration 
+ 
+    metrics {
+        hostname = 'mysuro'                     // default is 'localhost'
+        suroPort = 5555                         // default is 443
+        suroBuildEventName = 'my_build_events'  // default is 'build_metrics'
+        suroLogEventName = 'my_log_events'      // default is 'build_metrics_events'              
+    } 
 
 # Metrics
 
@@ -49,7 +63,7 @@ Metrics include:
 * Tests - result, elapsed time per test
 * Result - success, failure with throwable, elapsed time
 
-# Example Queries
+# Example Elasticsearch Queries
 
 ## Builds by result status
 
