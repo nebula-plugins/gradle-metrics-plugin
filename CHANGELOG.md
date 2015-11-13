@@ -1,3 +1,8 @@
+# 3.2.0
+
+- Added integration with Suro
+- Bug fixes
+
 # 3.1.0
 
 - sanitizedProperties extension property allows environment variables and system properties to be santitized
