@@ -30,7 +30,7 @@ public class PackageSanityTest extends AbstractPackageSanityTests {
         ignoreClasses(new Predicate<Class<?>>() {
             @Override
             boolean apply(@Nullable Class<?> input) {
-                return input == UninitializedMetricsDispatcher // Methods that take arguments throw UnsupportedOperationException
+                return input == UninitializedMetricsDispatcher || input == NoopMetricsDispatcher
             }
         })
     }

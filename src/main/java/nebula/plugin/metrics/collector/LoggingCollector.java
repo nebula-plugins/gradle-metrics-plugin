@@ -66,7 +66,8 @@ public class LoggingCollector {
         checkNotNull(extension);
         final BlockingQueue<LogEvent> logEvents = new LinkedBlockingQueue<>();
         OutputEventListenerBackedLoggerContext context = (OutputEventListenerBackedLoggerContext) LoggerFactory.getILoggerFactory();
-        context.setLevel(LogLevel.DEBUG);
+        // setting LogLevel to DEBUG forces stdout messages to be classified as DEBUG events, which are then discarded and never shown.
+        //context.setLevel(LogLevel.DEBUG);
         OutputEventListener originalListener = context.getOutputEventListener();
         OutputEventListener listener = new WrappedOutputEventListener(originalListener) {
             @Override
