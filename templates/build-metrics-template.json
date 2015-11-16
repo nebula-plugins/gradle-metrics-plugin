@@ -23,7 +23,24 @@
                         "systemProperties": { "type": "nested" }
                     }
                 }
-            }
+            },
+            "dynamic_templates": [
+                {
+                    "strings": {
+                        "match_mapping_type": "string",
+                        "mapping": {
+                            "type": "string",
+                            "fields": {
+                                "raw": {
+                                    "type":  "string",
+                                    "index": "not_analyzed",
+                                    "ignore_above": 256
+                                }
+                            }
+                        }
+                    }
+                }
+            ]
         }
     }
 }
