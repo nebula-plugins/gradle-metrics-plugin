@@ -29,9 +29,9 @@ import spock.lang.Ignore
  */
 class LoggingCollectorTest extends ProjectSpec {
     def dispatcher = Mock(MetricsDispatcher)
+    def extension = new MetricsPluginExtension()
 
     def setup() {
-        def extension = new MetricsPluginExtension()
         extension.setLogLevel('info')
         LoggingCollector.configureCollection(new Supplier<MetricsDispatcher>() {
             @Override
@@ -75,5 +75,18 @@ class LoggingCollectorTest extends ProjectSpec {
 
         then:
         1 * dispatcher.logEvent(_)
+    }
+
+    def 'attempting log collection without a reset throws an ISE'() {
+        when:
+        LoggingCollector.configureCollection(new Supplier<MetricsDispatcher>() {
+            @Override
+            MetricsDispatcher get() {
+                return dispatcher
+            }
+        }, extension)
+
+        then:
+        thrown(IllegalStateException)
     }
 }

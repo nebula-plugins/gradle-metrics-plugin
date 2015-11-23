@@ -69,7 +69,7 @@ public class LoggingCollector {
         // setting LogLevel to DEBUG forces stdout messages to be classified as DEBUG events, which are then discarded and never shown.
         //context.setLevel(LogLevel.DEBUG);
         OutputEventListener originalListener = context.getOutputEventListener();
-        checkState(!originalListener.getClass().getSimpleName().equals("WrappedOutputEventListener"), "Output event listener is already wrapped. A previous build against this daemon did not clean reset the logging collection");
+        checkState(!originalListener.getClass().getName().startsWith("nebula.plugin.metrics.collector.LoggingCollector"), "Output event listener is already wrapped. A previous build against this daemon did not clean reset the logging collection");
         OutputEventListener listener = new WrappedOutputEventListener(originalListener) {
             @Override
             public void onOutput(OutputEvent outputEvent) {
