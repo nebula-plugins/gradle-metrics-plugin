@@ -41,7 +41,7 @@ class InfoTest extends Specification {
         map.put("mykey1", "myvalue1")
         map.put("mykey2", "myvalue2")
         def tool = Mock(Tool)
-        def info = Info.create(tool, tool, tool, map, Collections.emptyMap())
+        def info = Info.create(tool, tool, tool, Collections.emptyMap(), map)
 
         expect:
         def sanitizedInfo = Info.sanitize(info, Arrays.asList("mykey1"))
