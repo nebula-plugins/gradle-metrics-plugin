@@ -88,5 +88,8 @@ class LoggingCollectorTest extends ProjectSpec {
 
         then:
         thrown(IllegalStateException)
+
+        cleanup:
+        LoggingCollector.reset()
     }
 }
