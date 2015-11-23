@@ -17,6 +17,7 @@
 
 package nebula.plugin.metrics
 
+import nebula.plugin.metrics.collector.LoggingCollector
 import nebula.plugin.metrics.dispatcher.MetricsDispatcher
 import nebula.test.ProjectSpec
 import org.gradle.BuildListener
@@ -42,6 +43,11 @@ import org.gradle.logging.internal.LogEvent
  */
 
 class MetricsPluginTest extends ProjectSpec {
+    def cleanup() {
+        // These tests don't reflect the complete build lifecycle, so the logging collector has to be manually reset
+        LoggingCollector.reset()
+    }
+
     def 'applying plugin registers extension'() {
         when:
         project.plugins.apply(MetricsPlugin)

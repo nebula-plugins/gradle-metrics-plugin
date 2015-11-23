@@ -111,8 +111,11 @@ public class LoggingCollector {
 
     public static void reset() {
         OutputEventListenerBackedLoggerContext context = (OutputEventListenerBackedLoggerContext) LoggerFactory.getILoggerFactory();
-        WrappedOutputEventListener listener = (WrappedOutputEventListener) context.getOutputEventListener();
-        context.setOutputEventListener(listener.unwrap());
+        OutputEventListener listener = context.getOutputEventListener();
+        if (listener instanceof WrappedOutputEventListener) {
+            WrappedOutputEventListener wrappedListener = (WrappedOutputEventListener) listener;
+            context.setOutputEventListener(wrappedListener.unwrap());
+        }
     }
 
     private static class WrappedOutputEventListener implements OutputEventListener {
