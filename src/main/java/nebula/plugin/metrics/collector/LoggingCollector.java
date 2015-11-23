@@ -29,7 +29,6 @@ import org.gradle.logging.internal.LogEvent;
 import org.gradle.logging.internal.OutputEvent;
 import org.gradle.logging.internal.OutputEventListener;
 import org.gradle.logging.internal.slf4j.OutputEventListenerBackedLoggerContext;
-import org.omg.CORBA.INV_FLAG;
 import org.slf4j.LoggerFactory;
 
 import java.util.List;
@@ -37,6 +36,7 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Preconditions.checkState;
 
 /**
  * Collector that intercepts logging events.
@@ -69,6 +69,7 @@ public class LoggingCollector {
         // setting LogLevel to DEBUG forces stdout messages to be classified as DEBUG events, which are then discarded and never shown.
         //context.setLevel(LogLevel.DEBUG);
         OutputEventListener originalListener = context.getOutputEventListener();
+        checkState(!originalListener.getClass().getSimpleName().equals("WrappedOutputEventListener"), "Output event listener is already wrapped. A previous build against this daemon did not clean reset the logging collection");
         OutputEventListener listener = new WrappedOutputEventListener(originalListener) {
             @Override
             public void onOutput(OutputEvent outputEvent) {
