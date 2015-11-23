@@ -17,8 +17,6 @@
 
 package nebula.plugin.metrics.model;
 
-import nebula.plugin.metrics.MetricsPluginExtension;
-
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import lombok.NonNull;
 import lombok.Value;
@@ -51,7 +49,7 @@ public class Info {
     public static Info sanitize(Info info, List<String> sanitizedProperties) {
         List<KeyValue> systemProperties = sanitizeKeyValues(info.getSystemProperties(), sanitizedProperties);
         List<KeyValue> environmentVariables = sanitizeKeyValues(info.getEnvironmentVariables(), sanitizedProperties);
-        return new Info(info.getBuild(), info.getScm(), info.getCi(), systemProperties, environmentVariables);
+        return new Info(info.getBuild(), info.getScm(), info.getCi(), environmentVariables, systemProperties);
     }
 
     private static List<KeyValue> sanitizeKeyValues(List<KeyValue> keyValues, List<String> sanitizedProperties) {
