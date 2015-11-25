@@ -45,36 +45,12 @@ class LoggingCollectorTest extends ProjectSpec {
         LoggingCollector.reset()
     }
 
-    @Ignore
-    def 'events equal or greater than threshold are collected'() {
-        def logger = project.logger
-
-        when:
-        logger.error("error")
-        logger.warn("warn")
-        logger.info("info") // this does not go through. Possibly because of
-                            // /src/core/org/gradle/logging/internal/OutputEventRenderer.java#238
-
-        then:
-        3 * dispatcher.logEvent(_)
-    }
-
     def 'events below threshold are not collected'() {
         when:
         project.logger.debug("debug")
 
         then:
         0 * dispatcher.logEvent(_)
-    }
-
-    @Ignore
-    def 'events below threshold are collected, if they contain the metrics logging prefix'() {
-        when:
-        def logger = MetricsLoggerFactory.getLogger(LoggingCollectorTest)
-        logger.debug("debug")
-
-        then:
-        1 * dispatcher.logEvent(_)
     }
 
     def 'attempting log collection without a reset throws an ISE'() {
@@ -88,8 +64,29 @@ class LoggingCollectorTest extends ProjectSpec {
 
         then:
         thrown(IllegalStateException)
+    }
 
-        cleanup:
-        LoggingCollector.reset()
+    @Ignore
+    def 'events equal or greater than threshold are collected'() {
+        def logger = project.logger
+
+        when:
+        logger.error("error")
+        logger.warn("warn")
+        logger.info("info") // this does not go through. Possibly because of
+        // /src/core/org/gradle/logging/internal/OutputEventRenderer.java#238
+
+        then:
+        3 * dispatcher.logEvent(_)
+    }
+
+    @Ignore
+    def 'events below threshold are collected, if they contain the metrics logging prefix'() {
+        when:
+        def logger = MetricsLoggerFactory.getLogger(LoggingCollectorTest)
+        logger.debug("debug")
+
+        then:
+        1 * dispatcher.logEvent(_)
     }
 }

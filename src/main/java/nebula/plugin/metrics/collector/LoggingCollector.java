@@ -53,7 +53,7 @@ public class LoggingCollector {
 
     /**
      * Configure a logback filter to capture all root logging events.
-     * <p>
+     * <p/>
      * Avoids having to depend on a particular Gradle logging level being set. Gradle's logging is such that
      * encoders/layouts/etc aren't an option and LogbackLoggingConfigurer.doConfigure() adds a TurboFilter which
      * prevents us getting at those events, so we re-wire the filters so ours comes first.
@@ -112,10 +112,11 @@ public class LoggingCollector {
     public static void reset() {
         OutputEventListenerBackedLoggerContext context = (OutputEventListenerBackedLoggerContext) LoggerFactory.getILoggerFactory();
         OutputEventListener listener = context.getOutputEventListener();
-        if (listener instanceof WrappedOutputEventListener) {
-            WrappedOutputEventListener wrappedListener = (WrappedOutputEventListener) listener;
-            context.setOutputEventListener(wrappedListener.unwrap());
+        if (!(listener instanceof WrappedOutputEventListener)) {
+            throw new IllegalStateException("Expected a wrapped logging output, but instead found " + listener);
         }
+        WrappedOutputEventListener wrappedListener = (WrappedOutputEventListener) listener;
+        context.setOutputEventListener(wrappedListener.unwrap());
     }
 
     private static class WrappedOutputEventListener implements OutputEventListener {

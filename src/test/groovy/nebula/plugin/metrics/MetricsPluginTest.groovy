@@ -17,45 +17,10 @@
 
 package nebula.plugin.metrics
 
-import nebula.plugin.metrics.collector.LoggingCollector
-import nebula.plugin.metrics.dispatcher.MetricsDispatcher
 import nebula.test.ProjectSpec
-import org.gradle.BuildListener
-import org.gradle.BuildResult
-import org.gradle.api.Project
 import org.gradle.api.internal.plugins.PluginApplicationException
-import org.gradle.api.internal.project.DefaultProject
-import org.gradle.api.logging.LogLevel
-import org.gradle.api.plugins.JavaPlugin
-import org.gradle.api.tasks.testing.Test
-import org.gradle.api.tasks.testing.TestDescriptor
-import org.gradle.api.tasks.testing.TestListener
-import org.gradle.api.tasks.testing.TestResult
-import org.gradle.internal.event.ListenerBroadcast
-import org.gradle.invocation.DefaultGradle
-import org.gradle.logging.internal.LogEvent
-
-/*
- * Tests for {@link MetricsPlugin}.
- * </p>
- * I'm not really concerned with mocking out Gradle here: it's a first class collaborator, and there's no benefit
- * in guessing at it's behaviour, or avoiding real interactions.
- */
 
 class MetricsPluginTest extends ProjectSpec {
-    def cleanup() {
-        // These tests don't reflect the complete build lifecycle, so the logging collector has to be manually reset
-        LoggingCollector.reset()
-    }
-
-    def 'applying plugin registers extension'() {
-        when:
-        project.plugins.apply(MetricsPlugin)
-
-        then:
-        project.extensions.findByName(MetricsPluginExtension.METRICS_EXTENSION_NAME)
-    }
-
     def 'plugin can only be applied to root project'() {
         given:
         def subproject = addSubproject('subproject')
@@ -65,123 +30,5 @@ class MetricsPluginTest extends ProjectSpec {
 
         then:
         thrown(PluginApplicationException)
-    }
-
-    def 'build lifecycle events control dispatcher startup lifecycle'() {
-        def dispatcher = applyPluginWithMockedDispatcher(project)
-        1 * dispatcher.startAsync() >> {
-            dispatcher.isRunning() >> true
-            dispatcher
-        }
-
-        DefaultGradle gradle = project.gradle
-
-        when:
-        def broadcaster = buildListenerBroadcaster(project)
-        broadcaster.projectsEvaluated(gradle)
-        broadcaster.buildFinished(new BuildResult(gradle, null))
-
-        then:
-        noExceptionThrown()
-    }
-
-    def 'project evaluation dispatches started event'() {
-        def dispatcher = applyPluginWithMockedDispatcher(project)
-        1 * dispatcher.startAsync() >> dispatcher
-
-        when:
-        buildListenerBroadcaster(project).projectsEvaluated(project.gradle)
-
-        then:
-        1 * dispatcher.started(_)
-    }
-
-    def 'project evaluation dispatches environment event'() {
-        def dispatcher = applyPluginWithMockedDispatcher(project)
-        1 * dispatcher.startAsync() >> dispatcher
-
-        when:
-        buildListenerBroadcaster(project).projectsEvaluated(project.gradle)
-
-        then:
-        1 * dispatcher.environment(_)
-    }
-
-    def 'project evaluation dispatches result event'() {
-        def dispatcher = applyPluginWithMockedDispatcher(project)
-
-        when:
-        buildListenerBroadcaster(project).buildFinished(new BuildResult(project.gradle, null))
-
-        then:
-        1 * dispatcher.result(_)
-    }
-
-    def 'project logger dispatches loging event at the log level'() {
-        def dispatcher = applyPluginWithMockedDispatcher(project)
-
-        when:
-        project.logger.warn('log message')
-
-        then:
-        1 * dispatcher.logEvent(_) >> { LogEvent event ->
-            assert event.message == 'log message'
-            assert event.logLevel == LogLevel.WARN
-        }
-    }
-
-    def 'project logger does not dispatch logback event belong the log level'() {
-        def dispatcher = applyPluginWithMockedDispatcher(project)
-
-        when:
-        project.logger.info('log message')
-
-        then:
-        0 * dispatcher.logEvent(_)
-    }
-
-    def 'afterTest notification dispatches test event'() {
-        project.plugins.apply(JavaPlugin)
-        def dispatcher = applyPluginWithMockedDispatcher(project)
-        def task = project.tasks.getByName('test') as Test
-
-        // This is pretty coupley, but it means we can use the same infrastructure as Gradle to trigger the result (I'll use test execution in integration tests)
-        def method = Test.getDeclaredMethod('getTestListenerBroadcaster')
-        method.setAccessible(true)
-        def listener = method.invoke(task) as ListenerBroadcast<TestListener>
-        def testListener = listener.getSource()
-
-        def descriptor = Mock(TestDescriptor)
-        descriptor.getName() >> 'name'
-        descriptor.getClassName() >> 'className'
-        def result = Mock(TestResult)
-        result.getResultType() >> TestResult.ResultType.SUCCESS
-
-        nebula.plugin.metrics.model.Test capturedTest = null
-
-        when:
-        testListener.afterTest(descriptor, result)
-
-        then:
-        1 * dispatcher.test(_) >> {
-            capturedTest = it.get(0)
-        }
-        capturedTest.getMethodName() == 'name'
-        capturedTest.getClassName() == 'className'
-    }
-
-    BuildListener buildListenerBroadcaster(Project project) {
-        def gradle = project.gradle as DefaultGradle
-        gradle.buildListenerBroadcaster
-    }
-
-    MetricsDispatcher applyPluginWithMockedDispatcher(Project project) {
-        project.plugins.apply(MetricsPlugin)
-        def plugin = project.plugins.getPlugin(MetricsPlugin)
-        def dispatcher = Mock(MetricsDispatcher)
-        plugin.setDispatcher(dispatcher)
-        def defaultProject = ((DefaultProject) project)
-        defaultProject.getProjectEvaluationBroadcaster().afterEvaluate(project, project.getState())
-        dispatcher
     }
 }
