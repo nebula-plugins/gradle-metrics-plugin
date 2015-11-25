@@ -17,9 +17,6 @@
 
 package nebula.plugin.metrics.collector;
 
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Optional;
-import com.google.common.base.Supplier;
 import nebula.plugin.metrics.MetricsLoggerFactory;
 import nebula.plugin.metrics.MetricsPluginExtension;
 import nebula.plugin.metrics.dispatcher.MetricsDispatcher;
@@ -27,6 +24,10 @@ import nebula.plugin.metrics.model.GradleToolContainer;
 import nebula.plugin.metrics.model.Info;
 import nebula.plugin.metrics.model.Result;
 import nebula.plugin.metrics.model.Task;
+
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Optional;
+import com.google.common.base.Supplier;
 import org.gradle.BuildListener;
 import org.gradle.BuildResult;
 import org.gradle.StartParameter;
@@ -86,9 +87,12 @@ public final class GradleCollector implements ProfileListener, BuildListener {
             dispatcher.started(project); // We register this listener after the build has started, so we fire the start event here instead
 
             GradleToolContainer tool = GradleToolContainer.fromGradle(gradle);
-            Plugin plugin = gradleProject.getPlugins().findPlugin("info-broker");
+            Plugin plugin = gradleProject.getPlugins().findPlugin("nebula.info-broker");
             if (plugin == null) {
-                logger.info("Gradle info plugin not found. SCM and CI information will not be collected");
+                plugin = gradleProject.getPlugins().findPlugin("info-broker");
+            }
+            if (plugin == null) {
+                logger.warn("Gradle info plugin not found. SCM and CI information will not be collected");
                 dispatcher.environment(Info.create(tool));
             } else {
                 GradleInfoCollector collector = new GradleInfoCollector(plugin);
