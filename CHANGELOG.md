@@ -1,3 +1,11 @@
+# 3.2.2
+
+- Recognise the new nebula.info-broker plugin id, so scm and ci information is captured again
+
+# 3.2.1
+
+- Add a precondition that identifies when the logging collector has not been reset. It turns out that Gradle 2.9 regressed the profile collector, so the dispatcher wasn't shutting down
+
 # 3.2.0
 
 - Added integration with Suro
