@@ -16,18 +16,15 @@
  */
 
 package nebula.plugin.metrics.dispatcher
-
 import nebula.plugin.metrics.SimpleOutputEventListener
 import org.gradle.api.logging.LogLevel
-import org.gradle.logging.internal.OutputEventListener
 import org.gradle.logging.internal.slf4j.OutputEventListenerBackedLoggerContext
 import org.slf4j.LoggerFactory
 import spock.lang.Specification
-
 /**
  * A Spock {@link Specification} that ensures that logging messages error level or higher are not logged.
  */
-class LoggingCaptureSpecification extends Specification {
+abstract class LoggingCaptureSpecification extends Specification {
     protected SimpleOutputEventListener listener = new SimpleOutputEventListener();
 
     def setup() {

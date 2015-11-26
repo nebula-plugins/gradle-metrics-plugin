@@ -69,6 +69,10 @@ public class LoggingCollector {
         // setting LogLevel to DEBUG forces stdout messages to be classified as DEBUG events, which are then discarded and never shown.
         //context.setLevel(LogLevel.DEBUG);
         OutputEventListener originalListener = context.getOutputEventListener();
+        if (dispatcherSupplier.toString().startsWith("Dummy proxy")) {
+            // Horrible coupled logic, but we need to keep the Guava nulls testers out of here
+            return;
+        }
         checkState(!originalListener.getClass().getName().startsWith("nebula.plugin.metrics.collector.LoggingCollector"), "Output event listener is already wrapped. A previous build against this daemon did not clean reset the logging collection");
         OutputEventListener listener = new WrappedOutputEventListener(originalListener) {
             @Override
