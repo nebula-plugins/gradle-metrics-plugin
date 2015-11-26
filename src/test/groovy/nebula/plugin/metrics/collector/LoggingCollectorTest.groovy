@@ -53,19 +53,6 @@ class LoggingCollectorTest extends ProjectSpec {
         0 * dispatcher.logEvent(_)
     }
 
-    def 'attempting log collection without a reset throws an ISE'() {
-        when:
-        LoggingCollector.configureCollection(new Supplier<MetricsDispatcher>() {
-            @Override
-            MetricsDispatcher get() {
-                return dispatcher
-            }
-        }, extension)
-
-        then:
-        thrown(IllegalStateException)
-    }
-
     @Ignore
     def 'events equal or greater than threshold are collected'() {
         def logger = project.logger

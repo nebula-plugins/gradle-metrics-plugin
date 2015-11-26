@@ -29,6 +29,7 @@ import org.gradle.logging.internal.LogEvent;
 import org.gradle.logging.internal.OutputEvent;
 import org.gradle.logging.internal.OutputEventListener;
 import org.gradle.logging.internal.slf4j.OutputEventListenerBackedLoggerContext;
+import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.List;
@@ -36,7 +37,6 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
 import static com.google.common.base.Preconditions.checkNotNull;
-import static com.google.common.base.Preconditions.checkState;
 
 /**
  * Collector that intercepts logging events.
@@ -50,6 +50,7 @@ public class LoggingCollector {
             return false;
         }
     };
+    private static final Logger LOGGER = MetricsLoggerFactory.getLogger(LoggingCollector.class);
 
     /**
      * Configure a logback filter to capture all root logging events.
@@ -73,7 +74,10 @@ public class LoggingCollector {
             // Horrible coupled logic, but we need to keep the Guava nulls testers out of here
             return;
         }
-        checkState(!originalListener.getClass().getName().startsWith("nebula.plugin.metrics.collector.LoggingCollector"), "Output event listener is already wrapped. A previous build against this daemon did not clean reset the logging collection");
+        if (originalListener.getClass().getName().startsWith("nebula.plugin.metrics.collector.LoggingCollector")) {
+            LOGGER.error("Output event listener is already wrapped. A previous build against this daemon did not clean reset the logging collection. Please report this bug");
+            return;
+        }
         OutputEventListener listener = new WrappedOutputEventListener(originalListener) {
             @Override
             public void onOutput(OutputEvent outputEvent) {
