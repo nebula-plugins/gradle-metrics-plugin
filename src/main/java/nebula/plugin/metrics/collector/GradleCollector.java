@@ -179,6 +179,9 @@ public final class GradleCollector implements ProfileListener, BuildListener {
      * Conditionally shutdown the dispatcher, because Gradle listener event order appears to be non-deterministic.
      */
     private void shutdownIfComplete() {
+        // It looks like we can't count on receiving build profile results for every run, so we reset logging collection at the earliest opportunity
+        LoggingCollector.reset();
+
         // only shut down if you have updated build results AND profile information
         if (!buildProfileComplete.get() || !buildResultComplete.get()) {
             return;
@@ -195,7 +198,7 @@ public final class GradleCollector implements ProfileListener, BuildListener {
                 logger.error("Could not stop metrics dispatcher service", e);
             }
         }
-        LoggingCollector.reset();
+
         Optional<String> receipt = dispatcher.receipt();
         if (receipt.isPresent()) {
             logger.warn(receipt.get());
