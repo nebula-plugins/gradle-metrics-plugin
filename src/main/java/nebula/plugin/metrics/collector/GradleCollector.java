@@ -179,8 +179,10 @@ public final class GradleCollector implements ProfileListener, BuildListener {
      * Conditionally shutdown the dispatcher, because Gradle listener event order appears to be non-deterministic.
      */
     private void shutdownIfComplete() {
-        // It looks like we can't count on receiving build profile results for every run, so we reset logging collection at the earliest opportunity
-        LoggingCollector.reset();
+        if (buildProfileComplete.get() ^ buildResultComplete.get()) {
+            // It looks like we can't count on receiving build profile results for every run, so we reset logging collection at the earliest opportunity
+            LoggingCollector.reset();
+        }
 
         // only shut down if you have updated build results AND profile information
         if (!buildProfileComplete.get() || !buildResultComplete.get()) {
