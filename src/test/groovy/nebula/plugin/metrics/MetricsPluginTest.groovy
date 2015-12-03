@@ -17,8 +17,14 @@
 
 package nebula.plugin.metrics
 
+import nebula.plugin.metrics.dispatcher.MetricsDispatcher
 import nebula.test.ProjectSpec
+import org.gradle.BuildListener
+import org.gradle.BuildResult
+import org.gradle.api.Project
 import org.gradle.api.internal.plugins.PluginApplicationException
+import org.gradle.api.internal.project.DefaultProject
+import org.gradle.invocation.DefaultGradle
 
 class MetricsPluginTest extends ProjectSpec {
     def 'plugin can only be applied to root project'() {
@@ -30,5 +36,48 @@ class MetricsPluginTest extends ProjectSpec {
 
         then:
         thrown(PluginApplicationException)
+    }
+
+    def 'build lifecycle events control dispatcher startup lifecycle'() {
+        def dispatcher = applyPluginWithMockedDispatcher(project)
+        1 * dispatcher.startAsync() >> {
+            dispatcher.isRunning() >> true
+            dispatcher
+        }
+
+        DefaultGradle gradle = project.gradle
+
+        when:
+        def broadcaster = buildListenerBroadcaster(project)
+        broadcaster.projectsEvaluated(gradle)
+        broadcaster.buildFinished(new BuildResult(gradle, null))
+
+        then:
+        noExceptionThrown()
+    }
+
+    def 'project evaluation dispatches result event'() {
+        def dispatcher = applyPluginWithMockedDispatcher(project)
+
+        when:
+        buildListenerBroadcaster(project).buildFinished(new BuildResult(project.gradle, null))
+
+        then:
+        1 * dispatcher.result(_)
+    }
+
+    BuildListener buildListenerBroadcaster(Project project) {
+        def gradle = project.gradle as DefaultGradle
+        gradle.buildListenerBroadcaster
+    }
+
+    MetricsDispatcher applyPluginWithMockedDispatcher(Project project) {
+        project.plugins.apply(MetricsPlugin)
+        def plugin = project.plugins.getPlugin(MetricsPlugin)
+        def dispatcher = Mock(MetricsDispatcher)
+        plugin.setDispatcher(dispatcher)
+        def defaultProject = ((DefaultProject) project)
+        defaultProject.getProjectEvaluationBroadcaster().afterEvaluate(project, project.getState())
+        dispatcher
     }
 }

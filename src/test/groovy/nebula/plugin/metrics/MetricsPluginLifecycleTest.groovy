@@ -16,11 +16,11 @@
  */
 
 package nebula.plugin.metrics
+
 import nebula.plugin.metrics.collector.LoggingCollector
 import nebula.plugin.metrics.dispatcher.MetricsDispatcher
 import nebula.test.ProjectSpec
 import org.gradle.BuildListener
-import org.gradle.BuildResult
 import org.gradle.api.Project
 import org.gradle.api.internal.project.DefaultProject
 import org.gradle.api.logging.LogLevel
@@ -47,24 +47,6 @@ class MetricsPluginLifecycleTest extends ProjectSpec {
         project.extensions.findByName(MetricsPluginExtension.METRICS_EXTENSION_NAME)
     }
 
-    def 'build lifecycle events control dispatcher startup lifecycle'() {
-        def dispatcher = applyPluginWithMockedDispatcher(project)
-        1 * dispatcher.startAsync() >> {
-            dispatcher.isRunning() >> true
-            dispatcher
-        }
-
-        DefaultGradle gradle = project.gradle
-
-        when:
-        def broadcaster = buildListenerBroadcaster(project)
-        broadcaster.projectsEvaluated(gradle)
-        broadcaster.buildFinished(new BuildResult(gradle, null))
-
-        then:
-        noExceptionThrown()
-    }
-
     def 'project evaluation dispatches started event'() {
         def dispatcher = applyPluginWithMockedDispatcher(project)
         1 * dispatcher.startAsync() >> dispatcher
@@ -85,16 +67,6 @@ class MetricsPluginLifecycleTest extends ProjectSpec {
 
         then:
         1 * dispatcher.environment(_)
-    }
-
-    def 'project evaluation dispatches result event'() {
-        def dispatcher = applyPluginWithMockedDispatcher(project)
-
-        when:
-        buildListenerBroadcaster(project).buildFinished(new BuildResult(project.gradle, null))
-
-        then:
-        1 * dispatcher.result(_)
     }
 
     def 'project logger dispatches loging event at the log level'() {
