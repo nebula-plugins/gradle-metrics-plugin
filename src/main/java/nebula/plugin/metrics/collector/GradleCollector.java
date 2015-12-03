@@ -206,7 +206,7 @@ public final class GradleCollector implements ProfileListener, BuildListener {
     Result getTaskExecutionResult(TaskExecution taskExecution) {
         Result result = Result.success();
         TaskState state = taskExecution.getState();
-        if (!state.getDidWork()) {
+        if (state == null || !state.getDidWork()) {
             result = Result.skipped();
         } else {
             //noinspection ThrowableResultOfMethodCallIgnored
