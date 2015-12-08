@@ -1,3 +1,12 @@
+# 3.2.4
+
+- Fix an NPE in GradleCollector when a task doesn't include a state
+- Improve logging collection cleanup logic
+
+# 3.2.3
+
+- Log an error rather than throw an exception when logging collection is not correctly cleaned up
+
 # 3.2.2
 
 - Recognise the new nebula.info-broker plugin id, so scm and ci information is captured again
