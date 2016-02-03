@@ -36,20 +36,21 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 import static org.apache.http.client.fluent.Request.Post;
 
-public class SuroMetricsDispatcher extends AbstractMetricsDispatcher {
+public class RestMetricsDispatcher extends AbstractMetricsDispatcher {
 
-    public SuroMetricsDispatcher(MetricsPluginExtension extension) {
+    public RestMetricsDispatcher(MetricsPluginExtension extension) {
         super(extension, true);
+        buildId = Optional.of(UUID.randomUUID().toString());
     }
 
     @Override
     protected String getLogCollectionName() {
-        return extension.getSuroLogEventName();
+        return extension.getRestLogEventName();
     }
 
     @Override
     protected String getBuildCollectionName() {
-        return extension.getSuroBuildEventName();
+        return extension.getRestBuildEventName();
     }
 
     @Override
@@ -57,13 +58,12 @@ public class SuroMetricsDispatcher extends AbstractMetricsDispatcher {
         checkNotNull(indexName);
         checkNotNull(type);
         checkNotNull(source);
+        checkNotNull(id);
 
-        if (!id.isPresent()) {
-            id = Optional.of(UUID.randomUUID().toString());
-        }
-        String payload = createPayloadJson(indexName, source, id.get());
+        // id is ignored because the REST dispatcher generates one on startup.
+        String payload = createPayloadJson(indexName, type, source, buildId.get());
         postPayload(payload);
-        return id.get();
+        return buildId.get();
     }
 
     @Override
@@ -74,8 +74,7 @@ public class SuroMetricsDispatcher extends AbstractMetricsDispatcher {
 
         List<String> payloads = Lists.newArrayList();
         for (String source : sources) {
-            Optional<String> id = Optional.of(UUID.randomUUID().toString());
-            payloads.add(createPayloadJson(indexName, source, id.get()));
+            payloads.add(createPayloadJson(indexName, type, source, buildId.get()));
         }
 
         postPayload(joinMultiplePayloads(payloads));
@@ -84,29 +83,22 @@ public class SuroMetricsDispatcher extends AbstractMetricsDispatcher {
     private void postPayload(String payload) {
         checkNotNull(payload);
 
-        String url = buildUrl();
-
         try {
-            Post(url).bodyString(payload, ContentType.APPLICATION_JSON).execute();
+            Post(extension.getRestUri()).bodyString(payload, ContentType.APPLICATION_JSON).execute();
         } catch (IOException e) {
-            throw new RuntimeException("Unable to POST to Suro at " + url, e);
+            throw new RuntimeException("Unable to POST at " + extension.getRestUri(), e);
         }
     }
 
-    private String buildUrl() {
-        String protocol = extension.isSuroHttps() ? "https" : "http";
-        return String.format("%s://%s:%d/REST/v1/log", protocol, extension.getHostname(), extension.getSuroPort());
-    }
-
-    private String createPayloadJson(String indexName, String payload, String buildId) {
+    private String createPayloadJson(String indexName, String type, String payload, String buildId) {
         Map<String, String> payloadMap = Maps.newHashMap();
         payloadMap.put("buildId", buildId);
-        payloadMap.put("build", payload);
+        payloadMap.put(type, payload);
         try {
-            SuroPayload sp = new SuroPayload(indexName, payloadMap);
+            RestPayload sp = new RestPayload(indexName, payloadMap);
             return mapper.writeValueAsString(sp);
         } catch (JsonProcessingException e) {
-            throw new RuntimeException("Unable to parse to Suro payload", e);
+            throw new RuntimeException("Unable to parse to payload", e);
         }
     }
 
@@ -116,14 +108,14 @@ public class SuroMetricsDispatcher extends AbstractMetricsDispatcher {
     }
 
     @VisibleForTesting
-    public static class SuroPayload {
+    public static class RestPayload {
         private String eventName;
         private Map<String, String> payload;
 
-        public SuroPayload() {
+        public RestPayload() {
         }
 
-        public SuroPayload(String eventName, Map<String, String> payload) {
+        public RestPayload(String eventName, Map<String, String> payload) {
             this.eventName = eventName;
             this.payload = payload;
         }

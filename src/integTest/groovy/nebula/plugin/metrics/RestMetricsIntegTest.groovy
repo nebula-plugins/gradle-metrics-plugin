@@ -25,13 +25,13 @@ import nebula.test.IntegrationSpec
 import org.apache.commons.io.IOUtils
 
 import static nebula.plugin.metrics.dispatcher.AbstractMetricsDispatcher.getObjectMapper
-import static nebula.plugin.metrics.dispatcher.SuroMetricsDispatcher.SuroPayload
+import static nebula.plugin.metrics.dispatcher.RestMetricsDispatcher.RestPayload
 
-class SuroMetricsIntegTest extends IntegrationSpec {
+class RestMetricsIntegTest extends IntegrationSpec {
 
     String lastReportedBuildMetricsEvent
 
-    class SuroMockHandler implements HttpHandler {
+    class RestMockHandler implements HttpHandler {
 
         public void handle(HttpExchange t) throws IOException {
             if (t.getRequestMethod() == 'POST') {
@@ -40,7 +40,7 @@ class SuroMetricsIntegTest extends IntegrationSpec {
                     lastReportedBuildMetricsEvent = body
                 }
             } else {
-                throw new IllegalStateException('Metrics plugin should only POST data to Suro')
+                throw new IllegalStateException('Metrics plugin should only POST data')
             }
             def response = 'OK'
             t.sendResponseHeaders(200, response.length());
@@ -51,9 +51,9 @@ class SuroMetricsIntegTest extends IntegrationSpec {
 
     }
 
-    def 'metrics posts data to preconfigured Suro'() {
+    def 'metrics posts data to preconfigured REST server'() {
         HttpServer server = HttpServer.create(new InetSocketAddress(1337), 0)
-        server.createContext("/REST/v1/log", new SuroMockHandler());
+        server.createContext("/", new RestMockHandler());
         server.setExecutor(null);
         server.start();
 
@@ -61,10 +61,8 @@ class SuroMetricsIntegTest extends IntegrationSpec {
             ${applyPlugin(MetricsPlugin)}
 
             metrics {
-                hostname = 'localhost'
-                suroPort = 1337
-                suroHttps = false
-                dispatcherType = 'SURO_REST'
+                restUri = 'http://localhost:1337'
+                dispatcherType = 'REST'
             }
         """.stripIndent()
 
@@ -72,10 +70,10 @@ class SuroMetricsIntegTest extends IntegrationSpec {
         runTasksSuccessfully('projects')
 
         then:
-        SuroPayload suroPayload = getObjectMapper().readValue(lastReportedBuildMetricsEvent, SuroPayload.class);
-        def buildJson = new JsonSlurper().parseText(suroPayload.payload.get('build'))
+        RestPayload restPayload = getObjectMapper().readValue(lastReportedBuildMetricsEvent, RestPayload.class);
+        def buildJson = new JsonSlurper().parseText(restPayload.payload.get('build'))
 
-        suroPayload.eventName == 'build_metrics'
+        restPayload.eventName == 'build_metrics'
         buildJson.with {
             project.name == moduleName
             project.version == 'unspecified'

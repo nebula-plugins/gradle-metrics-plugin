@@ -80,7 +80,7 @@ public final class ClientESMetricsDispatcher extends AbstractESMetricsDispatcher
 
     @Override
     protected String index(String indexName, String type, String source, Optional<String> id) {
-        IndexRequestBuilder index = client.prepareIndex(extension.getIndexName(), BUILD_TYPE).setSource(source);
+        IndexRequestBuilder index = client.prepareIndex(extension.getIndexName(), type).setSource(source);
         index.setId(id.or(UUID.randomUUID().toString()));
         IndexResponse indexResponse = index.execute().actionGet();
         return indexResponse.getId();
@@ -90,7 +90,7 @@ public final class ClientESMetricsDispatcher extends AbstractESMetricsDispatcher
     protected void bulkIndex(String indexName, String type, Collection<String> sources) {
         BulkRequestBuilder bulk = client.prepareBulk();
         for (String source : sources) {
-            IndexRequestBuilder index = client.prepareIndex(extension.getIndexName(), LOG_TYPE);
+            IndexRequestBuilder index = client.prepareIndex(extension.getIndexName(), type);
             index.setSource(source);
             bulk.add(index);
         }

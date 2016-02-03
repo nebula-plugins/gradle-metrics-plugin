@@ -90,8 +90,8 @@ public final class MetricsPlugin implements Plugin<Project> {
                             dispatcher = new HttpESMetricsDispatcher(extension);
                             break;
                         }
-                        case SURO_REST: {
-                            dispatcher = new SuroMetricsDispatcher(extension);
+                        case REST: {
+                            dispatcher = new RestMetricsDispatcher(extension);
                             break;
                         }
                         case NOOP: {

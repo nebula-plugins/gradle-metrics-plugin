@@ -5,7 +5,7 @@
 [![Gitter](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/nebula-plugins/gradle-metrics-plugin?utm_source=badgeutm_medium=badgeutm_campaign=pr-badge)
 [![Apache 2.0](https://img.shields.io/github/license/nebula-plugins/gradle-metrics-plugin.svg)](http://www.apache.org/licenses/LICENSE-2.0)
 
-Collect Gradle build metrics and persist them to an external datastore. 
+Collects Gradle build metrics and log events and and persists them to an external datastore. 
 
 # Usage
 
@@ -14,7 +14,7 @@ To include, add the following to your build.gradle:
 If newer than Gradle 2.1 you may use
 
     plugins {
-        id 'nebula.metrics' version '3.2.0'
+        id 'nebula.metrics' version '3.3.0'
     }
 
 *or*
@@ -23,33 +23,183 @@ If newer than Gradle 2.1 you may use
         repositories { jcenter() }
 
         dependencies {
-            classpath 'com.netflix.nebula:gradle-metrics-plugin:3.2.0'
+            classpath 'com.netflix.nebula:gradle-metrics-plugin:3.3.0'
         }
     }
 
     apply plugin: 'nebula.metrics'
 
-The metrics plugin can persist data into [Elasticsearch](https://www.elastic.co/products/elasticsearch) or [Suro](https://github.com/Netflix/suro). By default, the plugin will attempt to persist onto a local Elasticsearch instance on port `9200` with the templates under `templates/` applied. 
+The metrics plugin can persist data into [Elasticsearch](https://www.elastic.co/products/elasticsearch) or a generic REST endpoint. By default, the plugin will attempt to persist onto a local Elasticsearch instance on port `9200` with the templates under `templates/` applied. 
+
+# Example Build Data
+
+```json
+{
+  "project": {
+    "name": "test-metrics",
+    "version": "1.0"
+  },
+  "events": [
+    {
+      "description": "startup",
+      "type": "init",
+      "elapsedTime": 954
+    },
+    {
+      "description": "settings",
+      "type": "configure",
+      "elapsedTime": 151
+    },
+    {
+      "description": "projectsLoading",
+      "type": "configure",
+      "elapsedTime": 196
+    },
+    {
+      "description": ":",
+      "type": "configure",
+      "elapsedTime": 1163
+    },
+    {
+      "description": ":classpath",
+      "type": "resolve",
+      "elapsedTime": 359
+    },
+    {
+      "description": "task",
+      "type": "execution",
+      "elapsedTime": 59
+    }
+  ],
+  "tasks": [
+    {
+      "description": ":projects",
+      "result": {
+        "status": "success"
+      },
+      "startTime": "2015-11-04T18:32:04.917Z",
+      "elapsedTime": 59
+    }
+  ],
+  "tests": [],
+  "info": {
+    "build": {
+      "gradle": {
+        "version": "2.8",
+        "parameters": {
+          "taskRequests": [
+            {
+              "args": [
+                "projects"
+              ]
+            }
+          ],
+          "excludedTaskNames": [],
+          "buildProjectDependencies": true,
+          "currentDir": "/Users/user/dev/tests/test-metrics-plugin",
+          "searchUpwards": true,
+          "projectProperties": [],
+          "gradleUserHomeDir": "/Users/user/.gradle",
+          "useEmptySettings": false,
+          "initScripts": [],
+          "dryRun": false,
+          "rerunTasks": false,
+          "profile": false,
+          "continueOnFailure": false,
+          "offline": false,
+          "refreshDependencies": false,
+          "recompileScripts": false,
+          "parallelThreadCount": 0,
+          "configureOnDemand": false
+        }
+      },
+      "type": "gradle"
+    },
+    "scm": {
+      "type": "unknown"
+    },
+    "ci": {
+      "type": "unknown"
+    },
+    "environmentVariables": [ ], 
+    "systemProperties": [ ], 
+    "javaVersion": "unknown"
+  },
+  "result": {
+    "status": "success"
+  },
+  "startTime": "2015-11-04T18:32:02.086Z",
+  "elapsedTime": 3852,
+  "testCount": 0,
+  "eventsCount": 6,
+  "eventsElapsedTime": 2882,
+  "tasksElapsedTime": 59,
+  "testElapsedTime": 0,
+  "finishedTime": "2015-11-04T18:32:05.938Z",
+  "taskCount": 1
+}
+```
+ 
+# Data Population
+
+If configured to use Elasticsearch, the plugin uses the default indices `build-metrics-default` and `logstash-build-metrics-default-yyyyMM` for `build` and `log` events respectively. The log index rotates on a monthly basis.   
+
+For the REST configuration, both types of data are POSTed to the same endpoint, but the payload varies based on the type:
+ 
+build data: 
+
+```json
+{
+  "eventName" : "build_metrics",
+  "payload" : {
+    "buildId": "generated build id",
+    "build": "escaped build json"
+  }
+}
+```
+
+logs:
+
+```json
+[
+  {
+    "eventName": "build_logs",
+    "payload": {
+      "buildId": "generated build id",
+      "log": "log data"
+    }
+  },
+  {
+    "eventName": "build_logs",
+    "payload": {
+      "buildId": "generated build id",
+      "log": "log data 2"
+    }
+  }
+]
+```
+
 
 # Configuration
 
-You may configure the plugin to use Elasticsearch or Suro for data persistence. Configuration should be done via the `metrics` Gradle extension. 
+Configuration should be done via the `metrics` Gradle extension. 
  
 ### Elasticsearch configuration  
  
     metrics {
         hostname = 'myescluster'    // default is 'localhost'
         httpPort = 59300            // default is 9200
-        indexName = 'myindexname'   // default is 'build-metrics-default'
+        indexName = 'myindexname'   // default is 'build-metrics-default'       
+        dispatcherType = 'ES_HTTP'  // default is the Elasticsearch HTTP client. ES_CLIENT is also available. 
     }
 
-### Suro configuration 
+### REST configuration 
  
     metrics {
-        hostname = 'mysuro'                     // default is 'localhost'
-        suroPort = 5555                         // default is 443
-        suroBuildEventName = 'my_build_events'  // default is 'build_metrics'
-        suroLogEventName = 'my_log_events'      // default is 'build_metrics_events'              
+        restUri = 'https://server.com/rest/endpoint'      // default is 'http://localhost/metrics'
+        restBuildEventName = 'my_build_events'            // default is 'build_metrics'
+        restLogEventName = 'my_log_events'                // default is 'build_logs'                      
+        dispatcherType = 'REST'
     } 
 
 # Metrics
