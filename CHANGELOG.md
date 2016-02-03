@@ -1,3 +1,7 @@
+# 3.3.0
+
+- Generalize SURO dispatcher to REST dispatcher
+
 # 3.2.4
 
 - Fix an NPE in GradleCollector when a task doesn't include a state

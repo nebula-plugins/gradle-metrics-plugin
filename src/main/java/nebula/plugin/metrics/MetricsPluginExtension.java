@@ -51,10 +51,9 @@ public class MetricsPluginExtension {
     private String indexName = DEFAULT_INDEX_NAME;
     private LogLevel logLevel = DEFAULT_LOG_LEVEL;
 
-    private int suroPort = 443;
-    private boolean suroHttps = true;
-    private String suroBuildEventName = "build_metrics";
-    private String suroLogEventName = "build_metrics_events";
+    private String restUri = "http://localhost/metrics";
+    private String restBuildEventName = "build_metrics";
+    private String restLogEventName = "build_logs";
 
     private DispatcherType dispatcherType = DispatcherType.ES_HTTP;
     private List<String> sanitizedProperties = new ArrayList<>();
@@ -128,42 +127,35 @@ public class MetricsPluginExtension {
         this.sanitizedProperties = checkNotNull(sanitizedProperties);
     }
 
-    public String getSuroLogEventName() {
-        return suroLogEventName;
+    public String getRestLogEventName() {
+        return restLogEventName;
     }
 
-    public void setSuroLogEventName(String suroLogEventName) {
-        this.suroLogEventName = checkNotNull(suroLogEventName);
+    public void setRestLogEventName(String restLogEventName) {
+        this.restLogEventName = checkNotNull(restLogEventName);
     }
 
-    public String getSuroBuildEventName() {
-        return suroBuildEventName;
+    public String getRestBuildEventName() {
+        return restBuildEventName;
     }
 
-    public void setSuroBuildEventName(String suroBuildEventName) {
-        this.suroBuildEventName = checkNotNull(suroBuildEventName);
+    public void setRestBuildEventName(String restBuildEventName) {
+        this.restBuildEventName = checkNotNull(restBuildEventName);
     }
 
-    public int getSuroPort() {
-        return suroPort;
+    public String getRestUri() {
+        return restUri;
     }
 
-    public void setSuroPort(int suroPort) {
-        this.suroPort = suroPort;
+    public void setRestUri(String restUri) {
+        this.restUri = checkNotNull(restUri);
     }
 
-    public boolean isSuroHttps() {
-        return suroHttps;
-    }
-
-    public void setSuroHttps(boolean suroHttps) {
-        this.suroHttps = suroHttps;
-    }
 
     public enum DispatcherType {
         ES_CLIENT,
         ES_HTTP,
-        SURO_REST,
+        REST,
         NOOP
     }
 }

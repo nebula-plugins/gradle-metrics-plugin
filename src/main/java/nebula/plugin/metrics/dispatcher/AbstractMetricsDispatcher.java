@@ -263,11 +263,11 @@ public abstract class AbstractMetricsDispatcher extends AbstractQueuedExecutionT
     }
 
     // the log collection name is where event log data gets uploaded to.
-    // In Elastic this is the index name. In Suro it's the eventName.
+    // In Elastic this is the index name. In REST payloads it's the eventName.
     protected abstract String getLogCollectionName();
 
     // the collection name is where the build data gets uploaded to.
-    // In Elastic this is the index name. In Suro it's the eventName.
+    // In Elastic this is the index name. In REST payloads it's the eventName.
     protected abstract String getBuildCollectionName();
 
     protected abstract String index(String indexName, String type, String source, Optional<String> id);
