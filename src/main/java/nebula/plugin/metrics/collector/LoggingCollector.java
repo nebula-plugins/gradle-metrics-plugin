@@ -54,7 +54,6 @@ public class LoggingCollector {
 
     /**
      * Configure a logback filter to capture all root logging events.
-     *
      * Avoids having to depend on a particular Gradle logging level being set. Gradle's logging is such that
      * encoders/layouts/etc aren't an option and LogbackLoggingConfigurer.doConfigure() adds a TurboFilter which
      * prevents us getting at those events, so we re-wire the filters so ours comes first.

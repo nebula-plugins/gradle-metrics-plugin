@@ -86,7 +86,7 @@ public class RestMetricsDispatcher extends AbstractMetricsDispatcher {
         try {
             Post(extension.getRestUri()).bodyString(payload, ContentType.APPLICATION_JSON).execute();
         } catch (IOException e) {
-            throw new RuntimeException("Unable to POST at " + extension.getRestUri(), e);
+            throw new RuntimeException("Unable to POST to " + extension.getRestUri(), e);
         }
     }
 

@@ -35,6 +35,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
+import static org.apache.commons.lang.exception.ExceptionUtils.*;
 
 /**
  * An {@link AbstractQueuedExecutionThreadService} that allows actions of type <pre>E</pre> to be queued and executed in
@@ -49,15 +50,17 @@ public abstract class AbstractQueuedExecutionThreadService<E> extends AbstractEx
     private final BlockingQueue<E> queue;
     private final boolean failOnError;
     private final AtomicBoolean failed = new AtomicBoolean();
+    private final boolean verboseErrorOuput;
 
-    public AbstractQueuedExecutionThreadService(boolean failOnError) {
-        this(new LinkedBlockingQueue<E>(), failOnError);
+    public AbstractQueuedExecutionThreadService(boolean failOnError, boolean verboseErrorOuput) {
+        this(new LinkedBlockingQueue<E>(), failOnError, verboseErrorOuput);
     }
 
     @VisibleForTesting
-    AbstractQueuedExecutionThreadService(BlockingQueue<E> queue, boolean failOnError) {
+    AbstractQueuedExecutionThreadService(BlockingQueue<E> queue, boolean failOnError, boolean verboseErrorOutput) {
         this.queue = checkNotNull(queue);
         this.failOnError = failOnError;
+        this.verboseErrorOuput = verboseErrorOutput;
     }
 
     protected abstract void execute(E action) throws Exception;
@@ -78,12 +81,13 @@ public abstract class AbstractQueuedExecutionThreadService<E> extends AbstractEx
                 execute(action);
             }
         } catch (Exception e) {
-            logger.error("Error executing action {}: {}", action, e.getMessage(), e);
+            logger.error("Error executing action {}: {}", action, getRootCauseMessage(e));
             if (failOnError) {
                 logger.info("Shutting down {} due to previous failure", this);
                 queue.clear();
                 failed.set(true);
-                throw Throwables.propagate(e);
+                if (verboseErrorOuput)
+                    throw Throwables.propagate(e);
             }
         }
     }
@@ -105,7 +109,7 @@ public abstract class AbstractQueuedExecutionThreadService<E> extends AbstractEx
             }
             checkState(queue.isEmpty(), "The queue should have been drained before shutdown");
         } catch (Exception e) {
-            logger.error("An error occurred during shutdown", e);
+            logger.error("An error occurred during shutdown (error message: )", getRootCauseMessage(e));
         }
         postShutDown();
     }

@@ -57,6 +57,8 @@ public class MetricsPluginExtension {
 
     private DispatcherType dispatcherType = DispatcherType.ES_HTTP;
     private List<String> sanitizedProperties = new ArrayList<>();
+    private boolean failOnError = true;
+    private boolean verboseErrorOutput = false;
 
     public String getHostname() {
         return hostname;
@@ -151,6 +153,21 @@ public class MetricsPluginExtension {
         this.restUri = checkNotNull(restUri);
     }
 
+    public boolean isFailOnError() {
+        return failOnError;
+    }
+
+    public void setFailOnError(boolean failOnError) {
+        this.failOnError = failOnError;
+    }
+
+    public boolean isVerboseErrorOutput() {
+        return verboseErrorOutput;
+    }
+
+    public void setVerboseErrorOutput(boolean verboseErrorOutput) {
+        this.verboseErrorOutput = verboseErrorOutput;
+    }
 
     public enum DispatcherType {
         ES_CLIENT,
