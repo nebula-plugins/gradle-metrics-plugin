@@ -73,6 +73,7 @@ class ClientESMetricsDispatcherIntegTest extends LoggingCaptureSpecification {
     @Timeout(value = 10)
     def 'transport client times out when node is not listening on configured port'() {
         def extension = new MetricsPluginExtension()
+        extension.verboseErrorOutput = true
         def serverSocket = new ServerSocket(0)
         extension.transportPort = serverSocket.localPort
         serverSocket.close()
@@ -90,6 +91,7 @@ class ClientESMetricsDispatcherIntegTest extends LoggingCaptureSpecification {
     def 'transport client times out when node is unresponsive on configured port'() {
         setup:
         def extension = new MetricsPluginExtension()
+        extension.verboseErrorOutput = true
         def serverSocket = new ServerSocket(0)
         new Thread(new Runnable() {
             public void run() {

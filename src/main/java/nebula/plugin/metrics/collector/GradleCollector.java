@@ -46,6 +46,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
+import static org.apache.commons.lang.exception.ExceptionUtils.*;
 
 /**
  * Collector for Gradle.
@@ -74,7 +75,7 @@ public final class GradleCollector implements ProfileListener, BuildListener {
         try {
             dispatcherSupplier.get().startAsync().awaitRunning(TIMEOUT_MS, TimeUnit.MILLISECONDS);
         } catch (IllegalStateException | TimeoutException e) {
-            logger.error("Error while starting metrics dispatcher. Metrics collection disabled.", e);
+            logger.error("Error while starting metrics dispatcher. Metrics collection disabled. Error message: {}", getRootCauseMessage(e));
             return;
         }
 
@@ -99,7 +100,7 @@ public final class GradleCollector implements ProfileListener, BuildListener {
                 dispatcher.environment(Info.create(tool, collector.getSCM(), collector.getCI()));
             }
         } catch (Exception e) {
-            logger.error("Unexpected exception in evaluation listener", e);
+            logger.error("Unexpected exception in evaluation listener (error message: {})", getRootCauseMessage(e));
         }
     }
 
@@ -197,7 +198,7 @@ public final class GradleCollector implements ProfileListener, BuildListener {
             } catch (TimeoutException e) {
                 logger.error("Timed out after {}ms while waiting for metrics dispatcher to terminate", TIMEOUT_MS);
             } catch (IllegalStateException e) {
-                logger.error("Could not stop metrics dispatcher service", e);
+                logger.error("Could not stop metrics dispatcher service (error message: {})", getRootCauseMessage(e));
             }
         }
 

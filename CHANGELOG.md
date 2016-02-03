@@ -1,3 +1,7 @@
+# 4.0.0
+
+- Fix issue #7: Be less paranoid about bubbling up exceptions as logged errors
+
 # 3.3.0
 
 - Generalize SURO dispatcher to REST dispatcher

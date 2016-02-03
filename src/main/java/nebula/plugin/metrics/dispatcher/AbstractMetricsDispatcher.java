@@ -66,7 +66,7 @@ public abstract class AbstractMetricsDispatcher extends AbstractQueuedExecutionT
     }
 
     protected AbstractMetricsDispatcher(MetricsPluginExtension extension, boolean async) {
-        super(true);
+        super(extension.isFailOnError(), extension.isVerboseErrorOutput());
         this.extension = checkNotNull(extension);
         this.mapper = getObjectMapper();
         this.async = async;
@@ -157,6 +157,10 @@ public abstract class AbstractMetricsDispatcher extends AbstractQueuedExecutionT
                     logger.error("Unable to write JSON string value: " + e.getMessage(), e);
                 }
             }
+            @Override
+            public String toString() {
+                return "AbstractMetricsDispatcher.indexBuildModel()";
+            }
         };
 
         if (executeSynchronously) {
@@ -228,6 +232,10 @@ public abstract class AbstractMetricsDispatcher extends AbstractQueuedExecutionT
                 String json = renderEvent(event);
                 index(getLogCollectionName(), LOG_TYPE, json, Optional.<String>absent());
             }
+            @Override
+            public String toString() {
+                return "AbstractMetricsDispatcher.logEvent()";
+            }
         };
         queue(runnable);
     }
@@ -244,6 +252,10 @@ public abstract class AbstractMetricsDispatcher extends AbstractQueuedExecutionT
                     jsons.add(renderEvent(event));
                 }
                 bulkIndex(getLogCollectionName(), LOG_TYPE, jsons);
+            }
+            @Override
+            public String toString() {
+                return "AbstractMetricsDispatcher.logEvents()";
             }
         };
         queue(runnable);
@@ -273,5 +285,4 @@ public abstract class AbstractMetricsDispatcher extends AbstractQueuedExecutionT
     protected abstract String index(String indexName, String type, String source, Optional<String> id);
 
     protected abstract void bulkIndex(String indexName, String type, Collection<String> sources);
-
 }
