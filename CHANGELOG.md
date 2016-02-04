@@ -1,3 +1,7 @@
+# 4.0.1
+
+- Add receipt information for REST dispatcher
+
 # 4.0.0
 
 - Fix issue #7: Be less paranoid about bubbling up exceptions as logged errors
