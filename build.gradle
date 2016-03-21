@@ -36,7 +36,7 @@ plugins {
     id 'nebula.provided-base' version '3.0.3'
     id 'nebula.optional-base' version '3.0.3'
     id 'com.github.ben-manes.versions' version '0.11.3'
-    id 'com.github.johnrengelman.shadow' version '1.2.2'
+    id 'com.github.johnrengelman.shadow' version '1.2.3'
 }
 
 apply from: 'gradle/tests.gradle'
