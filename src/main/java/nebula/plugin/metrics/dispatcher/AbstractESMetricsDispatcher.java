@@ -85,7 +85,7 @@ public abstract class AbstractESMetricsDispatcher extends AbstractMetricsDispatc
     @Override
     protected void postShutDown() throws Exception {
         super.postShutDown();
-        logstashLayoutSupplier.get().stop();
+            logstashLayoutSupplier.get().stop();
     }
 
     @Override

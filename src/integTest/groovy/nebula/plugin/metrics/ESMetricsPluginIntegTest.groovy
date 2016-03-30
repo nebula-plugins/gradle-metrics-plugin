@@ -18,6 +18,7 @@
 package nebula.plugin.metrics
 
 import com.google.common.io.Files
+import nebula.plugin.info.InfoBrokerPlugin
 import nebula.plugin.metrics.MetricsPluginExtension.DispatcherType
 import nebula.test.IntegrationSpec
 import org.elasticsearch.common.settings.ImmutableSettings
@@ -175,5 +176,35 @@ class ESMetricsPluginIntegTest extends IntegrationSpec {
             }
         """.stripIndent()
         buildFile << build
+    }
+
+    def 'report information is serialized correctedly into elasticsearch'() {
+        setValidBuildFile(dispatcherType)
+        buildFile << """
+
+        ${applyPlugin(InfoBrokerPlugin)}
+
+        task createReport << {
+            def broker = project.plugins.findPlugin(${InfoBrokerPlugin.name})
+            broker.addReport('lintViolations', ['one', 'two', 'three'])
+        }
+
+        """
+
+        when:
+        def runResult = runTasksSuccessfully('createReport')
+        def m = runResult.standardOutput =~ /Build id is (.*)/
+        def buildId = m[0][1] as String
+        def client = node.client()
+        def metricsSent = client.prepareGet(DEFAULT_INDEX_NAME, 'build', buildId).execute().actionGet().source
+        def lintViolationsReport = metricsSent['lintViolations']
+
+        then:
+        lintViolationsReport != null
+        lintViolationsReport instanceof List
+        (lintViolationsReport as List).equals(['one', 'two', 'three'])
+
+        where:
+        dispatcherType << [DispatcherType.ES_CLIENT, DispatcherType.ES_HTTP]
     }
 }

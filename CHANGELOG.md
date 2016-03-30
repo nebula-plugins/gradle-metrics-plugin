@@ -1,3 +1,7 @@
+# 4.1.0
+
+- Send reports from the InfoBroker plugin to dispatchers
+
 # 4.0.1
 
 - Add receipt information for REST dispatcher

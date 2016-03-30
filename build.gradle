@@ -21,7 +21,7 @@ plugins {
     id 'idea'
     id 'jacoco'
 
-    id 'nebula.info' version '3.0.3'
+    id 'nebula.info' version '3.0.4'
     id 'nebula.contacts' version '3.0.1'
     id 'nebula.maven-publish' version '4.2.2'
     id 'nebula.nebula-release' version '3.0.5'

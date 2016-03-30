@@ -179,6 +179,21 @@ logs:
 ]
 ```
 
+# Custom Metrics 
+
+In some scenarios you might want to include additional metrics to your build reports. This is supported though 
+integration with the [nebula.info-broker](https://github.com/nebula-plugins/gradle-info-plugin#info-broker-plugin-broker) 
+plugin, which acts as a bridging point between plugins that wish to generate custom metrics and `gradle-build-metrics`. 
+
+To use, write a plugin that depends on [nebula.info-broker](https://github.com/nebula-plugins/gradle-info-plugin#info-broker-plugin-broker)
+and use code similar to this:
+
+```groovy
+def infoBrokerPlugin = project.plugins.getPlugin('nebula.info-broker')
+infoBrokerPlugin.addReport('myCustomReport', 'some value or object')
+``` 
+
+Every report will appear as a top-level element in the data model.  
 
 # Configuration
 
@@ -212,6 +227,7 @@ Metrics include:
 * Task executions - result, elapsed time per task
 * Tests - result, elapsed time per test
 * Result - success, failure with throwable, elapsed time
+* Custom metrics that have been provided via `nebula.info-broker`
 
 # Example Elasticsearch Queries
 
@@ -325,7 +341,7 @@ Where `<TYPE>` is one of `init`, `configure`, `resolve`, `execution` or the exce
 LICENSE
 =======
 
-Copyright 2015 Netflix, Inc.
+Copyright 2015-2016 Netflix, Inc.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.

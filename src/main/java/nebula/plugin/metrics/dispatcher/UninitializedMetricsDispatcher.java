@@ -93,6 +93,11 @@ public class UninitializedMetricsDispatcher implements MetricsDispatcher {
     }
 
     @Override
+    public void report(String reportName, Object report) {
+        throw unsupported();
+    }
+
+    @Override
     public Optional<String> receipt() {
         throw unsupported();
     }
