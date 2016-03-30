@@ -18,6 +18,7 @@
 package nebula.plugin.metrics.dispatcher;
 
 import com.google.common.base.Optional;
+import com.google.common.base.Strings;
 import com.google.common.base.Throwables;
 import io.searchbox.action.Action;
 import io.searchbox.client.JestClient;
@@ -49,10 +50,13 @@ public final class HttpESMetricsDispatcher extends AbstractESMetricsDispatcher {
     @Override
     protected void startUpClient() {
         JestClientFactory factory = new JestClientFactory();
-        factory.setHttpClientConfig(new HttpClientConfig
+        HttpClientConfig.Builder config = new HttpClientConfig
                 .Builder("http://" + extension.getHostname() + ":" + extension.getHttpPort())
-                .multiThreaded(false)
-                .build());
+                .multiThreaded(false);
+        if(!Strings.isNullOrEmpty(extension.getEsBasicAuthUsername())) {
+            config.defaultCredentials(extension.getEsBasicAuthUsername(), extension.getEsBasicAuthPassword());
+        }
+        factory.setHttpClientConfig(config.build());
         client = factory.getObject();
     }
 

@@ -43,19 +43,19 @@ class RestMetricsIntegTest extends IntegrationSpec {
                 throw new IllegalStateException('Metrics plugin should only POST data')
             }
             def response = 'OK'
-            t.sendResponseHeaders(200, response.length());
-            OutputStream os = t.getResponseBody();
-            os.write(response.getBytes());
-            os.close();
+            t.sendResponseHeaders(200, response.length())
+            OutputStream os = t.getResponseBody()
+            os.write(response.getBytes())
+            os.close()
         }
 
     }
 
     def 'metrics posts data to preconfigured REST server'() {
         HttpServer server = HttpServer.create(new InetSocketAddress(1337), 0)
-        server.createContext("/", new RestMockHandler());
-        server.setExecutor(null);
-        server.start();
+        server.createContext("/", new RestMockHandler())
+        server.setExecutor(null)
+        server.start()
 
         buildFile << """
             ${applyPlugin(MetricsPlugin)}
@@ -70,7 +70,7 @@ class RestMetricsIntegTest extends IntegrationSpec {
         runTasksSuccessfully('projects')
 
         then:
-        RestPayload restPayload = getObjectMapper().readValue(lastReportedBuildMetricsEvent, RestPayload.class);
+        RestPayload restPayload = getObjectMapper().readValue(lastReportedBuildMetricsEvent, RestPayload.class)
         def buildJson = new JsonSlurper().parseText(restPayload.payload.get('build'))
 
         restPayload.eventName == 'build_metrics'
@@ -85,6 +85,9 @@ class RestMetricsIntegTest extends IntegrationSpec {
             tasks.size() == 1
             tests.isEmpty()
         }
+
+        cleanup:
+        server?.stop(0)
     }
 
 }
