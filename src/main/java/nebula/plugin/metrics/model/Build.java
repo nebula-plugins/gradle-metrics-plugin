@@ -17,11 +17,15 @@
 
 package nebula.plugin.metrics.model;
 
+import com.fasterxml.jackson.annotation.JsonAnyGetter;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import org.joda.time.DateTime;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -35,6 +39,7 @@ public class Build {
     private final List<Event> events = new ArrayList<>();
     private final List<Task> tasks = new ArrayList<>();
     private final List<Test> tests = new ArrayList<>();
+    private final Map<String, Object> buildReports = new HashMap<>();
     private Info info;
     private Result result = Result.unknown();
     private long startTime;
@@ -92,8 +97,19 @@ public class Build {
         return ImmutableList.copyOf(tests);
     }
 
+    @JsonAnyGetter
+    public Map<String, Object> getBuildReports() {
+        return ImmutableMap.copyOf(buildReports);
+    }
+
     public void addTest(Test test) {
         tests.add(checkNotNull(test));
+    }
+
+    public void addBuildReport(String reportName, Object report) {
+        checkNotNull(reportName);
+        checkNotNull(report);
+        buildReports.put(reportName, report);
     }
 
     public int getTestCount() {

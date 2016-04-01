@@ -47,5 +47,7 @@ public interface MetricsDispatcher extends Service {
 
     void environment(Info info);
 
+    void report(String reportName, Object report);
+
     Optional<String> receipt();
 }

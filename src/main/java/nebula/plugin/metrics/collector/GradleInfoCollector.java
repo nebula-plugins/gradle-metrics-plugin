@@ -35,8 +35,8 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public class GradleInfoCollector {
     private final InfoBrokerPlugin plugin;
 
-    public GradleInfoCollector(Plugin plugin) {
-        this.plugin = (InfoBrokerPlugin) checkNotNull(plugin);
+    public GradleInfoCollector(InfoBrokerPlugin plugin) {
+        this.plugin = checkNotNull(plugin);
     }
 
     public Tool getSCM() {

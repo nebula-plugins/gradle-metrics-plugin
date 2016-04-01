@@ -224,6 +224,13 @@ public abstract class AbstractMetricsDispatcher extends AbstractQueuedExecutionT
     }
 
     @Override
+    public void report(String reportName, Object report) {
+        checkNotNull(reportName);
+        checkNotNull(report);
+        build.addBuildReport(reportName, report);
+    }
+
+    @Override
     public final void logEvent(final LogEvent event) {
         checkNotNull(event);
         Runnable runnable = new Runnable() {

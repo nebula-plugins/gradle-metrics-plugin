@@ -17,6 +17,7 @@
 
 package nebula.plugin.metrics.collector;
 
+import nebula.plugin.info.InfoBrokerPlugin;
 import nebula.plugin.metrics.MetricsLoggerFactory;
 import nebula.plugin.metrics.MetricsPluginExtension;
 import nebula.plugin.metrics.dispatcher.MetricsDispatcher;
@@ -28,6 +29,7 @@ import nebula.plugin.metrics.model.Task;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
 import com.google.common.base.Supplier;
+import org.gradle.BuildAdapter;
 import org.gradle.BuildListener;
 import org.gradle.BuildResult;
 import org.gradle.StartParameter;
@@ -40,6 +42,7 @@ import org.gradle.profile.*;
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
 
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -53,7 +56,7 @@ import static org.apache.commons.lang.exception.ExceptionUtils.*;
  *
  * @author Danny Thomas
  */
-public final class GradleCollector implements ProfileListener, BuildListener {
+public final class GradleCollector extends BuildAdapter implements ProfileListener {
     private static final long TIMEOUT_MS = 5000;
 
     private final Logger logger = MetricsLoggerFactory.getLogger(GradleCollector.class);
@@ -88,10 +91,7 @@ public final class GradleCollector implements ProfileListener, BuildListener {
             dispatcher.started(project); // We register this listener after the build has started, so we fire the start event here instead
 
             GradleToolContainer tool = GradleToolContainer.fromGradle(gradle);
-            Plugin plugin = gradleProject.getPlugins().findPlugin("nebula.info-broker");
-            if (plugin == null) {
-                plugin = gradleProject.getPlugins().findPlugin("info-broker");
-            }
+            InfoBrokerPlugin plugin = getNebulaInfoBrokerPlugin(gradleProject);
             if (plugin == null) {
                 logger.warn("Gradle info plugin not found. SCM and CI information will not be collected");
                 dispatcher.environment(Info.create(tool));
@@ -104,12 +104,33 @@ public final class GradleCollector implements ProfileListener, BuildListener {
         }
     }
 
-    @Override
-    public void buildFinished(BuildResult buildResult) {
+    private InfoBrokerPlugin getNebulaInfoBrokerPlugin(Project gradleProject) {
+        Plugin plugin = gradleProject.getPlugins().findPlugin("nebula.info-broker");
+        if (plugin == null) {
+            plugin = gradleProject.getPlugins().findPlugin("info-broker");
+        }
+        return plugin != null ? (InfoBrokerPlugin) plugin : null;
+    }
+
+    /*
+     * I have separated buildFinished from GradleCollector's BuildAdapter because we need it to be called
+     * *after* all BuildListeners have completed their BuildFinished cycle. This is because InfoBrokerPlugin
+     * only allows access to its reports after the BuildFinish cycle has completed.
+     */
+    public void buildFinishedClosure(BuildResult buildResult) {
         Throwable failure = buildResult.getFailure();
         Result result = failure == null ? Result.success() : Result.failure(failure);
         logger.info("Build finished with result " + result);
-        dispatcherSupplier.get().result(result);
+        MetricsDispatcher dispatcher = dispatcherSupplier.get();
+        dispatcher.result(result);
+
+        InfoBrokerPlugin infoBrokerPlugin = getNebulaInfoBrokerPlugin(buildResult.getGradle().getRootProject());
+        if (infoBrokerPlugin != null) {
+            Map<String, Object> reports = infoBrokerPlugin.buildReports();
+            for (Map.Entry<String, Object> report : reports.entrySet()) {
+                dispatcher.report(report.getKey(), report.getValue());
+            }
+        }
 
         buildResultComplete.getAndSet(true);
         shutdownIfComplete();
