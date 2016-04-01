@@ -189,8 +189,9 @@ To use, write a plugin that depends on [nebula.info-broker](https://github.com/n
 and use code similar to this:
 
 ```groovy
-def infoBrokerPlugin = project.plugins.getPlugin('nebula.info-broker')
-infoBrokerPlugin.addReport('myCustomReport', 'some value or object')
+project.plugins.withType(InfoBrokerPlugin) { 
+    it.addReport('myCustomReport', 'some value or object')
+}
 ``` 
 
 Every report will appear as a top-level element in the data model.  
