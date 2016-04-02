@@ -55,6 +55,7 @@ dependencies {
     plugin "org.elasticsearch:elasticsearch:$versions.es", optional
 
     plugin 'org.apache.httpcomponents:fluent-hc:4.5.1'
+    plugin 'org.apache.commons:commons-lang3:3.4'
 
     plugin 'com.netflix.nebula:gradle-info-plugin:3.+', optional
 
@@ -95,12 +96,14 @@ shadowJar {
         // Relocate Guava and HTTP components because it's a real bear if we get downgraded or upgraded downstream, and dependency-lock unfortunately applies to every config
         include(dependency(libraries.guava))
         include(dependency('org.apache.httpcomponents:.*'))
+        include(dependency('org.apache.commons:commons-lang3:.*'))
         include(dependency('io.searchbox:.*'))
     }
     relocate 'com.google.common', 'nebula.plugin.metrics.com.google.common'
     relocate 'com.google.thirdparty', 'nebula.plugin.metrics.com.google.thirdparty'
     relocate 'io.searchbox', 'nebula.plugin.metrics.io.searchbox'
     relocate 'org.apache.http', 'nebula.plugin.metrics.org.apache.http'
+    relocate 'org.apache.commons.lang3', 'nebula.plugin.metrics.org.apache.commons.lang3'
 }
 
 jar.deleteAllActions()
