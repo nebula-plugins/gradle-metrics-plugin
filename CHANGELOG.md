@@ -1,3 +1,7 @@
+# 4.1.2
+
+- Revert changes from 4.1.1
+
 # 4.1.1
 
 - Add transitive dependency as direct dependency
