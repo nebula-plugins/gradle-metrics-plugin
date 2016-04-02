@@ -1,3 +1,7 @@
+# 4.1.1
+
+- Add transitive dependency as direct dependency
+
 # 4.1.0
 
 - Send reports from the InfoBroker plugin to dispatchers
