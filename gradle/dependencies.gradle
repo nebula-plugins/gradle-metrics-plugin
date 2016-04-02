@@ -55,6 +55,7 @@ dependencies {
     plugin "org.elasticsearch:elasticsearch:$versions.es", optional
 
     plugin 'org.apache.httpcomponents:fluent-hc:4.5.1'
+    plugin 'commons-lang:commons-lang:2.6'
 
     plugin 'com.netflix.nebula:gradle-info-plugin:3.+', optional
 
