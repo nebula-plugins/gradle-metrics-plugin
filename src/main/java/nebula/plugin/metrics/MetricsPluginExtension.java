@@ -50,6 +50,8 @@ public class MetricsPluginExtension {
     private String clusterName = "elasticsearch";
     private String indexName = DEFAULT_INDEX_NAME;
     private LogLevel logLevel = DEFAULT_LOG_LEVEL;
+    private String esBasicAuthUsername;
+    private String esBasicAuthPassword;
 
     private String restUri = "http://localhost/metrics";
     private String restBuildEventName = "build_metrics";
@@ -66,6 +68,22 @@ public class MetricsPluginExtension {
 
     public void setHostname(String hostname) {
         this.hostname = checkNotNull(hostname);
+    }
+
+    public String getEsBasicAuthUsername() {
+        return esBasicAuthUsername;
+    }
+
+    public void setEsBasicAuthUsername(String esBasicAuthUsername) {
+        this.esBasicAuthUsername = checkNotNull(esBasicAuthUsername);
+    }
+
+    public String getEsBasicAuthPassword() {
+        return esBasicAuthPassword;
+    }
+
+    public void setEsBasicAuthPassword(String esBasicAuthPassword) {
+        this.esBasicAuthPassword = checkNotNull(esBasicAuthPassword);
     }
 
     public int getTransportPort() {

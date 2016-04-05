@@ -206,7 +206,9 @@ Configuration should be done via the `metrics` Gradle extension.
         hostname = 'myescluster'    // default is 'localhost'
         httpPort = 59300            // default is 9200
         indexName = 'myindexname'   // default is 'build-metrics-default'       
-        dispatcherType = 'ES_HTTP'  // default is the Elasticsearch HTTP client. ES_CLIENT is also available. 
+        dispatcherType = 'ES_HTTP'  // default is the Elasticsearch HTTP client. ES_CLIENT is also available.
+        esBasicAuthUsername = 'user' // only for ES_HTTP.  If not set, no authentication will be used.
+        esBasicAuthPassword = 'pass' // this value should be read in from a properties file
     }
 
 ### REST configuration 
