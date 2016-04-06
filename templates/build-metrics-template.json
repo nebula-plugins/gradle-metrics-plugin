@@ -22,7 +22,8 @@
                         "environmentVariables": { "type": "nested" },
                         "systemProperties": { "type": "nested" }
                     }
-                }
+                },
+                "lintViolations": { "type": "nested" }
             },
             "dynamic_templates": [
                 {
