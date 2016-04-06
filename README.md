@@ -194,7 +194,7 @@ project.plugins.withType(InfoBrokerPlugin) {
 }
 ``` 
 
-Every report will appear as a top-level element in the data model.  
+Every report will appear as a top-level element in the data model. 
 
 # Configuration
 
