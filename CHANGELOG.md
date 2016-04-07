@@ -1,3 +1,7 @@
+# 4.1.6
+
+- Suppress metrics-related error messages 
+
 # 4.1.5
 
 - Revert changes from 4.1.1

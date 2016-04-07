@@ -154,7 +154,7 @@ public abstract class AbstractMetricsDispatcher extends AbstractQueuedExecutionT
                     buildId = Optional.of(index(getBuildCollectionName(), BUILD_TYPE, json, buildId));
                     logger.info("Build id is {}", buildId.get());
                 } catch (JsonProcessingException e) {
-                    logger.error("Unable to write JSON string value: " + e.getMessage(), e);
+                    logger.error("Unable to write JSON string value", e);
                 }
             }
             @Override

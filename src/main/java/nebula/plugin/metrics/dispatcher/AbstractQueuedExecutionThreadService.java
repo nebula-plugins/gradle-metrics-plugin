@@ -26,6 +26,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
+import java.net.ConnectException;
+import java.net.SocketException;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.BlockingQueue;
@@ -35,7 +37,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
-import static org.apache.commons.lang.exception.ExceptionUtils.*;
+import static org.apache.commons.lang3.exception.ExceptionUtils.*;
 
 /**
  * An {@link AbstractQueuedExecutionThreadService} that allows actions of type <pre>E</pre> to be queued and executed in
@@ -81,9 +83,9 @@ public abstract class AbstractQueuedExecutionThreadService<E> extends AbstractEx
                 execute(action);
             }
         } catch (Exception e) {
-            logger.error("Error executing action {}: {}", action, getRootCauseMessage(e));
+            logger.debug("Error executing metrics action {}: {}", action, getRootCauseMessage(e));
             if (failOnError) {
-                logger.info("Shutting down {} due to previous failure", this);
+                logger.debug("Shutting down {} due to previous failure", this);
                 queue.clear();
                 failed.set(true);
                 if (verboseErrorOuput)

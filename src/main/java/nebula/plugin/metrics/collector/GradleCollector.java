@@ -49,7 +49,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
-import static org.apache.commons.lang.exception.ExceptionUtils.*;
+import static org.apache.commons.lang3.exception.ExceptionUtils.*;
 
 /**
  * Collector for Gradle.
@@ -78,7 +78,7 @@ public final class GradleCollector extends BuildAdapter implements ProfileListen
         try {
             dispatcherSupplier.get().startAsync().awaitRunning(TIMEOUT_MS, TimeUnit.MILLISECONDS);
         } catch (IllegalStateException | TimeoutException e) {
-            logger.error("Error while starting metrics dispatcher. Metrics collection disabled. Error message: {}", getRootCauseMessage(e));
+            logger.debug("Error while starting metrics dispatcher. Metrics collection disabled. Error message: {}", getRootCauseMessage(e));
             return;
         }
 
@@ -93,7 +93,6 @@ public final class GradleCollector extends BuildAdapter implements ProfileListen
             GradleToolContainer tool = GradleToolContainer.fromGradle(gradle);
             InfoBrokerPlugin plugin = getNebulaInfoBrokerPlugin(gradleProject);
             if (plugin == null) {
-                logger.warn("Gradle info plugin not found. SCM and CI information will not be collected");
                 dispatcher.environment(Info.create(tool));
             } else {
                 GradleInfoCollector collector = new GradleInfoCollector(plugin);
@@ -217,9 +216,9 @@ public final class GradleCollector extends BuildAdapter implements ProfileListen
             try {
                 dispatcher.stopAsync().awaitTerminated(TIMEOUT_MS, TimeUnit.MILLISECONDS);
             } catch (TimeoutException e) {
-                logger.error("Timed out after {}ms while waiting for metrics dispatcher to terminate", TIMEOUT_MS);
+                logger.debug("Timed out after {}ms while waiting for metrics dispatcher to terminate", TIMEOUT_MS);
             } catch (IllegalStateException e) {
-                logger.error("Could not stop metrics dispatcher service (error message: {})", getRootCauseMessage(e));
+                logger.debug("Could not stop metrics dispatcher service (error message: {})", getRootCauseMessage(e));
             }
         }
 

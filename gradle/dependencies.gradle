@@ -55,7 +55,7 @@ dependencies {
     plugin "org.elasticsearch:elasticsearch:$versions.es", optional
 
     plugin 'org.apache.httpcomponents:fluent-hc:4.5.1'
-    plugin 'commons-lang:commons-lang:2.6'
+    plugin 'org.apache.commons:commons-lang3:3.4' // also transitive of Jest
 
     plugin 'com.netflix.nebula:gradle-info-plugin:3.+', optional
 
