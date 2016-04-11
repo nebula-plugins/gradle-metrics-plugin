@@ -66,7 +66,16 @@ public abstract class AbstractESMetricsDispatcher extends AbstractMetricsDispatc
         super(extension, async);
     }
 
-    @Override
+    private LogstashLayout safeLogstashLayoutGet() {
+        try {
+            return logstashLayoutSupplier.get();
+        } catch (Exception e) {
+            logger.debug("Unable to log event due to errors in initialization", e);
+            return null;
+        }
+    }
+
+        @Override
     protected String getLogCollectionName() {
         return extension.getLogstashIndexName();
     }
@@ -74,7 +83,8 @@ public abstract class AbstractESMetricsDispatcher extends AbstractMetricsDispatc
     @Override
     protected String renderEvent(LogEvent event) {
         checkNotNull(event);
-        LogstashLayout logstashLayout = logstashLayoutSupplier.get();
+        LogstashLayout logstashLayout = safeLogstashLayoutGet();
+        if (logstashLayout == null) return ""; // suppress erroneous initialization errors, probably due to Elasticsearch connectivity
         String message = String.format("[%s] %s", event.getCategory(), event.getMessage());
         @SuppressWarnings("ConstantConditions")
         LoggingEvent loggingEvent = new LoggingEvent(Logger.class.getCanonicalName(), logbackLogger, Level.valueOf(event.getLogLevel().name()),
@@ -85,7 +95,12 @@ public abstract class AbstractESMetricsDispatcher extends AbstractMetricsDispatc
     @Override
     protected void postShutDown() throws Exception {
         super.postShutDown();
-            logstashLayoutSupplier.get().stop();
+        try {
+            LogstashLayout logstashLayout = safeLogstashLayoutGet();
+            if (logstashLayout != null) {
+                logstashLayout.stop();
+            }
+        } catch (Exception ignored) {}
     }
 
     @Override
