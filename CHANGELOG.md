@@ -1,6 +1,7 @@
 4.1.6 / 2016-04-11
 ==================
 
+* Added configuration for basic auth for ES_HTTP dispatcher (Bill Warshaw)
 * Suppress most metrics-related error messages by default 
 
 4.1.5 / 2016-04-02
