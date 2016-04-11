@@ -19,10 +19,11 @@ package nebula.plugin.metrics;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Supplier;
+import groovy.lang.Closure;
 import nebula.plugin.metrics.collector.GradleCollector;
 import nebula.plugin.metrics.collector.GradleTestSuiteCollector;
 import nebula.plugin.metrics.dispatcher.*;
-import org.codehaus.groovy.runtime.MethodClosure;
+import org.gradle.BuildResult;
 import org.gradle.StartParameter;
 import org.gradle.api.Action;
 import org.gradle.api.Plugin;
@@ -114,9 +115,14 @@ public final class MetricsPlugin implements Plugin<Project> {
 
     private void configureRootProjectCollectors(Project rootProject, MetricsPluginExtension extension) {
         Gradle gradle = rootProject.getGradle();
-        GradleCollector gradleCollector = new GradleCollector(dispatcherSupplier, extension);
+        final GradleCollector gradleCollector = new GradleCollector(dispatcherSupplier, extension);
         gradle.addListener(gradleCollector);
-        gradle.buildFinished(new MethodClosure(gradleCollector, "buildFinishedClosure"));
+        gradle.buildFinished(new Closure(null) {
+            protected Object doCall(Object arguments) {
+                gradleCollector.buildFinishedClosure((BuildResult)arguments);
+                return null;
+            }
+        });
     }
 
     private void configureProjectCollectors(Set<Project> projects) {
