@@ -26,8 +26,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
-import java.net.ConnectException;
-import java.net.SocketException;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.BlockingQueue;
@@ -37,7 +35,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
-import static org.apache.commons.lang3.exception.ExceptionUtils.*;
+import static org.apache.commons.lang3.exception.ExceptionUtils.getRootCauseMessage;
 
 /**
  * An {@link AbstractQueuedExecutionThreadService} that allows actions of type <pre>E</pre> to be queued and executed in
