@@ -23,7 +23,7 @@
                         "systemProperties": { "type": "nested" }
                     }
                 },
-                "lintViolations": { "type": "nested" }
+                "gradleLintViolations": { "type": "nested" }
             },
             "dynamic_templates": [
                 {
