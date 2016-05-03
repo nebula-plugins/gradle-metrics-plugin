@@ -42,9 +42,3 @@ facets {
         testTaskName = 'integrationTest'
     }
 }
-
-integrationTest {
-    minHeapSize = '128m'
-    maxHeapSize = '4g'
-    jvmArgs '-XX:MaxPermSize=256m'
-}
