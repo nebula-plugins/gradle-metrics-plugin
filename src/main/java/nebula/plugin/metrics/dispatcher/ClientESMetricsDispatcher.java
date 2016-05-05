@@ -80,7 +80,7 @@ public final class ClientESMetricsDispatcher extends AbstractESMetricsDispatcher
 
     @Override
     protected String index(String indexName, String type, String source, Optional<String> id) {
-        IndexRequestBuilder index = client.prepareIndex(extension.getIndexName(), type).setSource(source);
+        IndexRequestBuilder index = client.prepareIndex(indexName, type).setSource(source);
         index.setId(id.or(UUID.randomUUID().toString()));
         IndexResponse indexResponse = index.execute().actionGet();
         return indexResponse.getId();
@@ -90,7 +90,7 @@ public final class ClientESMetricsDispatcher extends AbstractESMetricsDispatcher
     protected void bulkIndex(String indexName, String type, Collection<String> sources) {
         BulkRequestBuilder bulk = client.prepareBulk();
         for (String source : sources) {
-            IndexRequestBuilder index = client.prepareIndex(extension.getIndexName(), type);
+            IndexRequestBuilder index = client.prepareIndex(indexName, type);
             index.setSource(source);
             bulk.add(index);
         }
@@ -99,7 +99,7 @@ public final class ClientESMetricsDispatcher extends AbstractESMetricsDispatcher
 
     @Override
     protected boolean exists(String indexName) {
-        final IndicesExistsRequestBuilder indicesExists = client.admin().indices().prepareExists(extension.getIndexName());
+        final IndicesExistsRequestBuilder indicesExists = client.admin().indices().prepareExists(indexName);
         IndicesExistsResponse indicesExistsResponse = indicesExists.execute().actionGet();
         return indicesExistsResponse.isExists();
     }
