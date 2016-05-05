@@ -53,7 +53,7 @@ public final class HttpESMetricsDispatcher extends AbstractESMetricsDispatcher {
         HttpClientConfig.Builder config = new HttpClientConfig
                 .Builder("http://" + extension.getHostname() + ":" + extension.getHttpPort())
                 .multiThreaded(false);
-        if(!Strings.isNullOrEmpty(extension.getEsBasicAuthUsername())) {
+        if (!Strings.isNullOrEmpty(extension.getEsBasicAuthUsername())) {
             config.defaultCredentials(extension.getEsBasicAuthUsername(), extension.getEsBasicAuthPassword());
         }
         factory.setHttpClientConfig(config.build());
@@ -68,7 +68,7 @@ public final class HttpESMetricsDispatcher extends AbstractESMetricsDispatcher {
     @Override
     protected void createIndex(String indexName, String source) {
         CreateIndex createIndex = new CreateIndex.Builder(indexName).settings(source).build();
-        execute(createIndex);
+        execute(createIndex, false);
     }
 
     @Override
@@ -77,7 +77,7 @@ public final class HttpESMetricsDispatcher extends AbstractESMetricsDispatcher {
             id = Optional.of(UUID.randomUUID().toString());
         }
         Index index = buildIndex(indexName, type, source, id.get());
-        JestResult result = execute(index);
+        JestResult result = execute(index, false);
         return result.getJsonObject().get("_id").getAsString();
     }
 
@@ -94,20 +94,20 @@ public final class HttpESMetricsDispatcher extends AbstractESMetricsDispatcher {
             builder.addAction(buildIndex(indexName, type, source, id));
         }
         Bulk bulk = builder.build();
-        execute(bulk);
+        execute(bulk, false);
     }
 
     @Override
     protected boolean exists(String indexName) {
         IndicesExists indicesExists = new IndicesExists.Builder(indexName).build();
-        JestResult result = execute(indicesExists);
+        JestResult result = execute(indicesExists, true);
         return result.getJsonObject().get("found").getAsBoolean();
     }
 
-    private <T extends JestResult> T execute(Action<T> clientRequest) {
+    private <T extends JestResult> T execute(Action<T> clientRequest, boolean allowNotFound) {
         try {
             T result = client.execute(clientRequest);
-            if (!result.isSucceeded()) {
+            if (!result.isSucceeded() && (!allowNotFound || result.getResponseCode() != 404)) {
                 throw new RuntimeException("Jest request failed with " + result.getErrorMessage());
             }
             return result;

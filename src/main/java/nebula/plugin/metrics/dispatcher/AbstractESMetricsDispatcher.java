@@ -30,9 +30,11 @@ import nebula.plugin.metrics.MetricsPluginExtension;
 import net.logstash.logback.composite.JsonProviders;
 import net.logstash.logback.composite.loggingevent.MdcJsonProvider;
 import net.logstash.logback.layout.LogstashLayout;
+import org.apache.commons.io.IOUtils;
 import org.gradle.logging.internal.LogEvent;
 import org.slf4j.Logger;
 
+import java.io.*;
 import java.net.MalformedURLException;
 import java.net.URL;
 
@@ -75,7 +77,7 @@ public abstract class AbstractESMetricsDispatcher extends AbstractMetricsDispatc
         }
     }
 
-        @Override
+    @Override
     protected String getLogCollectionName() {
         return extension.getLogstashIndexName();
     }
@@ -116,6 +118,29 @@ public abstract class AbstractESMetricsDispatcher extends AbstractMetricsDispatc
             return Optional.of("You can find the metrics for this build at " + url);
         } else {
             return Optional.absent();
+        }
+    }
+
+    private String readFromFileOrDefault(String file, String defaultFile) throws IOException {
+        InputStream input = (file == null || "".equals(file)) ? this.getClass().getResourceAsStream(defaultFile) : new FileInputStream(file);
+        StringWriter sw = new StringWriter();
+        IOUtils.copy(input, sw);
+        return sw.toString();
+    }
+
+    @Override
+    protected void initDatastore() {
+        String indexName = extension.getIndexName();
+        try {
+            if (!exists(indexName)) {
+                String mapping = readFromFileOrDefault(extension.getMetricsIndexMappingFile(), "/default-build-metrics-mappings.json");
+                logger.info(String.format("Creating index %s for metrics", indexName));
+                createIndex(indexName, mapping);
+            } else {
+                logger.info(String.format("Using index %s for metrics", indexName));
+            }
+        } catch (IOException e) {
+            logger.debug("Error creating index(es)", e);
         }
     }
 

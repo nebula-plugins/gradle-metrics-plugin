@@ -56,6 +56,7 @@ dependencies {
 
     plugin 'org.apache.httpcomponents:fluent-hc:4.5.1'
     plugin 'org.apache.commons:commons-lang3:3.4' // also transitive of Jest
+    plugin 'commons-io:commons-io:2.5'
 
     plugin 'com.netflix.nebula:gradle-info-plugin:3.+', optional
 

@@ -29,7 +29,9 @@ If newer than Gradle 2.1 you may use
 
     apply plugin: 'nebula.metrics'
 
-The metrics plugin can persist data into [Elasticsearch](https://www.elastic.co/products/elasticsearch) or a generic REST endpoint. By default, the plugin will attempt to persist onto a local Elasticsearch instance on port `9200` with the templates under `templates/` applied. 
+The metrics plugin can persist data into [Elasticsearch](https://www.elastic.co/products/elasticsearch) or a generic REST endpoint. 
+When used with Elasticsearch, build and log data will be persisted into `build-metrics-default-yyyyMM` and `logstash-build-metrics-default-yyyyMMM` 
+respectively. By default, indexes will be genereated using the default templates and rotated on a monthly basis. 
 
 # Example Build Data
 
@@ -140,6 +142,12 @@ The metrics plugin can persist data into [Elasticsearch](https://www.elastic.co/
 }
 ```
  
+# Example Log Data
+ 
+```
+TBD
+```
+ 
 # Data Population
 
 If configured to use Elasticsearch, the plugin uses the default indices `build-metrics-default` and `logstash-build-metrics-default-yyyyMM` for `build` and `log` events respectively. The log index rotates on a monthly basis.   
@@ -203,21 +211,26 @@ Configuration should be done via the `metrics` Gradle extension.
 ### Elasticsearch configuration  
  
     metrics {
-        hostname = 'myescluster'    // default is 'localhost'
-        httpPort = 59300            // default is 9200
-        indexName = 'myindexname'   // default is 'build-metrics-default'       
-        dispatcherType = 'ES_HTTP'  // default is the Elasticsearch HTTP client. ES_CLIENT is also available.
-        esBasicAuthUsername = 'user' // only for ES_HTTP.  If not set, no authentication will be used.
-        esBasicAuthPassword = 'pass' // this value should be read in from a properties file
+        dispatcherType = 'ES_HTTP'              // default is the Elasticsearch HTTP client. ES_CLIENT is also available.
+        hostname = 'myescluster'                // default is 'localhost'
+        httpPort = 59300                        // default is 9200
+        indexName = 'myindexname'               // default is 'default'. Builds metrics and log data index names
+                                                // are derived from this setting (e.g. `build-metrics-default-yyyyMM` and 
+                                                // `logstash-build-metrics-default-yyyyMM`)
+                  
+        esBasicAuthUsername = 'user'            // only for ES_HTTP.  If not set, no authentication will be used.
+        esBasicAuthPassword = 'pass'            // this value should be read in from a properties file
+        
+        metricsIndexMappingFile = 'loc/of/file' // location of the mapping file for creation of rolling metrics indices (optional)
     }
 
 ### REST configuration 
  
     metrics {
+        dispatcherType = 'REST'
         restUri = 'https://server.com/rest/endpoint'      // default is 'http://localhost/metrics'
         restBuildEventName = 'my_build_events'            // default is 'build_metrics'
         restLogEventName = 'my_log_events'                // default is 'build_logs'                      
-        dispatcherType = 'REST'
     } 
 
 # Metrics

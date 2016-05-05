@@ -52,7 +52,7 @@ class ClientESMetricsDispatcherTest extends LoggingCaptureSpecification {
 
         then:
         def receipt = dispatcher.receipt().get()
-        receipt.startsWith('You can find the metrics for this build at http://localhost:9200/build-metrics-default/build/')
+        receipt ==~ 'You can find the metrics for this build at http://localhost:9200/build-metrics-default-\\d{6}.*'
         receipt.split('/')[-1] ==~ /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/
         noErrorsLogged()
     }

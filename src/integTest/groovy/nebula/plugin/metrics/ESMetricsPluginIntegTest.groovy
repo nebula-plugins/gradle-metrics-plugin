@@ -27,8 +27,6 @@ import org.elasticsearch.node.NodeBuilder
 import spock.lang.Shared
 import spock.lang.Unroll
 
-import static nebula.plugin.metrics.MetricsPluginExtension.DEFAULT_INDEX_NAME
-
 /**
  * Integration tests for {@link MetricsPlugin}.
  */
@@ -47,22 +45,30 @@ class ESMetricsPluginIntegTest extends IntegrationSpec {
     }
 
     def cleanup() {
-        if (indexExists()) {
-            def admin = node.client().admin()
-            def indices = admin.indices()
-            indices.prepareDelete(DEFAULT_INDEX_NAME).execute().actionGet()
-        }
-    }
-
-    boolean indexExists() {
         def admin = node.client().admin()
         def indices = admin.indices()
-        indices.prepareExists(DEFAULT_INDEX_NAME).execute().actionGet().isExists()
+        indices.prepareDelete('_all').execute().actionGet()
+    }
+
+    boolean indexExists(String indexName) {
+        def admin = node.client().admin()
+        def indices = admin.indices()
+        indices.prepareExists(indexName).execute().actionGet().isExists()
     }
 
     def cleanupSpec() {
         node.close()
         dataDir.deleteDir()
+    }
+
+    def getBuildIdAndIndex(String output) {
+        def m = output =~ /Build id is (.*)/
+        def buildId = m[0][1] as String
+
+        def m2 = output =~ /(Creating|Using) index (.*) for metrics/
+        String index = m2[0][2]
+
+        return [buildId, index]
     }
 
     @Unroll('running projects task causes no errors and the build id to standard out (#dispatcherType)')
@@ -82,6 +88,52 @@ class ESMetricsPluginIntegTest extends IntegrationSpec {
         dispatcherType << [DispatcherType.ES_CLIENT, DispatcherType.ES_HTTP]
     }
 
+    @Unroll
+    def "custom mapping file is used with #dispatcherType"() {
+        setValidBuildFile(dispatcherType)
+        File f = File.createTempFile('esmapping-', '')
+        f.text = '''
+        {
+            "mappings": {
+                "_default_": {
+                    "_all": { "enabled": false },
+                    "properties": {
+                        "events": { "type": "nested" },
+                        "tasks": { "type": "nested" },
+                        "tests": { "type": "nested" },
+                        "artifacts": { "type": "nested" },
+                        "info": {
+                            "properties": {
+                                "environmentVariables": { "type": "nested" },
+                                "systemProperties": { "type": "nested" }
+                            }
+                        },
+                        "gradleLintViolations": { "type": "nested" },
+                        "testingField": { "type": "nested" }
+                    }
+                }
+            }
+        }
+        '''
+        buildFile << "metrics.metricsIndexMappingFile = '${f.absolutePath}'"
+
+        when:
+        def result = runTasksSuccessfully('projects')
+
+        then:
+        noExceptionThrown()
+        result.standardError.isEmpty()
+        def (buildId, index) = getBuildIdAndIndex(result.standardOutput)
+
+        def admin = node.client().admin()
+        def indices = admin.indices()
+        def mappings = indices.prepareGetMappings(index).get().mappings()
+        mappings.get(index as String).get('build').source().string().contains('testingField')
+
+        where:
+        dispatcherType << [DispatcherType.ES_CLIENT, DispatcherType.ES_HTTP]
+    }
+
     @Unroll('recorded build model is valid (#dispatcherType)')
     def 'recorded build model is valid'(DispatcherType dispatcherType) {
         setValidBuildFile(dispatcherType)
@@ -91,13 +143,14 @@ class ESMetricsPluginIntegTest extends IntegrationSpec {
         runResult = runTasksSuccessfully('projects')
 
         then:
-        indexExists()
         runResult.standardError.isEmpty()
 
-        def m = runResult.standardOutput =~ /Build id is (.*)/
-        def buildId = m[0][1] as String
+        def (buildId, index) = getBuildIdAndIndex(runResult.standardOutput)
+
+        indexExists(index)
+
         def client = node.client()
-        def result = client.prepareGet(DEFAULT_INDEX_NAME, 'build', buildId).execute().actionGet()
+        def result = client.prepareGet(index, 'build', buildId).execute().actionGet()
         result.isExists()
 
         def source = result.source
@@ -132,13 +185,13 @@ class ESMetricsPluginIntegTest extends IntegrationSpec {
         runResult = runTasksSuccessfully('projects')
 
         then:
-        indexExists()
         runResult.standardError.isEmpty()
 
-        def m = runResult.standardOutput =~ /Build id is (.*)/
-        def buildId = m[0][1] as String
+        def (buildId, index) = getBuildIdAndIndex(runResult.standardOutput)
+
+        indexExists(index as String)
         def client = node.client()
-        def result = client.prepareGet(DEFAULT_INDEX_NAME, 'build', buildId).execute().actionGet()
+        def result = client.prepareGet(index, 'build', buildId).execute().actionGet()
         result.isExists()
 
         def props = result.source.info.systemProperties
@@ -178,7 +231,7 @@ class ESMetricsPluginIntegTest extends IntegrationSpec {
         buildFile << build
     }
 
-    def 'report information is serialized correctedly into elasticsearch'() {
+    def 'report information is serialized correctly into elasticsearch'() {
         setValidBuildFile(dispatcherType)
         buildFile << """
 
@@ -193,10 +246,11 @@ class ESMetricsPluginIntegTest extends IntegrationSpec {
 
         when:
         def runResult = runTasksSuccessfully('createReport')
-        def m = runResult.standardOutput =~ /Build id is (.*)/
-        def buildId = m[0][1] as String
+
+        def (buildId, index) = getBuildIdAndIndex(runResult.standardOutput)
+
         def client = node.client()
-        def metricsSent = client.prepareGet(DEFAULT_INDEX_NAME, 'build', buildId).execute().actionGet().source
+        def metricsSent = client.prepareGet(index, 'build', buildId).execute().actionGet().source
         def lintViolationsReport = metricsSent['lintViolations']
 
         then:
