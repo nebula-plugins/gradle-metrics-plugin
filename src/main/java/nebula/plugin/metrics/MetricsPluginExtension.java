@@ -42,7 +42,7 @@ public class MetricsPluginExtension {
     public static final DateTimeFormatter ROLLING_FORMATTER = DateTimeFormat.forPattern("yyyyMM");
     private static final LogLevel DEFAULT_LOG_LEVEL = LogLevel.WARN;
 
-    public static final String DEFAULT_INDEX_NAME = INDEX_PREFIX + "default";
+    public static final String DEFAULT_INDEX_NAME = "default";
 
     private String hostname = "localhost";
     private int transportPort = 9300;
@@ -52,6 +52,8 @@ public class MetricsPluginExtension {
     private LogLevel logLevel = DEFAULT_LOG_LEVEL;
     private String esBasicAuthUsername;
     private String esBasicAuthPassword;
+    private boolean rollingIndex = false;
+    private String metricsIndexMappingFile; // location of mapping file used to create the rolling metrics index (optional)
 
     private String restUri = "http://localhost/metrics";
     private String restBuildEventName = "build_metrics";
@@ -110,17 +112,18 @@ public class MetricsPluginExtension {
         this.clusterName = checkNotNull(clusterName);
     }
 
-    public String getIndexName() {
-        return indexName;
-    }
-
     public String getLogstashIndexName() {
         String rollingSuffix = "-" + ROLLING_FORMATTER.print(DateTime.now());
-        return LOGSTASH_INDEX_PREFIX + indexName + rollingSuffix;
+        return LOGSTASH_INDEX_PREFIX + INDEX_PREFIX + indexName + rollingSuffix;
+    }
+
+    public String getIndexName() {
+        String name = INDEX_PREFIX + indexName;
+        return rollingIndex ? name + "-" + ROLLING_FORMATTER.print(DateTime.now()) : name;
     }
 
     public void setIndexName(String indexName) {
-        this.indexName = INDEX_PREFIX + checkNotNull(indexName);
+        this.indexName = checkNotNull(indexName);
     }
 
     public LogLevel getLogLevel() {
@@ -185,6 +188,22 @@ public class MetricsPluginExtension {
 
     public void setVerboseErrorOutput(boolean verboseErrorOutput) {
         this.verboseErrorOutput = verboseErrorOutput;
+    }
+
+    public boolean isRollingIndex() {
+        return rollingIndex;
+    }
+
+    public void setRollingIndex(boolean rollingIndex) {
+        this.rollingIndex = rollingIndex;
+    }
+
+    public String getMetricsIndexMappingFile() {
+        return metricsIndexMappingFile;
+    }
+
+    public void setMetricsIndexMappingFile(String metricsIndexMappingFile) {
+        this.metricsIndexMappingFile = checkNotNull(metricsIndexMappingFile);
     }
 
     public enum DispatcherType {

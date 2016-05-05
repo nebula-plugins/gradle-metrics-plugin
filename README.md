@@ -14,7 +14,7 @@ To include, add the following to your build.gradle:
 If newer than Gradle 2.1 you may use
 
     plugins {
-        id 'nebula.metrics' version '4.1.5'
+        id 'nebula.metrics' version '4.2.0'
     }
 
 *or*
@@ -23,13 +23,11 @@ If newer than Gradle 2.1 you may use
         repositories { jcenter() }
 
         dependencies {
-            classpath 'com.netflix.nebula:gradle-metrics-plugin:4.1.5'
+            classpath 'com.netflix.nebula:gradle-metrics-plugin:4.2.0'
         }
     }
 
     apply plugin: 'nebula.metrics'
-
-The metrics plugin can persist data into [Elasticsearch](https://www.elastic.co/products/elasticsearch) or a generic REST endpoint. By default, the plugin will attempt to persist onto a local Elasticsearch instance on port `9200` with the templates under `templates/` applied. 
 
 # Example Build Data
 
@@ -140,11 +138,18 @@ The metrics plugin can persist data into [Elasticsearch](https://www.elastic.co/
 }
 ```
  
+# Example Log Data
+ 
+```
+TBD
+```
+ 
 # Data Population
 
-If configured to use Elasticsearch, the plugin uses the default indices `build-metrics-default` and `logstash-build-metrics-default-yyyyMM` for `build` and `log` events respectively. The log index rotates on a monthly basis.   
-
-For the REST configuration, both types of data are POSTed to the same endpoint, but the payload varies based on the type:
+`gradle-build-metrics` can be currently configured to persist data against either Elasticsearch or a generic REST endpoint. If configured 
+to use Elasticsearch, data is persisted to the `build-metrics-default` and `logstash-build-metrics-default-yyyyMM` indices for 
+`build` and `log` events respectively. For the REST configuration, both types of data are POSTed to the same endpoint, but the payload 
+varies based on type:
  
 build data: 
 
@@ -181,7 +186,7 @@ logs:
 
 # Custom Metrics 
 
-In some scenarios you might want to include additional metrics to your build reports. This is supported though 
+In some scenarios you might want to include additional metrics in your build reports. This is supported though 
 integration with the [nebula.info-broker](https://github.com/nebula-plugins/gradle-info-plugin#info-broker-plugin-broker) 
 plugin, which acts as a bridging point between plugins that wish to generate custom metrics and `gradle-build-metrics`. 
 
@@ -203,21 +208,27 @@ Configuration should be done via the `metrics` Gradle extension.
 ### Elasticsearch configuration  
  
     metrics {
-        hostname = 'myescluster'    // default is 'localhost'
-        httpPort = 59300            // default is 9200
-        indexName = 'myindexname'   // default is 'build-metrics-default'       
-        dispatcherType = 'ES_HTTP'  // default is the Elasticsearch HTTP client. ES_CLIENT is also available.
-        esBasicAuthUsername = 'user' // only for ES_HTTP.  If not set, no authentication will be used.
-        esBasicAuthPassword = 'pass' // this value should be read in from a properties file
+        dispatcherType = 'ES_HTTP'              // default is the Elasticsearch HTTP client. ES_CLIENT is also available.
+        hostname = 'myescluster'                // default is 'localhost'
+        httpPort = 59300                        // default is 9200
+        indexName = 'myindexname'               // default is 'default'. Builds metrics and log data index names
+                                                // are derived from this setting (e.g. `build-metrics-default` and 
+                                                // `logstash-build-metrics-default-yyyyMM`)
+        rollingIndex = true                     // default is false. If true, appends `-yyyyMM` to build-metrics index.                                         
+                  
+        esBasicAuthUsername = 'user'            // only for ES_HTTP.  If not set, no authentication will be used.
+        esBasicAuthPassword = 'pass'            // this value should be read in from a properties file
+        
+        metricsIndexMappingFile = 'loc/of/file' // location of the mapping file for creation of rolling metrics indices (optional)
     }
 
 ### REST configuration 
  
     metrics {
+        dispatcherType = 'REST'
         restUri = 'https://server.com/rest/endpoint'      // default is 'http://localhost/metrics'
         restBuildEventName = 'my_build_events'            // default is 'build_metrics'
         restLogEventName = 'my_log_events'                // default is 'build_logs'                      
-        dispatcherType = 'REST'
     } 
 
 # Metrics

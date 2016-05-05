@@ -1,0 +1,46 @@
+{
+    "settings": {
+        "analysis": {
+            "analyzer": {
+                "default": {
+                    "type": "standard"
+                }
+            }
+        }
+    },
+    "mappings": {
+        "_default_": {
+            "_all": { "enabled": false },
+            "properties": {
+                "events": { "type": "nested" },
+                "tasks": { "type": "nested" },
+                "tests": { "type": "nested" },
+                "artifacts": { "type": "nested" },
+                "info": {
+                    "properties": {
+                        "environmentVariables": { "type": "nested" },
+                        "systemProperties": { "type": "nested" }
+                    }
+                },
+                "gradleLintViolations": { "type": "nested" }
+            },
+            "dynamic_templates": [
+                {
+                    "strings": {
+                        "match_mapping_type": "string",
+                        "mapping": {
+                            "type": "string",
+                            "fields": {
+                                "raw": {
+                                    "type":  "string",
+                                    "index": "not_analyzed",
+                                    "ignore_above": 256
+                                }
+                            }
+                        }
+                    }
+                }
+            ]
+        }
+    }
+}

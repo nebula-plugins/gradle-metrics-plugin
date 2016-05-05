@@ -21,6 +21,7 @@ import org.gradle.api.logging.LogLevel
 import org.joda.time.DateTime
 import spock.lang.Shared
 import spock.lang.Specification
+import spock.lang.Unroll
 
 /**
  * Tests for {@link MetricsPluginExtension}.
@@ -52,5 +53,21 @@ class MetricsPluginExtensionTest extends Specification {
         expect:
         def pattern = MetricsPluginExtension.ROLLING_FORMATTER.print(DateTime.now())
         extension.logstashIndexName == 'logstash-build-metrics-default-' + pattern
+    }
+
+    @Unroll
+    def "metrics index name is #expectedName when rolling index is #rollingIndex"() {
+        setup:
+        extension.setRollingIndex(rollingIndex)
+
+        expect:
+        extension.indexName == expectedName
+
+        where:
+        rollingIndex || expectedName
+        true         || "build-metrics-default-${MetricsPluginExtension.ROLLING_FORMATTER.print(DateTime.now())}"
+        false        || 'build-metrics-default'
+
+
     }
 }
