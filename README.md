@@ -14,7 +14,7 @@ To include, add the following to your build.gradle:
 If newer than Gradle 2.1 you may use
 
     plugins {
-        id 'nebula.metrics' version '4.2.0'
+        id 'nebula.metrics' version '4.2.1'
     }
 
 *or*
@@ -23,7 +23,7 @@ If newer than Gradle 2.1 you may use
         repositories { jcenter() }
 
         dependencies {
-            classpath 'com.netflix.nebula:gradle-metrics-plugin:4.2.0'
+            classpath 'com.netflix.nebula:gradle-metrics-plugin:4.2.1'
         }
     }
 

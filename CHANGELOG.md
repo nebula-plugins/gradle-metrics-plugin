@@ -1,4 +1,4 @@
-4.2.0 / 2016-05-05
+4.2.1 / 2016-05-05
 ==================
 
 * Enable auto-rolling indices in Elasticsearch
