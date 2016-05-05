@@ -1,3 +1,9 @@
+4.2.0 / 2016-05-05
+==================
+
+* Enable auto-rolling indices in Elasticsearch
+* Fix ES_CLIENT index name bug
+
 4.1.6 / 2016-04-11
 ==================
 

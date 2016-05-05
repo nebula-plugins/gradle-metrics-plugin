@@ -52,6 +52,7 @@ public class MetricsPluginExtension {
     private LogLevel logLevel = DEFAULT_LOG_LEVEL;
     private String esBasicAuthUsername;
     private String esBasicAuthPassword;
+    private boolean rollingIndex = false;
     private String metricsIndexMappingFile; // location of mapping file used to create the rolling metrics index (optional)
 
     private String restUri = "http://localhost/metrics";
@@ -112,12 +113,13 @@ public class MetricsPluginExtension {
     }
 
     public String getLogstashIndexName() {
-        return LOGSTASH_INDEX_PREFIX + getIndexName();
+        String rollingSuffix = "-" + ROLLING_FORMATTER.print(DateTime.now());
+        return LOGSTASH_INDEX_PREFIX + INDEX_PREFIX + indexName + rollingSuffix;
     }
 
     public String getIndexName() {
-        String rollingSuffix = "-" + ROLLING_FORMATTER.print(DateTime.now());
-        return INDEX_PREFIX + indexName + rollingSuffix;
+        String name = INDEX_PREFIX + indexName;
+        return rollingIndex ? name + "-" + ROLLING_FORMATTER.print(DateTime.now()) : name;
     }
 
     public void setIndexName(String indexName) {
@@ -186,6 +188,14 @@ public class MetricsPluginExtension {
 
     public void setVerboseErrorOutput(boolean verboseErrorOutput) {
         this.verboseErrorOutput = verboseErrorOutput;
+    }
+
+    public boolean isRollingIndex() {
+        return rollingIndex;
+    }
+
+    public void setRollingIndex(boolean rollingIndex) {
+        this.rollingIndex = rollingIndex;
     }
 
     public String getMetricsIndexMappingFile() {
