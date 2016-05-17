@@ -59,6 +59,10 @@ public class MetricsPluginExtension {
     private String restBuildEventName = "build_metrics";
     private String restLogEventName = "build_logs";
 
+    private String splunkUri = "http://localhost/";
+    private String splunkAuthHeader = "httpCollectorToken";
+    private String splunkInputType = "HTTP_COLLECTOR";
+
     private DispatcherType dispatcherType = DispatcherType.ES_HTTP;
     private List<String> sanitizedProperties = new ArrayList<>();
     private boolean failOnError = true;
@@ -158,6 +162,30 @@ public class MetricsPluginExtension {
         this.restLogEventName = checkNotNull(restLogEventName);
     }
 
+    public String getSplunkUri() {
+        return splunkUri;
+    }
+
+    public void setSplunkUri(String splunkUri) {
+        this.splunkUri = checkNotNull(splunkUri);
+    }
+
+    public String getSplunkAuthHeader() {
+        return splunkAuthHeader;
+    }
+
+    public void setSplunkAuthHeader(String splunkAuthHeader) {
+        this.splunkAuthHeader = checkNotNull(splunkAuthHeader);
+    }
+
+    public String getSplunkInputType() {
+        return splunkInputType;
+    }
+
+    public void setSplunkInputType(String splunkInputType) {
+        this.splunkInputType = checkNotNull(splunkInputType);
+    }
+
     public String getRestBuildEventName() {
         return restBuildEventName;
     }
@@ -209,6 +237,7 @@ public class MetricsPluginExtension {
     public enum DispatcherType {
         ES_CLIENT,
         ES_HTTP,
+        SPLUNK,
         REST,
         NOOP
     }
