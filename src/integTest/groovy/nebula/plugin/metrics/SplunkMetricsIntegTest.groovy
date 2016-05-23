@@ -44,10 +44,10 @@ class SplunkMetricsIntegTest extends IntegrationSpec {
             def response = 'OK'
             if (t.getRequestMethod() == 'POST') {
 
-                def splunkHeader = 'Basic YWRtaW46Y2hhbmdlbWU='
+                def expectedAuth = 'Basic YWRtaW46Y2hhbmdlbWU='
                 def authHeader = t.getRequestHeaders()['Authorization'][0]
 
-                if (authHeader == splunkHeader){ 
+                if (authHeader == expectedAuth){ 
                     lastReportedBuildMetricsEvent = IOUtils.toString(t.getRequestBody())
                     
                     t.sendResponseHeaders(200, response.length())
@@ -76,7 +76,8 @@ class SplunkMetricsIntegTest extends IntegrationSpec {
 
                 splunkInputType = 'FORWARDER'
                 splunkUri = 'http://localhost:1337/'
-                splunkAuthHeader = 'Basic YWRtaW46Y2hhbmdlbWU='
+                splunkHeaderMap = [:]
+                splunkHeaderMap['Authorization'] = 'Basic YWRtaW46Y2hhbmdlbWU='
             }
         """.stripIndent()
 
@@ -84,19 +85,18 @@ class SplunkMetricsIntegTest extends IntegrationSpec {
         runTasksSuccessfully('projects')
 
         then:
+        !lastReportedBuildMetricsEvent.isEmpty()
         def buildJson = slurper.parseText(lastReportedBuildMetricsEvent)
 
-        buildJson.with {
-            buildInfo.project.name == moduleName
-            buildInfo.project.version == 'unspecified'
-            buildInfo.startTime
-            buildInfo.finishedTime
-            buildInfo.elapsedTime
-            buildInfo.result.status == 'success'
-            !buildInfo.events.isEmpty()
-            buildInfo.tasks.size() == 1
-            buildInfo.tests.isEmpty()
-        }
+        buildJson.buildInfo.project.name == moduleName
+        buildJson.buildInfo.project.version == 'unspecified'
+        buildJson.buildInfo.result.status == 'success'
+        buildJson.buildInfo.startTime
+        buildJson.buildInfo.finishedTime
+        buildJson.buildInfo.elapsedTime
+        buildJson.buildInfo.tasks.size() == 1
+        buildJson.buildInfo.tests.isEmpty()
+        !buildJson.buildInfo.events.isEmpty()
 
         cleanup:
         server?.stop(0)

@@ -24,6 +24,8 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
 
 import java.util.Collection;
+import java.util.Iterator;
+import java.util.Map;
 import java.util.UUID;
 import java.io.IOException;
 
@@ -33,6 +35,7 @@ import org.apache.http.StatusLine;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
+import static org.apache.http.HttpStatus.SC_OK;
 
 public class SplunkMetricsDispatcher extends RestMetricsDispatcher {
 
@@ -79,22 +82,31 @@ public class SplunkMetricsDispatcher extends RestMetricsDispatcher {
     	return buildId.get();
     }
 
+    @Override
+    public Optional<String> receipt() {
+        if (error == null) {
+            return Optional.of(String.format("Metrics have been posted to %s (buildId: %s)", 
+                extension.getSplunkUri(), buildId.get()));
+        } else {
+            return Optional.of(String.format("Could not post metrics : %s ",error));
+        }
+    }
+
     private void postToSplunk(String requestBody) {
         try {
 
             Request postReq = Request.Post(extension.getSplunkUri());
             postReq.bodyString(requestBody , ContentType.APPLICATION_JSON);
-            postReq.addHeader("Authorization",extension.getSplunkAuthHeader());
+            postReq = addHeaders(postReq);
             StatusLine status = postReq.execute().returnResponse().getStatusLine();
 
-            if (status.getStatusCode() != 200) {
+            if (SC_OK != status.getStatusCode()) {
                 error = String.format("%s (status code: %s)", 
                     status.getReasonPhrase(), status.getStatusCode());
             }
         } catch (IOException e) {
             error = e.getMessage();
         }
-
     }
 
     private String getSplunkRequestBody(String buildInfo, String buildId) {
@@ -114,13 +126,13 @@ public class SplunkMetricsDispatcher extends RestMetricsDispatcher {
         return body;
     }
 
-    @Override
-    public Optional<String> receipt() {
-        if (error == null) {
-            return Optional.of(String.format("Metrics have been posted to %s (buildId: %s)", 
-                extension.getSplunkUri(), buildId.get()));
-        } else {
-            return Optional.of(String.format("Could not post metrics : %s ",error));
+    private Request addHeaders(Request req){
+
+        Iterator it = extension.getSplunkHeaderMap().entrySet().iterator();
+        while (it.hasNext()) {
+            Map.Entry pair = (Map.Entry)it.next();
+            req.addHeader(pair.getKey().toString(),pair.getValue().toString());
         }
+        return req;
     }
 }
