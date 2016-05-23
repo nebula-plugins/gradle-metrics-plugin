@@ -28,14 +28,13 @@ import org.apache.http.StatusLine
 import org.apache.http.client.fluent.Request
 import org.apache.http.entity.ContentType
 
-import org.apache.log4j.Logger
-
 class SplunkMetricsIntegTest extends IntegrationSpec {
-
-    final static Logger logger = Logger.getLogger(SplunkMetricsIntegTest.class);
 
     String lastReportedBuildMetricsEvent
     private def slurper = new JsonSlurper()
+    
+    private final def expectedBasicAuth = 'Basic YWRtaW46Y2hhbmdlbWU='
+    private final def expectedSplunkAuth = 'Splunk 8BA5A780-6B3A-472D-BF2F-CF4E9FFF4E9D'
 
     class SplunkEndPointMock implements HttpHandler {
 
@@ -44,12 +43,10 @@ class SplunkMetricsIntegTest extends IntegrationSpec {
             def response = 'OK'
             if (t.getRequestMethod() == 'POST') {
 
-                def expectedAuth = 'Basic YWRtaW46Y2hhbmdlbWU='
                 def authHeader = t.getRequestHeaders()['Authorization'][0]
 
-                if (authHeader == expectedAuth){ 
+                if (authHeader == expectedBasicAuth || authHeader == expectedSplunkAuth){ 
                     lastReportedBuildMetricsEvent = IOUtils.toString(t.getRequestBody())
-                    
                     t.sendResponseHeaders(200, response.length())
                 } else {
                     response = 'Unauthorized'
@@ -97,6 +94,46 @@ class SplunkMetricsIntegTest extends IntegrationSpec {
         buildJson.buildInfo.tasks.size() == 1
         buildJson.buildInfo.tests.isEmpty()
         !buildJson.buildInfo.events.isEmpty()
+
+        cleanup:
+        server?.stop(0)
+    }
+
+    def 'metrics posts data to Mocked Splunk HTTP Collector with Splunk Authorization Header'() {
+        HttpServer server = HttpServer.create(new InetSocketAddress(1338), 0)
+        server.createContext("/", new SplunkEndPointMock())
+        server.setExecutor(null)
+        server.start()
+
+        buildFile << """
+            ${applyPlugin(MetricsPlugin)}
+
+            metrics {
+                dispatcherType = 'SPLUNK'
+
+                splunkInputType = 'HTTP_COLLECTOR'
+                splunkUri = 'http://localhost:1338/'
+                splunkHeaderMap = [:]
+                splunkHeaderMap['Authorization'] = 'Splunk 8BA5A780-6B3A-472D-BF2F-CF4E9FFF4E9D'
+            }
+        """.stripIndent()
+
+        when:
+        runTasksSuccessfully('projects')
+
+        then:
+        !lastReportedBuildMetricsEvent.isEmpty()
+        def buildJson = slurper.parseText(lastReportedBuildMetricsEvent)
+
+        buildJson.event.buildInfo.project.name == moduleName
+        buildJson.event.buildInfo.project.version == 'unspecified'
+        buildJson.event.buildInfo.result.status == 'success'
+        buildJson.event.buildInfo.startTime
+        buildJson.event.buildInfo.finishedTime
+        buildJson.event.buildInfo.elapsedTime
+        buildJson.event.buildInfo.tasks.size() == 1
+        buildJson.event.buildInfo.tests.isEmpty()
+        !buildJson.event.buildInfo.events.isEmpty()
 
         cleanup:
         server?.stop(0)
