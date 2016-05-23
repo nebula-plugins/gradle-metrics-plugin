@@ -126,12 +126,9 @@ public class SplunkMetricsDispatcher extends RestMetricsDispatcher {
         return body;
     }
 
-    private Request addHeaders(Request req){
-
-        Iterator it = extension.getSplunkHeaderMap().entrySet().iterator();
-        while (it.hasNext()) {
-            Map.Entry pair = (Map.Entry)it.next();
-            req.addHeader(pair.getKey().toString(),pair.getValue().toString());
+    private Request addHeaders(Request req) {
+        for (Map.Entry<String, String> entry : extension.getHeaders().entrySet()) {
+            req.addHeader(entry.getKey().toString(),entry.getValue().toString());
         }
         return req;
     }

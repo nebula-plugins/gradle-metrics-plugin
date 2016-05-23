@@ -62,7 +62,7 @@ public class MetricsPluginExtension {
 
     private String splunkUri = "http://localhost/";
     private String splunkInputType = "HTTP_COLLECTOR";
-    private HashMap<String,String> splunkHeaderMap = new HashMap<String,String>();
+    private HashMap<String,String> headers = new HashMap<String,String>();
 
     private DispatcherType dispatcherType = DispatcherType.ES_HTTP;
     private List<String> sanitizedProperties = new ArrayList<>();
@@ -179,12 +179,12 @@ public class MetricsPluginExtension {
         this.splunkInputType = checkNotNull(splunkInputType);
     }
 
-    public void setSplunkHeaderMap(HashMap<String,String> splunkHeaderMap) {
-        this.splunkHeaderMap = checkNotNull(splunkHeaderMap);
+    public void setHeaders(HashMap<String,String> headers) {
+        this.headers = checkNotNull(headers);
     }
 
-    public HashMap<String,String> getSplunkHeaderMap() {
-        return splunkHeaderMap;
+    public HashMap<String,String> getHeaders() {
+        return headers;
     }
 
     public String getRestBuildEventName() {

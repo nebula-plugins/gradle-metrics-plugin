@@ -73,8 +73,7 @@ class SplunkMetricsIntegTest extends IntegrationSpec {
 
                 splunkInputType = 'FORWARDER'
                 splunkUri = 'http://localhost:1337/'
-                splunkHeaderMap = [:]
-                splunkHeaderMap['Authorization'] = 'Basic YWRtaW46Y2hhbmdlbWU='
+                headers['Authorization'] = 'Basic YWRtaW46Y2hhbmdlbWU='
             }
         """.stripIndent()
 
@@ -113,8 +112,7 @@ class SplunkMetricsIntegTest extends IntegrationSpec {
 
                 splunkInputType = 'HTTP_COLLECTOR'
                 splunkUri = 'http://localhost:1338/'
-                splunkHeaderMap = [:]
-                splunkHeaderMap['Authorization'] = 'Splunk 8BA5A780-6B3A-472D-BF2F-CF4E9FFF4E9D'
+                headers['Authorization'] = 'Splunk 8BA5A780-6B3A-472D-BF2F-CF4E9FFF4E9D'
             }
         """.stripIndent()
 
