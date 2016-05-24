@@ -81,7 +81,7 @@ public class RestMetricsDispatcher extends AbstractMetricsDispatcher {
         postPayload(joinMultiplePayloads(payloads));
     }
 
-    public void postPayload(String payload) {
+    protected void postPayload(String payload) {
         checkNotNull(payload);
 
         try {
@@ -120,7 +120,7 @@ public class RestMetricsDispatcher extends AbstractMetricsDispatcher {
         }
     }
 
-    public Request addHeaders(Request req) {
+    protected Request addHeaders(Request req) {
         checkNotNull(req);
 
         for (Map.Entry<String, String> entry : extension.getHeaders().entrySet()) {

@@ -84,7 +84,7 @@ public class SplunkMetricsDispatcher extends RestMetricsDispatcher {
     }
 
     @Override
-    public void postPayload(String requestBody) {
+    protected void postPayload(String requestBody) {
         try {
 
             Request postReq = Request.Post(extension.getSplunkUri());
