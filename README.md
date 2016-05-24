@@ -231,7 +231,9 @@ Configuration should be done via the `metrics` Gradle extension.
         dispatcherType = 'REST'
         restUri = 'https://server.com/rest/endpoint'      // default is 'http://localhost/metrics'
         restBuildEventName = 'my_build_events'            // default is 'build_metrics'
-        restLogEventName = 'my_log_events'                // default is 'build_logs'                      
+        restLogEventName = 'my_log_events'                // default is 'build_logs'  
+
+        headers['myHeader_key'] = 'header_value'          // optional, default is empty MAP object
     } 
 
 ### Splunk configuration 
@@ -255,7 +257,7 @@ Configuration should be done via the `metrics` Gradle extension.
 
         splunkInputType = 'FORWARDER'                                                                    // input type to persist the build event
         splunkUri = 'https://mysplunk.com/services/receivers/simple?index=main&sourcetype=gradle_builds' // splunk forwarder URI, here the sourcetype and the index could be defined
-        headers['Authorization'] = 'Basic YWRtaW46Y2hhbmdlbWU='                                          // basic auth with user and password is mandatory to request via Splunk Forwarder  
+        headers['Authorization'] = 'Basic YWRtaW46Y2hhbmdlbWU='                                          // basic auth with user and password is mandatory to request via Splunk Forwarder 
     }
 
 # Metrics

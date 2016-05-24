@@ -55,7 +55,8 @@ public class SplunkMetricsDispatcher extends RestMetricsDispatcher {
         checkNotNull(build);
     	
         /*
-        *  The only event we want to submit to splunk is the complete build info 
+        *  The only event we want to submit to splunk is the complete build info,
+        *  this switch will exclude the logstach from posting
         */
         if(build.getEvents().isEmpty()){
             this.submit = false;
@@ -76,23 +77,14 @@ public class SplunkMetricsDispatcher extends RestMetricsDispatcher {
         String requestBody = getSplunkRequestBody(source, buildId.get());
 
         if (BUILD_TYPE.equals(type) && submit && requestBody != null) {
-            postToSplunk(requestBody);
+            postPayload(requestBody);
         }
 
     	return buildId.get();
     }
 
     @Override
-    public Optional<String> receipt() {
-        if (error == null) {
-            return Optional.of(String.format("Metrics have been posted to %s (buildId: %s)", 
-                extension.getSplunkUri(), buildId.get()));
-        } else {
-            return Optional.of(String.format("Could not post metrics : %s ",error));
-        }
-    }
-
-    private void postToSplunk(String requestBody) {
+    public void postPayload(String requestBody) {
         try {
 
             Request postReq = Request.Post(extension.getSplunkUri());
@@ -106,6 +98,16 @@ public class SplunkMetricsDispatcher extends RestMetricsDispatcher {
             }
         } catch (IOException e) {
             error = e.getMessage();
+        }
+    }
+
+    @Override
+    public Optional<String> receipt() {
+        if (error == null) {
+            return Optional.of(String.format("Metrics have been posted to %s (buildId: %s)", 
+                extension.getSplunkUri(), buildId.get()));
+        } else {
+            return Optional.of(String.format("Could not post metrics : %s ",error));
         }
     }
 
@@ -124,12 +126,5 @@ public class SplunkMetricsDispatcher extends RestMetricsDispatcher {
                 break;
         }
         return body;
-    }
-
-    private Request addHeaders(Request req) {
-        for (Map.Entry<String, String> entry : extension.getHeaders().entrySet()) {
-            req.addHeader(entry.getKey().toString(),entry.getValue().toString());
-        }
-        return req;
     }
 }
