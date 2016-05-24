@@ -56,7 +56,7 @@ public class SplunkMetricsDispatcher extends RestMetricsDispatcher {
     	
         /*
         *  The only event we want to submit to splunk is the complete build info,
-        *  this switch will exclude the logstach from posting
+        *  this switch will exclude the logstash from posting
         */
         if(build.getEvents().isEmpty()){
             this.submit = false;

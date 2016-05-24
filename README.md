@@ -147,7 +147,7 @@ TBD
  
 # Data Population
 
-`gradle-build-metrics` can be currently configured to persist data against either Elasticsearch, a generic REST endpoint or to Splunk Indexer/Forwarder. If configured 
+`gradle-build-metrics` can be currently configured to persist data against either Elasticsearch, a generic REST endpoint or to a Splunk Indexer/Forwarder. If configured 
 to use Elasticsearch, data is persisted to the `build-metrics-default` and `logstash-build-metrics-default-yyyyMM` indices for 
 `build` and `log` events respectively. For the REST configuration, both types of data are POSTed to the same endpoint, but the payload 
 varies based on type:
@@ -185,7 +185,12 @@ logs:
 ]
 ```
 
-If configured to use Splunk, there will be two input types to index the build event, 1) using a *Splunk Forwarder* or 2) using the *Splunk indexer HTTP Event Collector*. If **FORWARDER** is chosen, the data build event will be persisted in the forwarder configured *index* and *sourcetype*. If **HTTP_COLLECTOR** is chosen the data will be indexed according to the event collector configuration in the Splunk Indexer.
+If configured to use Splunk, there will be two input types to index the build event:
+
+* *Splunk Forwarder*
+* *Splunk indexer HTTP Event Collector*
+
+If **FORWARDER** is chosen, the data build event will be persisted in the forwarder configured *index* and *sourcetype*. If **HTTP_COLLECTOR** is chosen the data will be indexed according to the event collector configuration in the Splunk Indexer.
 
 # Custom Metrics 
 
@@ -257,7 +262,7 @@ Configuration should be done via the `metrics` Gradle extension.
 
         splunkInputType = 'FORWARDER'                                                                    // input type to persist the build event
         splunkUri = 'https://mysplunk.com/services/receivers/simple?index=main&sourcetype=gradle_builds' // splunk forwarder URI, here the sourcetype and the index could be defined
-        headers['Authorization'] = 'Basic YWRtaW46Y2hhbmdlbWU='                                          // basic auth with user and password is mandatory to request via Splunk Forwarder 
+        headers['Authorization'] = 'Basic YWRtaW46Y2hhbmdlbWU='                                          // basic auth with user and password base64 is mandatory to request via Splunk Forwarder 
     }
 
 # Metrics
