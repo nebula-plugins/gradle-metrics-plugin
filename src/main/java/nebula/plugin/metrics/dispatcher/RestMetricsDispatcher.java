@@ -87,7 +87,7 @@ public class RestMetricsDispatcher extends AbstractMetricsDispatcher {
         try {
             Request postReq = Request.Post(extension.getRestUri());
             postReq.bodyString(payload , ContentType.APPLICATION_JSON);
-            postReq = addHeaders(postReq);
+            addHeaders(postReq);
             postReq.execute();
         } catch (IOException e) {
             throw new RuntimeException("Unable to POST to " + extension.getRestUri(), e);
@@ -120,13 +120,12 @@ public class RestMetricsDispatcher extends AbstractMetricsDispatcher {
         }
     }
 
-    protected Request addHeaders(Request req) {
+    protected void addHeaders(Request req) {
         checkNotNull(req);
 
         for (Map.Entry<String, String> entry : extension.getHeaders().entrySet()) {
             req.addHeader(entry.getKey(),entry.getValue());
         }
-        return req;
     }
 
     @VisibleForTesting

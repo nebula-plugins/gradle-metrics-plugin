@@ -89,7 +89,7 @@ public class SplunkMetricsDispatcher extends RestMetricsDispatcher {
 
             Request postReq = Request.Post(extension.getSplunkUri());
             postReq.bodyString(requestBody , ContentType.APPLICATION_JSON);
-            postReq = addHeaders(postReq);
+            addHeaders(postReq);
             StatusLine status = postReq.execute().returnResponse().getStatusLine();
 
             if (SC_OK != status.getStatusCode()) {
