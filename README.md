@@ -6,7 +6,15 @@
 [![Gitter](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/nebula-plugins/gradle-metrics-plugin?utm_source=badgeutm_medium=badgeutm_campaign=pr-badge)
 [![Apache 2.0](https://img.shields.io/github/license/nebula-plugins/gradle-metrics-plugin.svg)](http://www.apache.org/licenses/LICENSE-2.0)
 
-Collects Gradle build metrics and log events and and persists them to an external datastore. 
+Collects Gradle build metrics and log events and and persists them to an external datastore. Metrics include:
+
+* Info - Gradle start parameters, system properties and environment variables. SCM and GIT information if the gradle-info-plugin has been applied
+* Project - name and version
+* Events - configuration, dependency resolution, task execution
+* Task executions - result, elapsed time per task
+* Tests - result, elapsed time per test
+* Result - success, failure with throwable, elapsed time
+* Custom metrics that have been provided via `nebula.info-broker`
 
 # Quick Start
 
