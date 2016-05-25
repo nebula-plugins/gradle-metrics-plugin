@@ -92,6 +92,10 @@ public final class MetricsPlugin implements Plugin<Project> {
                             dispatcher = new HttpESMetricsDispatcher(extension);
                             break;
                         }
+                        case SPLUNK: {
+                            dispatcher = new SplunkMetricsDispatcher(extension);
+                            break;
+                        }
                         case REST: {
                             dispatcher = new RestMetricsDispatcher(extension);
                             break;

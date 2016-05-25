@@ -32,9 +32,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import org.apache.http.client.fluent.Request;
+
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
-import static org.apache.http.client.fluent.Request.Post;
 
 public class RestMetricsDispatcher extends AbstractMetricsDispatcher {
 
@@ -80,11 +81,14 @@ public class RestMetricsDispatcher extends AbstractMetricsDispatcher {
         postPayload(joinMultiplePayloads(payloads));
     }
 
-    private void postPayload(String payload) {
+    protected void postPayload(String payload) {
         checkNotNull(payload);
 
         try {
-            Post(extension.getRestUri()).bodyString(payload, ContentType.APPLICATION_JSON).execute();
+            Request postReq = Request.Post(extension.getRestUri());
+            postReq.bodyString(payload , ContentType.APPLICATION_JSON);
+            addHeaders(postReq);
+            postReq.execute();
         } catch (IOException e) {
             throw new RuntimeException("Unable to POST to " + extension.getRestUri(), e);
         }
@@ -113,6 +117,14 @@ public class RestMetricsDispatcher extends AbstractMetricsDispatcher {
             return Optional.of(String.format("Metrics have been posted to %s (buildId: %s)", extension.getRestUri(), buildId.get()));
         } else {
             return Optional.absent();
+        }
+    }
+
+    protected void addHeaders(Request req) {
+        checkNotNull(req);
+
+        for (Map.Entry<String, String> entry : extension.getHeaders().entrySet()) {
+            req.addHeader(entry.getKey(),entry.getValue());
         }
     }
 

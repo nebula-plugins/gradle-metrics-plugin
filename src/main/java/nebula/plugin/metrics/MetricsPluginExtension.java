@@ -24,6 +24,7 @@ import org.joda.time.format.DateTimeFormatter;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.HashMap;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -58,6 +59,10 @@ public class MetricsPluginExtension {
     private String restUri = "http://localhost/metrics";
     private String restBuildEventName = "build_metrics";
     private String restLogEventName = "build_logs";
+
+    private String splunkUri = "http://localhost/";
+    private String splunkInputType = "HTTP_COLLECTOR";
+    private HashMap<String,String> headers = new HashMap<String,String>();
 
     private DispatcherType dispatcherType = DispatcherType.ES_HTTP;
     private List<String> sanitizedProperties = new ArrayList<>();
@@ -158,6 +163,30 @@ public class MetricsPluginExtension {
         this.restLogEventName = checkNotNull(restLogEventName);
     }
 
+    public String getSplunkUri() {
+        return splunkUri;
+    }
+
+    public void setSplunkUri(String splunkUri) {
+        this.splunkUri = checkNotNull(splunkUri);
+    }
+
+    public String getSplunkInputType() {
+        return splunkInputType;
+    }
+
+    public void setSplunkInputType(String splunkInputType) {
+        this.splunkInputType = checkNotNull(splunkInputType);
+    }
+
+    public void setHeaders(HashMap<String,String> headers) {
+        this.headers = checkNotNull(headers);
+    }
+
+    public HashMap<String,String> getHeaders() {
+        return headers;
+    }
+
     public String getRestBuildEventName() {
         return restBuildEventName;
     }
@@ -209,6 +238,7 @@ public class MetricsPluginExtension {
     public enum DispatcherType {
         ES_CLIENT,
         ES_HTTP,
+        SPLUNK,
         REST,
         NOOP
     }
