@@ -31,7 +31,7 @@ import org.gradle.api.tasks.testing.TestListener
 import org.gradle.api.tasks.testing.TestResult
 import org.gradle.internal.event.ListenerBroadcast
 import org.gradle.invocation.DefaultGradle
-import org.gradle.logging.internal.LogEvent
+import org.gradle.internal.logging.events.LogEvent
 
 class MetricsPluginLifecycleTest extends ProjectSpec {
     def cleanup() {

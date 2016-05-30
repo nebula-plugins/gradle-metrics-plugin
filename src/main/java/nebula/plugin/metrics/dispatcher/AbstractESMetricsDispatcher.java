@@ -31,7 +31,7 @@ import net.logstash.logback.composite.JsonProviders;
 import net.logstash.logback.composite.loggingevent.MdcJsonProvider;
 import net.logstash.logback.layout.LogstashLayout;
 import org.apache.commons.io.IOUtils;
-import org.gradle.logging.internal.LogEvent;
+import org.gradle.internal.logging.events.LogEvent;
 import org.slf4j.Logger;
 
 import java.io.*;

@@ -25,10 +25,10 @@ import com.google.common.base.Supplier;
 import com.google.common.collect.Lists;
 import com.google.common.util.concurrent.Service;
 import org.gradle.api.logging.LogLevel;
-import org.gradle.logging.internal.LogEvent;
-import org.gradle.logging.internal.OutputEvent;
-import org.gradle.logging.internal.OutputEventListener;
-import org.gradle.logging.internal.slf4j.OutputEventListenerBackedLoggerContext;
+import org.gradle.internal.logging.events.LogEvent;
+import org.gradle.internal.logging.events.OutputEvent;
+import org.gradle.internal.logging.events.OutputEventListener;
+import org.gradle.internal.logging.slf4j.OutputEventListenerBackedLoggerContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

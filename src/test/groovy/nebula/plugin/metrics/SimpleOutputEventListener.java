@@ -17,11 +17,10 @@
 
 package nebula.plugin.metrics;
 
-import org.gradle.logging.internal.LogEvent;
-import org.gradle.logging.internal.OutputEvent;
-import org.gradle.logging.internal.OutputEventListener;
+import org.gradle.internal.logging.events.LogEvent;
+import org.gradle.internal.logging.events.OutputEvent;
+import org.gradle.internal.logging.events.OutputEventListener;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 

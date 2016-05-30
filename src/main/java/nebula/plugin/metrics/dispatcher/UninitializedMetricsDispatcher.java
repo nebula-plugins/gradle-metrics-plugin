@@ -21,7 +21,7 @@ import nebula.plugin.metrics.model.*;
 
 import com.google.common.base.Optional;
 import com.google.common.util.concurrent.Service;
-import org.gradle.logging.internal.LogEvent;
+import org.gradle.internal.logging.events.LogEvent;
 
 import java.util.Collection;
 import java.util.concurrent.Executor;

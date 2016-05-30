@@ -18,7 +18,7 @@
 package nebula.plugin.metrics.dispatcher
 import nebula.plugin.metrics.SimpleOutputEventListener
 import org.gradle.api.logging.LogLevel
-import org.gradle.logging.internal.slf4j.OutputEventListenerBackedLoggerContext
+import org.gradle.internal.logging.slf4j.OutputEventListenerBackedLoggerContext
 import org.slf4j.LoggerFactory
 import spock.lang.Specification
 /**

@@ -32,7 +32,7 @@ import com.google.common.collect.Lists;
 import nebula.plugin.metrics.MetricsLoggerFactory;
 import nebula.plugin.metrics.MetricsPluginExtension;
 import nebula.plugin.metrics.model.*;
-import org.gradle.logging.internal.LogEvent;
+import org.gradle.internal.logging.events.LogEvent;
 import org.slf4j.Logger;
 
 import java.io.IOException;
