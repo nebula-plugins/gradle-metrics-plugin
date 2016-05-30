@@ -107,19 +107,3 @@ shadowJar {
 
 jar.deleteAllActions()
 jar.dependsOn shadowJar
-
-// Attempt to get out of Gradle dependency hell (at least somewhat reflect the runtime classloading scheme) by forcefully ordering Gradle dependencies last
-
-configurations {
-    gradleApi
-}
-
-dependencies {
-    gradleApi gradleApi()
-    gradleApi localGroovy()
-}
-
-sourceSets.each {
-    it.compileClasspath = it.compileClasspath - configurations.gradleApi + configurations.gradleApi
-    it.runtimeClasspath = it.runtimeClasspath - configurations.gradleApi + configurations.gradleApi
-}
