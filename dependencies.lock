@@ -1,0 +1,978 @@
+{
+    "compile": {
+        "com.fasterxml.jackson.core:jackson-annotations": {
+            "locked": "2.5.0",
+            "requested": "2.3.2"
+        },
+        "com.fasterxml.jackson.core:jackson-core": {
+            "locked": "2.5.4",
+            "requested": "2.3.2"
+        },
+        "com.fasterxml.jackson.core:jackson-databind": {
+            "locked": "2.5.4",
+            "requested": "2.3.2"
+        },
+        "com.fasterxml.jackson.datatype:jackson-datatype-joda": {
+            "locked": "2.3.2",
+            "requested": "2.3.2"
+        },
+        "com.google.code.findbugs:jsr305": {
+            "locked": "3.0.0",
+            "requested": "3.0.0"
+        },
+        "com.google.guava:guava": {
+            "locked": "18.0",
+            "requested": "18.0"
+        },
+        "com.netflix.nebula:gradle-info-plugin": {
+            "locked": "3.1.0",
+            "requested": "3.+"
+        },
+        "commons-io:commons-io": {
+            "locked": "2.5",
+            "requested": "2.5"
+        },
+        "io.searchbox:jest": {
+            "locked": "0.1.7",
+            "requested": "0.1.7"
+        },
+        "joda-time:joda-time": {
+            "locked": "2.8.2",
+            "requested": "2.8.2"
+        },
+        "net.logstash.logback:logstash-logback-encoder": {
+            "locked": "4.5.1",
+            "requested": "4.5.1"
+        },
+        "org.apache.commons:commons-lang3": {
+            "locked": "3.4",
+            "requested": "3.4"
+        },
+        "org.apache.httpcomponents:fluent-hc": {
+            "locked": "4.5.1",
+            "requested": "4.5.1"
+        },
+        "org.elasticsearch:elasticsearch": {
+            "locked": "1.7.2",
+            "requested": "1.7.2"
+        },
+        "org.projectlombok:lombok": {
+            "locked": "1.16.6",
+            "requested": "1.16.6"
+        }
+    },
+    "compileClasspath": {
+        "com.fasterxml.jackson.core:jackson-annotations": {
+            "locked": "2.5.0",
+            "requested": "2.3.2"
+        },
+        "com.fasterxml.jackson.core:jackson-core": {
+            "locked": "2.5.4",
+            "requested": "2.3.2"
+        },
+        "com.fasterxml.jackson.core:jackson-databind": {
+            "locked": "2.5.4",
+            "requested": "2.3.2"
+        },
+        "com.fasterxml.jackson.datatype:jackson-datatype-joda": {
+            "locked": "2.3.2",
+            "requested": "2.3.2"
+        },
+        "com.google.code.findbugs:jsr305": {
+            "locked": "3.0.0",
+            "requested": "3.0.0"
+        },
+        "com.google.guava:guava": {
+            "locked": "18.0",
+            "requested": "18.0"
+        },
+        "com.netflix.nebula:gradle-info-plugin": {
+            "locked": "3.1.0",
+            "requested": "3.+"
+        },
+        "commons-io:commons-io": {
+            "locked": "2.5",
+            "requested": "2.5"
+        },
+        "io.searchbox:jest": {
+            "locked": "0.1.7",
+            "requested": "0.1.7"
+        },
+        "joda-time:joda-time": {
+            "locked": "2.8.2",
+            "requested": "2.8.2"
+        },
+        "net.logstash.logback:logstash-logback-encoder": {
+            "locked": "4.5.1",
+            "requested": "4.5.1"
+        },
+        "org.apache.commons:commons-lang3": {
+            "locked": "3.4",
+            "requested": "3.4"
+        },
+        "org.apache.httpcomponents:fluent-hc": {
+            "locked": "4.5.1",
+            "requested": "4.5.1"
+        },
+        "org.elasticsearch:elasticsearch": {
+            "locked": "1.7.2",
+            "requested": "1.7.2"
+        },
+        "org.projectlombok:lombok": {
+            "locked": "1.16.6",
+            "requested": "1.16.6"
+        }
+    },
+    "compileOnly": {
+        "com.fasterxml.jackson.core:jackson-annotations": {
+            "locked": "2.5.0",
+            "requested": "2.3.2"
+        },
+        "com.fasterxml.jackson.core:jackson-core": {
+            "locked": "2.5.4",
+            "requested": "2.3.2"
+        },
+        "com.fasterxml.jackson.core:jackson-databind": {
+            "locked": "2.5.4",
+            "requested": "2.3.2"
+        },
+        "com.fasterxml.jackson.datatype:jackson-datatype-joda": {
+            "locked": "2.3.2",
+            "requested": "2.3.2"
+        },
+        "com.google.code.findbugs:jsr305": {
+            "locked": "3.0.0",
+            "requested": "3.0.0"
+        },
+        "com.google.guava:guava": {
+            "locked": "18.0",
+            "requested": "18.0"
+        },
+        "com.netflix.nebula:gradle-info-plugin": {
+            "locked": "3.1.0",
+            "requested": "3.+"
+        },
+        "commons-io:commons-io": {
+            "locked": "2.5",
+            "requested": "2.5"
+        },
+        "io.searchbox:jest": {
+            "locked": "0.1.7",
+            "requested": "0.1.7"
+        },
+        "joda-time:joda-time": {
+            "locked": "2.8.2",
+            "requested": "2.8.2"
+        },
+        "net.logstash.logback:logstash-logback-encoder": {
+            "locked": "4.5.1",
+            "requested": "4.5.1"
+        },
+        "org.apache.commons:commons-lang3": {
+            "locked": "3.4",
+            "requested": "3.4"
+        },
+        "org.apache.httpcomponents:fluent-hc": {
+            "locked": "4.5.1",
+            "requested": "4.5.1"
+        },
+        "org.elasticsearch:elasticsearch": {
+            "locked": "1.7.2",
+            "requested": "1.7.2"
+        },
+        "org.projectlombok:lombok": {
+            "locked": "1.16.6",
+            "requested": "1.16.6"
+        }
+    },
+    "default": {
+        "com.fasterxml.jackson.core:jackson-annotations": {
+            "locked": "2.5.0",
+            "requested": "2.3.2"
+        },
+        "com.fasterxml.jackson.core:jackson-core": {
+            "locked": "2.5.4",
+            "requested": "2.3.2"
+        },
+        "com.fasterxml.jackson.core:jackson-databind": {
+            "locked": "2.5.4",
+            "requested": "2.3.2"
+        },
+        "com.fasterxml.jackson.datatype:jackson-datatype-joda": {
+            "locked": "2.3.2",
+            "requested": "2.3.2"
+        },
+        "com.google.code.findbugs:jsr305": {
+            "project": true,
+            "requested": "3.0.0"
+        },
+        "com.google.guava:guava": {
+            "locked": "18.0",
+            "requested": "18.0"
+        },
+        "com.netflix.nebula:gradle-info-plugin": {
+            "locked": "3.1.0",
+            "requested": "3.+"
+        },
+        "commons-io:commons-io": {
+            "locked": "2.5",
+            "requested": "2.5"
+        },
+        "io.searchbox:jest": {
+            "locked": "0.1.7",
+            "requested": "0.1.7"
+        },
+        "joda-time:joda-time": {
+            "locked": "2.8.2",
+            "requested": "2.8.2"
+        },
+        "net.logstash.logback:logstash-logback-encoder": {
+            "locked": "4.5.1",
+            "requested": "4.5.1"
+        },
+        "org.apache.commons:commons-lang3": {
+            "locked": "3.4",
+            "requested": "3.4"
+        },
+        "org.apache.httpcomponents:fluent-hc": {
+            "locked": "4.5.1",
+            "requested": "4.5.1"
+        },
+        "org.elasticsearch:elasticsearch": {
+            "locked": "1.7.2",
+            "requested": "1.7.2"
+        },
+        "org.projectlombok:lombok": {
+            "project": true,
+            "requested": "1.16.6"
+        }
+    },
+    "integTestCompile": {
+        "com.fasterxml.jackson.core:jackson-annotations": {
+            "locked": "2.5.0",
+            "requested": "2.3.2"
+        },
+        "com.fasterxml.jackson.core:jackson-core": {
+            "locked": "2.5.4",
+            "requested": "2.3.2"
+        },
+        "com.fasterxml.jackson.core:jackson-databind": {
+            "locked": "2.5.4",
+            "requested": "2.3.2"
+        },
+        "com.fasterxml.jackson.datatype:jackson-datatype-joda": {
+            "locked": "2.3.2",
+            "requested": "2.3.2"
+        },
+        "com.github.tlrx:elasticsearch-test": {
+            "locked": "1.2.1",
+            "requested": "1.2.1"
+        },
+        "com.google.code.findbugs:jsr305": {
+            "locked": "3.0.0",
+            "requested": "3.0.0"
+        },
+        "com.google.guava:guava": {
+            "locked": "18.0",
+            "requested": "18.0"
+        },
+        "com.google.guava:guava-testlib": {
+            "locked": "18.0",
+            "requested": "18.0"
+        },
+        "com.netflix.nebula:gradle-info-plugin": {
+            "locked": "3.1.0",
+            "requested": "3.+"
+        },
+        "com.netflix.nebula:nebula-test": {
+            "locked": "4.2.0",
+            "requested": "3.1.0"
+        },
+        "commons-io:commons-io": {
+            "locked": "2.5",
+            "requested": "2.5"
+        },
+        "io.searchbox:jest": {
+            "locked": "0.1.7",
+            "requested": "0.1.7"
+        },
+        "joda-time:joda-time": {
+            "locked": "2.8.2",
+            "requested": "2.8.2"
+        },
+        "net.logstash.logback:logstash-logback-encoder": {
+            "locked": "4.5.1",
+            "requested": "4.5.1"
+        },
+        "org.apache.commons:commons-lang3": {
+            "locked": "3.4",
+            "requested": "3.4"
+        },
+        "org.apache.httpcomponents:fluent-hc": {
+            "locked": "4.5.1",
+            "requested": "4.5.1"
+        },
+        "org.elasticsearch:elasticsearch": {
+            "locked": "1.7.2",
+            "requested": "1.7.2"
+        },
+        "org.projectlombok:lombok": {
+            "locked": "1.16.6",
+            "requested": "1.16.6"
+        }
+    },
+    "integTestCompileClasspath": {
+        "com.fasterxml.jackson.core:jackson-annotations": {
+            "locked": "2.5.0",
+            "requested": "2.3.2"
+        },
+        "com.fasterxml.jackson.core:jackson-core": {
+            "locked": "2.5.4",
+            "requested": "2.3.2"
+        },
+        "com.fasterxml.jackson.core:jackson-databind": {
+            "locked": "2.5.4",
+            "requested": "2.3.2"
+        },
+        "com.fasterxml.jackson.datatype:jackson-datatype-joda": {
+            "locked": "2.3.2",
+            "requested": "2.3.2"
+        },
+        "com.github.tlrx:elasticsearch-test": {
+            "locked": "1.2.1",
+            "requested": "1.2.1"
+        },
+        "com.google.code.findbugs:jsr305": {
+            "locked": "3.0.0",
+            "requested": "3.0.0"
+        },
+        "com.google.guava:guava": {
+            "locked": "18.0",
+            "requested": "18.0"
+        },
+        "com.google.guava:guava-testlib": {
+            "locked": "18.0",
+            "requested": "18.0"
+        },
+        "com.netflix.nebula:gradle-info-plugin": {
+            "locked": "3.1.0",
+            "requested": "3.+"
+        },
+        "com.netflix.nebula:nebula-test": {
+            "locked": "4.2.0",
+            "requested": "3.1.0"
+        },
+        "commons-io:commons-io": {
+            "locked": "2.5",
+            "requested": "2.5"
+        },
+        "io.searchbox:jest": {
+            "locked": "0.1.7",
+            "requested": "0.1.7"
+        },
+        "joda-time:joda-time": {
+            "locked": "2.8.2",
+            "requested": "2.8.2"
+        },
+        "net.logstash.logback:logstash-logback-encoder": {
+            "locked": "4.5.1",
+            "requested": "4.5.1"
+        },
+        "org.apache.commons:commons-lang3": {
+            "locked": "3.4",
+            "requested": "3.4"
+        },
+        "org.apache.httpcomponents:fluent-hc": {
+            "locked": "4.5.1",
+            "requested": "4.5.1"
+        },
+        "org.elasticsearch:elasticsearch": {
+            "locked": "1.7.2",
+            "requested": "1.7.2"
+        },
+        "org.projectlombok:lombok": {
+            "locked": "1.16.6",
+            "requested": "1.16.6"
+        }
+    },
+    "integTestCompileOnly": {
+        "com.fasterxml.jackson.core:jackson-annotations": {
+            "locked": "2.5.0",
+            "requested": "2.3.2"
+        },
+        "com.fasterxml.jackson.core:jackson-core": {
+            "locked": "2.5.4",
+            "requested": "2.3.2"
+        },
+        "com.fasterxml.jackson.core:jackson-databind": {
+            "locked": "2.5.4",
+            "requested": "2.3.2"
+        },
+        "com.fasterxml.jackson.datatype:jackson-datatype-joda": {
+            "locked": "2.3.2",
+            "requested": "2.3.2"
+        },
+        "com.github.tlrx:elasticsearch-test": {
+            "locked": "1.2.1",
+            "requested": "1.2.1"
+        },
+        "com.google.code.findbugs:jsr305": {
+            "locked": "3.0.0",
+            "requested": "3.0.0"
+        },
+        "com.google.guava:guava": {
+            "locked": "18.0",
+            "requested": "18.0"
+        },
+        "com.google.guava:guava-testlib": {
+            "locked": "18.0",
+            "requested": "18.0"
+        },
+        "com.netflix.nebula:gradle-info-plugin": {
+            "locked": "3.1.0",
+            "requested": "3.+"
+        },
+        "com.netflix.nebula:nebula-test": {
+            "locked": "4.2.0",
+            "requested": "3.1.0"
+        },
+        "commons-io:commons-io": {
+            "locked": "2.5",
+            "requested": "2.5"
+        },
+        "io.searchbox:jest": {
+            "locked": "0.1.7",
+            "requested": "0.1.7"
+        },
+        "joda-time:joda-time": {
+            "locked": "2.8.2",
+            "requested": "2.8.2"
+        },
+        "net.logstash.logback:logstash-logback-encoder": {
+            "locked": "4.5.1",
+            "requested": "4.5.1"
+        },
+        "org.apache.commons:commons-lang3": {
+            "locked": "3.4",
+            "requested": "3.4"
+        },
+        "org.apache.httpcomponents:fluent-hc": {
+            "locked": "4.5.1",
+            "requested": "4.5.1"
+        },
+        "org.elasticsearch:elasticsearch": {
+            "locked": "1.7.2",
+            "requested": "1.7.2"
+        },
+        "org.projectlombok:lombok": {
+            "locked": "1.16.6",
+            "requested": "1.16.6"
+        }
+    },
+    "integTestRuntime": {
+        "com.fasterxml.jackson.core:jackson-annotations": {
+            "locked": "2.5.0",
+            "requested": "2.3.2"
+        },
+        "com.fasterxml.jackson.core:jackson-core": {
+            "locked": "2.5.4",
+            "requested": "2.3.2"
+        },
+        "com.fasterxml.jackson.core:jackson-databind": {
+            "locked": "2.5.4",
+            "requested": "2.3.2"
+        },
+        "com.fasterxml.jackson.datatype:jackson-datatype-joda": {
+            "locked": "2.3.2",
+            "requested": "2.3.2"
+        },
+        "com.github.tlrx:elasticsearch-test": {
+            "locked": "1.2.1",
+            "requested": "1.2.1"
+        },
+        "com.google.code.findbugs:jsr305": {
+            "locked": "3.0.0",
+            "requested": "3.0.0"
+        },
+        "com.google.guava:guava": {
+            "locked": "18.0",
+            "requested": "18.0"
+        },
+        "com.google.guava:guava-testlib": {
+            "locked": "18.0",
+            "requested": "18.0"
+        },
+        "com.netflix.nebula:gradle-info-plugin": {
+            "locked": "3.1.0",
+            "requested": "3.+"
+        },
+        "com.netflix.nebula:nebula-test": {
+            "locked": "4.2.0",
+            "requested": "3.1.0"
+        },
+        "commons-io:commons-io": {
+            "locked": "2.5",
+            "requested": "2.5"
+        },
+        "io.searchbox:jest": {
+            "locked": "0.1.7",
+            "requested": "0.1.7"
+        },
+        "joda-time:joda-time": {
+            "locked": "2.8.2",
+            "requested": "2.8.2"
+        },
+        "net.logstash.logback:logstash-logback-encoder": {
+            "locked": "4.5.1",
+            "requested": "4.5.1"
+        },
+        "org.apache.commons:commons-lang3": {
+            "locked": "3.4",
+            "requested": "3.4"
+        },
+        "org.apache.httpcomponents:fluent-hc": {
+            "locked": "4.5.1",
+            "requested": "4.5.1"
+        },
+        "org.elasticsearch:elasticsearch": {
+            "locked": "1.7.2",
+            "requested": "1.7.2"
+        },
+        "org.projectlombok:lombok": {
+            "locked": "1.16.6",
+            "requested": "1.16.6"
+        }
+    },
+    "jacocoAgent": {
+        "org.jacoco:org.jacoco.agent": {
+            "locked": "0.7.6.201602180812"
+        }
+    },
+    "jacocoAnt": {
+        "org.jacoco:org.jacoco.ant": {
+            "locked": "0.7.6.201602180812"
+        }
+    },
+    "plugin": {
+        "com.fasterxml.jackson.core:jackson-annotations": {
+            "locked": "2.5.0",
+            "requested": "2.3.2"
+        },
+        "com.fasterxml.jackson.core:jackson-core": {
+            "locked": "2.5.4",
+            "requested": "2.3.2"
+        },
+        "com.fasterxml.jackson.core:jackson-databind": {
+            "locked": "2.5.4",
+            "requested": "2.3.2"
+        },
+        "com.fasterxml.jackson.datatype:jackson-datatype-joda": {
+            "locked": "2.3.2",
+            "requested": "2.3.2"
+        },
+        "com.google.guava:guava": {
+            "locked": "18.0",
+            "requested": "18.0"
+        },
+        "com.netflix.nebula:gradle-info-plugin": {
+            "locked": "3.1.0",
+            "requested": "3.+"
+        },
+        "commons-io:commons-io": {
+            "locked": "2.5",
+            "requested": "2.5"
+        },
+        "io.searchbox:jest": {
+            "locked": "0.1.7",
+            "requested": "0.1.7"
+        },
+        "joda-time:joda-time": {
+            "locked": "2.8.2",
+            "requested": "2.8.2"
+        },
+        "net.logstash.logback:logstash-logback-encoder": {
+            "locked": "4.5.1",
+            "requested": "4.5.1"
+        },
+        "org.apache.commons:commons-lang3": {
+            "locked": "3.4",
+            "requested": "3.4"
+        },
+        "org.apache.httpcomponents:fluent-hc": {
+            "locked": "4.5.1",
+            "requested": "4.5.1"
+        },
+        "org.elasticsearch:elasticsearch": {
+            "locked": "1.7.2",
+            "requested": "1.7.2"
+        }
+    },
+    "provided": {
+        "com.google.code.findbugs:jsr305": {
+            "locked": "3.0.0",
+            "requested": "3.0.0"
+        },
+        "org.projectlombok:lombok": {
+            "locked": "1.16.6",
+            "requested": "1.16.6"
+        }
+    },
+    "runtime": {
+        "com.fasterxml.jackson.core:jackson-annotations": {
+            "locked": "2.5.0",
+            "requested": "2.3.2"
+        },
+        "com.fasterxml.jackson.core:jackson-core": {
+            "locked": "2.5.4",
+            "requested": "2.3.2"
+        },
+        "com.fasterxml.jackson.core:jackson-databind": {
+            "locked": "2.5.4",
+            "requested": "2.3.2"
+        },
+        "com.fasterxml.jackson.datatype:jackson-datatype-joda": {
+            "locked": "2.3.2",
+            "requested": "2.3.2"
+        },
+        "com.google.code.findbugs:jsr305": {
+            "locked": "3.0.0",
+            "requested": "3.0.0"
+        },
+        "com.google.guava:guava": {
+            "locked": "18.0",
+            "requested": "18.0"
+        },
+        "com.netflix.nebula:gradle-info-plugin": {
+            "locked": "3.1.0",
+            "requested": "3.+"
+        },
+        "commons-io:commons-io": {
+            "locked": "2.5",
+            "requested": "2.5"
+        },
+        "io.searchbox:jest": {
+            "locked": "0.1.7",
+            "requested": "0.1.7"
+        },
+        "joda-time:joda-time": {
+            "locked": "2.8.2",
+            "requested": "2.8.2"
+        },
+        "net.logstash.logback:logstash-logback-encoder": {
+            "locked": "4.5.1",
+            "requested": "4.5.1"
+        },
+        "org.apache.commons:commons-lang3": {
+            "locked": "3.4",
+            "requested": "3.4"
+        },
+        "org.apache.httpcomponents:fluent-hc": {
+            "locked": "4.5.1",
+            "requested": "4.5.1"
+        },
+        "org.elasticsearch:elasticsearch": {
+            "locked": "1.7.2",
+            "requested": "1.7.2"
+        },
+        "org.projectlombok:lombok": {
+            "locked": "1.16.6",
+            "requested": "1.16.6"
+        }
+    },
+    "testCompile": {
+        "com.fasterxml.jackson.core:jackson-annotations": {
+            "locked": "2.5.0",
+            "requested": "2.3.2"
+        },
+        "com.fasterxml.jackson.core:jackson-core": {
+            "locked": "2.5.4",
+            "requested": "2.3.2"
+        },
+        "com.fasterxml.jackson.core:jackson-databind": {
+            "locked": "2.5.4",
+            "requested": "2.3.2"
+        },
+        "com.fasterxml.jackson.datatype:jackson-datatype-joda": {
+            "locked": "2.3.2",
+            "requested": "2.3.2"
+        },
+        "com.github.tlrx:elasticsearch-test": {
+            "locked": "1.2.1",
+            "requested": "1.2.1"
+        },
+        "com.google.code.findbugs:jsr305": {
+            "locked": "3.0.0",
+            "requested": "3.0.0"
+        },
+        "com.google.guava:guava": {
+            "locked": "18.0",
+            "requested": "18.0"
+        },
+        "com.google.guava:guava-testlib": {
+            "locked": "18.0",
+            "requested": "18.0"
+        },
+        "com.netflix.nebula:gradle-info-plugin": {
+            "locked": "3.1.0",
+            "requested": "3.+"
+        },
+        "com.netflix.nebula:nebula-test": {
+            "locked": "4.2.0",
+            "requested": "3.1.0"
+        },
+        "commons-io:commons-io": {
+            "locked": "2.5",
+            "requested": "2.5"
+        },
+        "io.searchbox:jest": {
+            "locked": "0.1.7",
+            "requested": "0.1.7"
+        },
+        "joda-time:joda-time": {
+            "locked": "2.8.2",
+            "requested": "2.8.2"
+        },
+        "net.logstash.logback:logstash-logback-encoder": {
+            "locked": "4.5.1",
+            "requested": "4.5.1"
+        },
+        "org.apache.commons:commons-lang3": {
+            "locked": "3.4",
+            "requested": "3.4"
+        },
+        "org.apache.httpcomponents:fluent-hc": {
+            "locked": "4.5.1",
+            "requested": "4.5.1"
+        },
+        "org.elasticsearch:elasticsearch": {
+            "locked": "1.7.2",
+            "requested": "1.7.2"
+        },
+        "org.projectlombok:lombok": {
+            "locked": "1.16.6",
+            "requested": "1.16.6"
+        }
+    },
+    "testCompileClasspath": {
+        "com.fasterxml.jackson.core:jackson-annotations": {
+            "locked": "2.5.0",
+            "requested": "2.3.2"
+        },
+        "com.fasterxml.jackson.core:jackson-core": {
+            "locked": "2.5.4",
+            "requested": "2.3.2"
+        },
+        "com.fasterxml.jackson.core:jackson-databind": {
+            "locked": "2.5.4",
+            "requested": "2.3.2"
+        },
+        "com.fasterxml.jackson.datatype:jackson-datatype-joda": {
+            "locked": "2.3.2",
+            "requested": "2.3.2"
+        },
+        "com.github.tlrx:elasticsearch-test": {
+            "locked": "1.2.1",
+            "requested": "1.2.1"
+        },
+        "com.google.code.findbugs:jsr305": {
+            "locked": "3.0.0",
+            "requested": "3.0.0"
+        },
+        "com.google.guava:guava": {
+            "locked": "18.0",
+            "requested": "18.0"
+        },
+        "com.google.guava:guava-testlib": {
+            "locked": "18.0",
+            "requested": "18.0"
+        },
+        "com.netflix.nebula:gradle-info-plugin": {
+            "locked": "3.1.0",
+            "requested": "3.+"
+        },
+        "com.netflix.nebula:nebula-test": {
+            "locked": "4.2.0",
+            "requested": "3.1.0"
+        },
+        "commons-io:commons-io": {
+            "locked": "2.5",
+            "requested": "2.5"
+        },
+        "io.searchbox:jest": {
+            "locked": "0.1.7",
+            "requested": "0.1.7"
+        },
+        "joda-time:joda-time": {
+            "locked": "2.8.2",
+            "requested": "2.8.2"
+        },
+        "net.logstash.logback:logstash-logback-encoder": {
+            "locked": "4.5.1",
+            "requested": "4.5.1"
+        },
+        "org.apache.commons:commons-lang3": {
+            "locked": "3.4",
+            "requested": "3.4"
+        },
+        "org.apache.httpcomponents:fluent-hc": {
+            "locked": "4.5.1",
+            "requested": "4.5.1"
+        },
+        "org.elasticsearch:elasticsearch": {
+            "locked": "1.7.2",
+            "requested": "1.7.2"
+        },
+        "org.projectlombok:lombok": {
+            "locked": "1.16.6",
+            "requested": "1.16.6"
+        }
+    },
+    "testCompileOnly": {
+        "com.fasterxml.jackson.core:jackson-annotations": {
+            "locked": "2.5.0",
+            "requested": "2.3.2"
+        },
+        "com.fasterxml.jackson.core:jackson-core": {
+            "locked": "2.5.4",
+            "requested": "2.3.2"
+        },
+        "com.fasterxml.jackson.core:jackson-databind": {
+            "locked": "2.5.4",
+            "requested": "2.3.2"
+        },
+        "com.fasterxml.jackson.datatype:jackson-datatype-joda": {
+            "locked": "2.3.2",
+            "requested": "2.3.2"
+        },
+        "com.github.tlrx:elasticsearch-test": {
+            "locked": "1.2.1",
+            "requested": "1.2.1"
+        },
+        "com.google.code.findbugs:jsr305": {
+            "locked": "3.0.0",
+            "requested": "3.0.0"
+        },
+        "com.google.guava:guava": {
+            "locked": "18.0",
+            "requested": "18.0"
+        },
+        "com.google.guava:guava-testlib": {
+            "locked": "18.0",
+            "requested": "18.0"
+        },
+        "com.netflix.nebula:gradle-info-plugin": {
+            "locked": "3.1.0",
+            "requested": "3.+"
+        },
+        "com.netflix.nebula:nebula-test": {
+            "locked": "4.2.0",
+            "requested": "3.1.0"
+        },
+        "commons-io:commons-io": {
+            "locked": "2.5",
+            "requested": "2.5"
+        },
+        "io.searchbox:jest": {
+            "locked": "0.1.7",
+            "requested": "0.1.7"
+        },
+        "joda-time:joda-time": {
+            "locked": "2.8.2",
+            "requested": "2.8.2"
+        },
+        "net.logstash.logback:logstash-logback-encoder": {
+            "locked": "4.5.1",
+            "requested": "4.5.1"
+        },
+        "org.apache.commons:commons-lang3": {
+            "locked": "3.4",
+            "requested": "3.4"
+        },
+        "org.apache.httpcomponents:fluent-hc": {
+            "locked": "4.5.1",
+            "requested": "4.5.1"
+        },
+        "org.elasticsearch:elasticsearch": {
+            "locked": "1.7.2",
+            "requested": "1.7.2"
+        },
+        "org.projectlombok:lombok": {
+            "locked": "1.16.6",
+            "requested": "1.16.6"
+        }
+    },
+    "testRuntime": {
+        "com.fasterxml.jackson.core:jackson-annotations": {
+            "locked": "2.5.0",
+            "requested": "2.3.2"
+        },
+        "com.fasterxml.jackson.core:jackson-core": {
+            "locked": "2.5.4",
+            "requested": "2.3.2"
+        },
+        "com.fasterxml.jackson.core:jackson-databind": {
+            "locked": "2.5.4",
+            "requested": "2.3.2"
+        },
+        "com.fasterxml.jackson.datatype:jackson-datatype-joda": {
+            "locked": "2.3.2",
+            "requested": "2.3.2"
+        },
+        "com.github.tlrx:elasticsearch-test": {
+            "locked": "1.2.1",
+            "requested": "1.2.1"
+        },
+        "com.google.code.findbugs:jsr305": {
+            "locked": "3.0.0",
+            "requested": "3.0.0"
+        },
+        "com.google.guava:guava": {
+            "locked": "18.0",
+            "requested": "18.0"
+        },
+        "com.google.guava:guava-testlib": {
+            "locked": "18.0",
+            "requested": "18.0"
+        },
+        "com.netflix.nebula:gradle-info-plugin": {
+            "locked": "3.1.0",
+            "requested": "3.+"
+        },
+        "com.netflix.nebula:nebula-test": {
+            "locked": "4.2.0",
+            "requested": "3.1.0"
+        },
+        "commons-io:commons-io": {
+            "locked": "2.5",
+            "requested": "2.5"
+        },
+        "io.searchbox:jest": {
+            "locked": "0.1.7",
+            "requested": "0.1.7"
+        },
+        "joda-time:joda-time": {
+            "locked": "2.8.2",
+            "requested": "2.8.2"
+        },
+        "net.logstash.logback:logstash-logback-encoder": {
+            "locked": "4.5.1",
+            "requested": "4.5.1"
+        },
+        "org.apache.commons:commons-lang3": {
+            "locked": "3.4",
+            "requested": "3.4"
+        },
+        "org.apache.httpcomponents:fluent-hc": {
+            "locked": "4.5.1",
+            "requested": "4.5.1"
+        },
+        "org.elasticsearch:elasticsearch": {
+            "locked": "1.7.2",
+            "requested": "1.7.2"
+        },
+        "org.projectlombok:lombok": {
+            "locked": "1.16.6",
+            "requested": "1.16.6"
+        }
+    }
+}
