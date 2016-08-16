@@ -53,7 +53,7 @@ public class GradleParameters {
                 start.getProjectCacheDir(),
                 start.isRefreshDependencies(),
                 start.isRecompileScripts(),
-                start.getParallelThreadCount(),
+                start.getMaxWorkerCount(),
                 start.isConfigureOnDemand()
         );
     }
@@ -98,7 +98,7 @@ public class GradleParameters {
 
     private boolean recompileScripts;
 
-    private int parallelThreadCount;
+    private int maxWorkerCount;
 
     private boolean configureOnDemand;
 }
