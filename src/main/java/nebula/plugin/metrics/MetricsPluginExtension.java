@@ -123,8 +123,12 @@ public class MetricsPluginExtension {
     }
 
     public String getIndexName() {
+        return getIndexName(DateTime.now());
+    }
+
+    public String getIndexName(DateTime dt) {
         String name = INDEX_PREFIX + indexName;
-        return rollingIndex ? name + "-" + ROLLING_FORMATTER.print(DateTime.now()) : name;
+        return rollingIndex ? name + "-" + ROLLING_FORMATTER.print(dt) : name;
     }
 
     public void setIndexName(String indexName) {
