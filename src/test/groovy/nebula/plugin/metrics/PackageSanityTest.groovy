@@ -17,15 +17,11 @@
 
 package nebula.plugin.metrics
 
-import com.google.common.base.Predicate;
 import com.google.common.testing.AbstractPackageSanityTests
-import nebula.plugin.metrics.dispatcher.NoopMetricsDispatcher
-
-import javax.annotation.Nullable;
 
 /**
  * Sanity checks for {@link nebula.plugin.metrics}.
  */
-public class PackageSanityTest extends AbstractPackageSanityTests {
+class PackageSanityTest extends AbstractPackageSanityTests {
 
 }

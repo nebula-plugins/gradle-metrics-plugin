@@ -22,6 +22,7 @@ import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
 
+import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.HashMap;
@@ -126,7 +127,7 @@ public class MetricsPluginExtension {
         return getIndexName(DateTime.now());
     }
 
-    public String getIndexName(DateTime dt) {
+    public String getIndexName(@Nullable DateTime dt) {
         String name = INDEX_PREFIX + indexName;
         return rollingIndex ? name + "-" + ROLLING_FORMATTER.print(dt) : name;
     }
