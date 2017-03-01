@@ -65,6 +65,7 @@ dependencies {
 
     testCompile 'com.netflix.nebula:nebula-test:3.1.0'
     testCompile "com.google.guava:guava-testlib:$versions.guava"
+    integTestCompile 'com.github.tlrx:elasticsearch-test:1.2.1'
 }
 
 configurations.all ({
