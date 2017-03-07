@@ -52,6 +52,7 @@ public class MetricsPluginExtension {
     private String clusterName = "elasticsearch";
     private String indexName = DEFAULT_INDEX_NAME;
     private LogLevel logLevel = DEFAULT_LOG_LEVEL;
+    private boolean collectLogging = true;
     private String esBasicAuthUsername;
     private String esBasicAuthPassword;
     private boolean rollingIndex = false;
@@ -238,6 +239,14 @@ public class MetricsPluginExtension {
 
     public void setMetricsIndexMappingFile(String metricsIndexMappingFile) {
         this.metricsIndexMappingFile = checkNotNull(metricsIndexMappingFile);
+    }
+
+    public boolean isCollectLogging() {
+        return collectLogging;
+    }
+
+    public void setCollectLogging(boolean collectLogging) {
+        this.collectLogging = collectLogging;
     }
 
     public enum DispatcherType {

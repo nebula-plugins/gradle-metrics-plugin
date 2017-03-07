@@ -17,6 +17,9 @@
 
 package nebula.plugin.metrics.collector;
 
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Optional;
+import com.google.common.base.Supplier;
 import nebula.plugin.info.InfoBrokerPlugin;
 import nebula.plugin.metrics.MetricsLoggerFactory;
 import nebula.plugin.metrics.MetricsPluginExtension;
@@ -25,12 +28,7 @@ import nebula.plugin.metrics.model.GradleToolContainer;
 import nebula.plugin.metrics.model.Info;
 import nebula.plugin.metrics.model.Result;
 import nebula.plugin.metrics.model.Task;
-
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Optional;
-import com.google.common.base.Supplier;
 import org.gradle.BuildAdapter;
-import org.gradle.BuildListener;
 import org.gradle.BuildResult;
 import org.gradle.StartParameter;
 import org.gradle.api.Plugin;
@@ -49,7 +47,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
-import static org.apache.commons.lang3.exception.ExceptionUtils.*;
+import static org.apache.commons.lang3.exception.ExceptionUtils.getRootCauseMessage;
 
 /**
  * Collector for Gradle.
@@ -65,9 +63,14 @@ public final class GradleCollector extends BuildAdapter implements ProfileListen
     private final AtomicBoolean buildProfileComplete = new AtomicBoolean(false);
     private final AtomicBoolean buildResultComplete = new AtomicBoolean(false);
 
+    private boolean resetLogging = false;
+
     public GradleCollector(Supplier<MetricsDispatcher> dispatcherSupplier, MetricsPluginExtension extension) {
         this.dispatcherSupplier = checkNotNull(dispatcherSupplier);
-        LoggingCollector.configureCollection(dispatcherSupplier, checkNotNull(extension));
+        if (extension.isCollectLogging()) {
+            resetLogging = true;
+            LoggingCollector.configureCollection(dispatcherSupplier, checkNotNull(extension));
+        }
     }
 
     @Override
@@ -200,7 +203,7 @@ public final class GradleCollector extends BuildAdapter implements ProfileListen
      * Conditionally shutdown the dispatcher, because Gradle listener event order appears to be non-deterministic.
      */
     private void shutdownIfComplete() {
-        if (buildProfileComplete.get() ^ buildResultComplete.get()) {
+        if (resetLogging && (buildProfileComplete.get() ^ buildResultComplete.get())) {
             // It looks like we can't count on receiving build profile results for every run, so we reset logging collection at the earliest opportunity
             LoggingCollector.reset();
         }
