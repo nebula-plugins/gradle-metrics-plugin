@@ -223,7 +223,7 @@
             "requested": "3.+"
         },
         "com.netflix.nebula:nebula-test": {
-            "locked": "6.0.0",
+            "locked": "6.0.1",
             "requested": "3.1.0"
         },
         "commons-io:commons-io": {
@@ -297,7 +297,7 @@
             "requested": "3.+"
         },
         "com.netflix.nebula:nebula-test": {
-            "locked": "6.0.0",
+            "locked": "6.0.1",
             "requested": "3.1.0"
         },
         "commons-io:commons-io": {
@@ -371,7 +371,7 @@
             "requested": "3.+"
         },
         "com.netflix.nebula:nebula-test": {
-            "locked": "6.0.0",
+            "locked": "6.0.1",
             "requested": "3.1.0"
         },
         "commons-io:commons-io": {
@@ -445,7 +445,7 @@
             "requested": "3.+"
         },
         "com.netflix.nebula:nebula-test": {
-            "locked": "6.0.0",
+            "locked": "6.0.1",
             "requested": "3.1.0"
         },
         "commons-io:commons-io": {
@@ -713,7 +713,7 @@
             "requested": "3.+"
         },
         "com.netflix.nebula:nebula-test": {
-            "locked": "6.0.0",
+            "locked": "6.0.1",
             "requested": "3.1.0"
         },
         "commons-io:commons-io": {
@@ -783,7 +783,7 @@
             "requested": "3.+"
         },
         "com.netflix.nebula:nebula-test": {
-            "locked": "6.0.0",
+            "locked": "6.0.1",
             "requested": "3.1.0"
         },
         "commons-io:commons-io": {
@@ -853,7 +853,7 @@
             "requested": "3.+"
         },
         "com.netflix.nebula:nebula-test": {
-            "locked": "6.0.0",
+            "locked": "6.0.1",
             "requested": "3.1.0"
         },
         "commons-io:commons-io": {
@@ -923,7 +923,7 @@
             "requested": "3.+"
         },
         "com.netflix.nebula:nebula-test": {
-            "locked": "6.0.0",
+            "locked": "6.0.1",
             "requested": "3.1.0"
         },
         "commons-io:commons-io": {
