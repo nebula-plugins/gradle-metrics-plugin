@@ -60,8 +60,8 @@ dependencies {
 
     plugin 'com.netflix.nebula:gradle-info-plugin:3.+', optional
 
-    provided 'org.projectlombok:lombok:1.16.6'
-    provided 'com.google.code.findbugs:jsr305:3.0.0'
+    compileOnly 'org.projectlombok:lombok:1.16.6'
+    compileOnly 'com.google.code.findbugs:jsr305:3.0.0'
 
     testCompile 'com.netflix.nebula:nebula-test:3.1.0'
     testCompile "com.google.guava:guava-testlib:$versions.guava"
