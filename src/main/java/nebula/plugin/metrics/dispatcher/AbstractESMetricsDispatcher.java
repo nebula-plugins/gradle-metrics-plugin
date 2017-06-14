@@ -78,23 +78,6 @@ public abstract class AbstractESMetricsDispatcher extends AbstractMetricsDispatc
     }
 
     @Override
-    protected String getLogCollectionName() {
-        return extension.getLogstashIndexName();
-    }
-
-    @Override
-    protected String renderEvent(LogEvent event) {
-        checkNotNull(event);
-        LogstashLayout logstashLayout = safeLogstashLayoutGet();
-        if (logstashLayout == null) return ""; // suppress erroneous initialization errors, probably due to Elasticsearch connectivity
-        String message = String.format("[%s] %s", event.getCategory(), event.getMessage());
-        @SuppressWarnings("ConstantConditions")
-        LoggingEvent loggingEvent = new LoggingEvent(Logger.class.getCanonicalName(), logbackLogger, Level.valueOf(event.getLogLevel().name()),
-                message, event.getThrowable(), null);
-        return logstashLayout.doLayout(loggingEvent);
-    }
-
-    @Override
     protected void postShutDown() throws Exception {
         super.postShutDown();
         try {
@@ -145,7 +128,7 @@ public abstract class AbstractESMetricsDispatcher extends AbstractMetricsDispatc
     }
 
     @Override
-    protected String getBuildCollectionName() {
+    protected String getCollectionName() {
         return extension.getIndexName();
     }
 

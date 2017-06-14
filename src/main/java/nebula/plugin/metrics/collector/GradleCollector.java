@@ -63,14 +63,8 @@ public final class GradleCollector extends BuildAdapter implements ProfileListen
     private final AtomicBoolean buildProfileComplete = new AtomicBoolean(false);
     private final AtomicBoolean buildResultComplete = new AtomicBoolean(false);
 
-    private boolean resetLogging = false;
-
-    public GradleCollector(Supplier<MetricsDispatcher> dispatcherSupplier, MetricsPluginExtension extension) {
+    public GradleCollector(Supplier<MetricsDispatcher> dispatcherSupplier) {
         this.dispatcherSupplier = checkNotNull(dispatcherSupplier);
-        if (extension.isCollectLogging()) {
-            resetLogging = true;
-            LoggingCollector.configureCollection(dispatcherSupplier, checkNotNull(extension));
-        }
     }
 
     @Override
@@ -203,11 +197,6 @@ public final class GradleCollector extends BuildAdapter implements ProfileListen
      * Conditionally shutdown the dispatcher, because Gradle listener event order appears to be non-deterministic.
      */
     private void shutdownIfComplete() {
-        if (resetLogging && (buildProfileComplete.get() ^ buildResultComplete.get())) {
-            // It looks like we can't count on receiving build profile results for every run, so we reset logging collection at the earliest opportunity
-            LoggingCollector.reset();
-        }
-
         // only shut down if you have updated build results AND profile information
         if (!buildProfileComplete.get() || !buildResultComplete.get()) {
             return;

@@ -73,16 +73,6 @@ public class UninitializedMetricsDispatcher implements MetricsDispatcher {
     }
 
     @Override
-    public void logEvent(LogEvent event) {
-        throw unsupported();
-    }
-
-    @Override
-    public void logEvents(Collection<LogEvent> events) {
-        throw unsupported();
-    }
-
-    @Override
     public void test(Test test) {
         throw unsupported();
     }

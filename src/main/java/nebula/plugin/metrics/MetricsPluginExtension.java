@@ -40,9 +40,7 @@ public class MetricsPluginExtension {
      */
     public static final String METRICS_EXTENSION_NAME = "metrics";
     private static final String INDEX_PREFIX = "build-metrics-";
-    private static final String LOGSTASH_INDEX_PREFIX = "logstash-";
     public static final DateTimeFormatter ROLLING_FORMATTER = DateTimeFormat.forPattern("yyyyMM");
-    private static final LogLevel DEFAULT_LOG_LEVEL = LogLevel.WARN;
 
     public static final String DEFAULT_INDEX_NAME = "default";
 
@@ -51,8 +49,6 @@ public class MetricsPluginExtension {
     private int httpPort = 9200;
     private String clusterName = "elasticsearch";
     private String indexName = DEFAULT_INDEX_NAME;
-    private LogLevel logLevel = DEFAULT_LOG_LEVEL;
-    private boolean collectLogging = true;
     private String esBasicAuthUsername;
     private String esBasicAuthPassword;
     private boolean rollingIndex = false;
@@ -119,11 +115,6 @@ public class MetricsPluginExtension {
         this.clusterName = checkNotNull(clusterName);
     }
 
-    public String getLogstashIndexName() {
-        String rollingSuffix = "-" + ROLLING_FORMATTER.print(DateTime.now());
-        return LOGSTASH_INDEX_PREFIX + INDEX_PREFIX + indexName + rollingSuffix;
-    }
-
     public String getIndexName() {
         return getIndexName(DateTime.now());
     }
@@ -135,14 +126,6 @@ public class MetricsPluginExtension {
 
     public void setIndexName(String indexName) {
         this.indexName = checkNotNull(indexName);
-    }
-
-    public LogLevel getLogLevel() {
-        return logLevel;
-    }
-
-    public void setLogLevel(String logLevel) {
-        this.logLevel = LogLevel.valueOf(logLevel.toUpperCase());
     }
 
     public DispatcherType getDispatcherType() {
@@ -239,14 +222,6 @@ public class MetricsPluginExtension {
 
     public void setMetricsIndexMappingFile(String metricsIndexMappingFile) {
         this.metricsIndexMappingFile = checkNotNull(metricsIndexMappingFile);
-    }
-
-    public boolean isCollectLogging() {
-        return collectLogging;
-    }
-
-    public void setCollectLogging(boolean collectLogging) {
-        this.collectLogging = collectLogging;
     }
 
     public enum DispatcherType {

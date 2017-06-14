@@ -28,16 +28,13 @@ import com.fasterxml.jackson.databind.ser.std.StdSerializer;
 import com.fasterxml.jackson.datatype.joda.JodaModule;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
-import com.google.common.collect.Lists;
 import nebula.plugin.metrics.MetricsLoggerFactory;
 import nebula.plugin.metrics.MetricsPluginExtension;
 import nebula.plugin.metrics.model.*;
-import org.gradle.internal.logging.events.LogEvent;
 import org.slf4j.Logger;
 
 import java.io.IOException;
 import java.util.Collection;
-import java.util.List;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -152,7 +149,7 @@ public abstract class AbstractMetricsDispatcher extends AbstractQueuedExecutionT
                     sanitizeProperties(build);
                     Object transformed = transformBuild(build);
                     String json = mapper.writeValueAsString(transformed);
-                    buildId = Optional.of(index(getBuildCollectionName(), BUILD_TYPE, json, buildId));
+                    buildId = Optional.of(index(getCollectionName(), BUILD_TYPE, json, buildId));
                     logger.info("Build id is {}", buildId.get());
                 } catch (JsonProcessingException e) {
                     logger.error("Unable to write JSON string value", e);
@@ -231,49 +228,6 @@ public abstract class AbstractMetricsDispatcher extends AbstractQueuedExecutionT
         build.addBuildReport(reportName, report);
     }
 
-    @Override
-    public final void logEvent(final LogEvent event) {
-        checkNotNull(event);
-        Runnable runnable = new Runnable() {
-            @Override
-            public void run() {
-                String json = renderEvent(event);
-                index(getLogCollectionName(), LOG_TYPE, json, Optional.<String>absent());
-            }
-            @Override
-            public String toString() {
-                return "AbstractMetricsDispatcher.logEvent()";
-            }
-        };
-        queue(runnable);
-    }
-
-    @Override
-    public final void logEvents(final Collection<LogEvent> events) {
-        checkNotNull(events);
-        checkArgument(!events.isEmpty(), "Empty events list found: %s", events);
-        Runnable runnable = new Runnable() {
-            @Override
-            public void run() {
-                List<String> jsons = Lists.newArrayListWithCapacity(events.size());
-                for (LogEvent event : events) {
-                    jsons.add(renderEvent(event));
-                }
-                bulkIndex(getLogCollectionName(), LOG_TYPE, jsons);
-            }
-            @Override
-            public String toString() {
-                return "AbstractMetricsDispatcher.logEvents()";
-            }
-        };
-        queue(runnable);
-    }
-
-    protected String renderEvent(LogEvent event) {
-        return event.toString();
-    }
-
-
     protected void startUpClient() {
         // empty implementation. Concrete classes may override to add functionality.
     }
@@ -286,13 +240,9 @@ public abstract class AbstractMetricsDispatcher extends AbstractQueuedExecutionT
         // empty implementation. Concrete classes may override to add functionality.
     }
 
-    // the log collection name is where event log data gets uploaded to.
-    // In Elastic this is the index name. In REST payloads it's the eventName.
-    protected abstract String getLogCollectionName();
-
     // the collection name is where the build data gets uploaded to.
     // In Elastic this is the index name. In REST payloads it's the eventName.
-    protected abstract String getBuildCollectionName();
+    protected abstract String getCollectionName();
 
     protected abstract String index(String indexName, String type, String source, Optional<String> id);
 

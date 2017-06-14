@@ -78,7 +78,7 @@ public final class MetricsPlugin implements Plugin<Project> {
             return;
         }
 
-        configureRootProjectCollectors(project, extension);
+        configureRootProjectCollectors(project);
         project.afterEvaluate(new Action<Project>() {
             @Override
             public void execute(Project project) {
@@ -117,9 +117,9 @@ public final class MetricsPlugin implements Plugin<Project> {
         this.dispatcher = checkNotNull(dispatcher);
     }
 
-    private void configureRootProjectCollectors(Project rootProject, MetricsPluginExtension extension) {
+    private void configureRootProjectCollectors(Project rootProject) {
         Gradle gradle = rootProject.getGradle();
-        final GradleCollector gradleCollector = new GradleCollector(dispatcherSupplier, extension);
+        final GradleCollector gradleCollector = new GradleCollector(dispatcherSupplier);
         gradle.addListener(gradleCollector);
         gradle.buildFinished(new Closure(null) {
             protected Object doCall(Object arguments) {

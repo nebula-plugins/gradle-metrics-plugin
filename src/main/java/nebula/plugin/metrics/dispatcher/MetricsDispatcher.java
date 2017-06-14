@@ -39,10 +39,6 @@ public interface MetricsDispatcher extends Service {
 
     void task(Task task);
 
-    void logEvent(LogEvent event);
-
-    void logEvents(Collection<LogEvent> events);
-
     void test(Test test);
 
     void environment(Info info);

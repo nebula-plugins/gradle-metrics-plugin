@@ -45,12 +45,7 @@ public class RestMetricsDispatcher extends AbstractMetricsDispatcher {
     }
 
     @Override
-    protected String getLogCollectionName() {
-        return extension.getRestLogEventName();
-    }
-
-    @Override
-    protected String getBuildCollectionName() {
+    protected String getCollectionName() {
         return extension.getRestBuildEventName();
     }
 

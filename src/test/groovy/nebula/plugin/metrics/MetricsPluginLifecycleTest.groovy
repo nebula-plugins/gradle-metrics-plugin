@@ -17,13 +17,11 @@
 
 package nebula.plugin.metrics
 
-import nebula.plugin.metrics.collector.LoggingCollector
 import nebula.plugin.metrics.dispatcher.MetricsDispatcher
 import nebula.test.ProjectSpec
 import org.gradle.BuildListener
 import org.gradle.api.Project
 import org.gradle.api.internal.project.DefaultProject
-import org.gradle.api.logging.LogLevel
 import org.gradle.api.plugins.JavaPlugin
 import org.gradle.api.tasks.testing.Test
 import org.gradle.api.tasks.testing.TestDescriptor
@@ -31,14 +29,8 @@ import org.gradle.api.tasks.testing.TestListener
 import org.gradle.api.tasks.testing.TestResult
 import org.gradle.internal.event.ListenerBroadcast
 import org.gradle.invocation.DefaultGradle
-import org.gradle.internal.logging.events.LogEvent
 
 class MetricsPluginLifecycleTest extends ProjectSpec {
-    def cleanup() {
-        // These tests don't reflect the complete build lifecycle, so the logging collector has to be manually reset
-        LoggingCollector.reset()
-    }
-
     def 'applying plugin registers extension'() {
         when:
         project.plugins.apply(MetricsPlugin)
@@ -67,29 +59,6 @@ class MetricsPluginLifecycleTest extends ProjectSpec {
 
         then:
         1 * dispatcher.environment(_)
-    }
-
-    def 'project logger dispatches loging event at the log level'() {
-        def dispatcher = applyPluginWithMockedDispatcher(project)
-
-        when:
-        project.logger.warn('log message')
-
-        then:
-        1 * dispatcher.logEvent(_) >> { LogEvent event ->
-            assert event.message == 'log message'
-            assert event.logLevel == LogLevel.WARN
-        }
-    }
-
-    def 'project logger does not dispatch logback event belong the log level'() {
-        def dispatcher = applyPluginWithMockedDispatcher(project)
-
-        when:
-        project.logger.info('log message')
-
-        then:
-        0 * dispatcher.logEvent(_)
     }
 
     def 'afterTest notification dispatches test event'() {
