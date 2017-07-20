@@ -16,16 +16,12 @@
             "locked": "2.3.2",
             "requested": "2.3.2"
         },
-        "com.google.code.findbugs:jsr305": {
-            "locked": "3.0.0",
-            "requested": "3.0.0"
-        },
         "com.google.guava:guava": {
             "locked": "18.0",
             "requested": "18.0"
         },
         "com.netflix.nebula:gradle-info-plugin": {
-            "locked": "3.5.2",
+            "locked": "3.6.0",
             "requested": "3.+"
         },
         "commons-io:commons-io": {
@@ -55,10 +51,6 @@
         "org.elasticsearch:elasticsearch": {
             "locked": "1.7.2",
             "requested": "1.7.2"
-        },
-        "org.projectlombok:lombok": {
-            "locked": "1.16.6",
-            "requested": "1.16.6"
         }
     },
     "compileClasspath": {
@@ -87,7 +79,7 @@
             "requested": "18.0"
         },
         "com.netflix.nebula:gradle-info-plugin": {
-            "locked": "3.5.2",
+            "locked": "3.6.0",
             "requested": "3.+"
         },
         "commons-io:commons-io": {
@@ -117,6 +109,16 @@
         "org.elasticsearch:elasticsearch": {
             "locked": "1.7.2",
             "requested": "1.7.2"
+        },
+        "org.projectlombok:lombok": {
+            "locked": "1.16.6",
+            "requested": "1.16.6"
+        }
+    },
+    "compileOnly": {
+        "com.google.code.findbugs:jsr305": {
+            "locked": "3.0.0",
+            "requested": "3.0.0"
         },
         "org.projectlombok:lombok": {
             "locked": "1.16.6",
@@ -140,16 +142,12 @@
             "locked": "2.3.2",
             "requested": "2.3.2"
         },
-        "com.google.code.findbugs:jsr305": {
-            "project": true,
-            "requested": "3.0.0"
-        },
         "com.google.guava:guava": {
             "locked": "18.0",
             "requested": "18.0"
         },
         "com.netflix.nebula:gradle-info-plugin": {
-            "locked": "3.5.2",
+            "locked": "3.6.0",
             "requested": "3.+"
         },
         "commons-io:commons-io": {
@@ -179,10 +177,6 @@
         "org.elasticsearch:elasticsearch": {
             "locked": "1.7.2",
             "requested": "1.7.2"
-        },
-        "org.projectlombok:lombok": {
-            "project": true,
-            "requested": "1.16.6"
         }
     },
     "integTestCompile": {
@@ -206,10 +200,6 @@
             "locked": "1.2.1",
             "requested": "1.2.1"
         },
-        "com.google.code.findbugs:jsr305": {
-            "locked": "3.0.0",
-            "requested": "3.0.0"
-        },
         "com.google.guava:guava": {
             "locked": "18.0",
             "requested": "18.0"
@@ -219,11 +209,11 @@
             "requested": "18.0"
         },
         "com.netflix.nebula:gradle-info-plugin": {
-            "locked": "3.5.2",
+            "locked": "3.6.0",
             "requested": "3.+"
         },
         "com.netflix.nebula:nebula-test": {
-            "locked": "6.0.1",
+            "locked": "6.1.0",
             "requested": "3.1.0"
         },
         "commons-io:commons-io": {
@@ -253,10 +243,6 @@
         "org.elasticsearch:elasticsearch": {
             "locked": "1.7.2",
             "requested": "1.7.2"
-        },
-        "org.projectlombok:lombok": {
-            "locked": "1.16.6",
-            "requested": "1.16.6"
         }
     },
     "integTestCompileClasspath": {
@@ -280,10 +266,6 @@
             "locked": "1.2.1",
             "requested": "1.2.1"
         },
-        "com.google.code.findbugs:jsr305": {
-            "locked": "3.0.0",
-            "requested": "3.0.0"
-        },
         "com.google.guava:guava": {
             "locked": "18.0",
             "requested": "18.0"
@@ -293,11 +275,11 @@
             "requested": "18.0"
         },
         "com.netflix.nebula:gradle-info-plugin": {
-            "locked": "3.5.2",
+            "locked": "3.6.0",
             "requested": "3.+"
         },
         "com.netflix.nebula:nebula-test": {
-            "locked": "6.0.1",
+            "locked": "6.1.0",
             "requested": "3.1.0"
         },
         "commons-io:commons-io": {
@@ -327,10 +309,6 @@
         "org.elasticsearch:elasticsearch": {
             "locked": "1.7.2",
             "requested": "1.7.2"
-        },
-        "org.projectlombok:lombok": {
-            "locked": "1.16.6",
-            "requested": "1.16.6"
         }
     },
     "integTestRuntime": {
@@ -354,10 +332,6 @@
             "locked": "1.2.1",
             "requested": "1.2.1"
         },
-        "com.google.code.findbugs:jsr305": {
-            "locked": "3.0.0",
-            "requested": "3.0.0"
-        },
         "com.google.guava:guava": {
             "locked": "18.0",
             "requested": "18.0"
@@ -367,11 +341,11 @@
             "requested": "18.0"
         },
         "com.netflix.nebula:gradle-info-plugin": {
-            "locked": "3.5.2",
+            "locked": "3.6.0",
             "requested": "3.+"
         },
         "com.netflix.nebula:nebula-test": {
-            "locked": "6.0.1",
+            "locked": "6.1.0",
             "requested": "3.1.0"
         },
         "commons-io:commons-io": {
@@ -401,10 +375,6 @@
         "org.elasticsearch:elasticsearch": {
             "locked": "1.7.2",
             "requested": "1.7.2"
-        },
-        "org.projectlombok:lombok": {
-            "locked": "1.16.6",
-            "requested": "1.16.6"
         }
     },
     "integTestRuntimeClasspath": {
@@ -428,10 +398,6 @@
             "locked": "1.2.1",
             "requested": "1.2.1"
         },
-        "com.google.code.findbugs:jsr305": {
-            "locked": "3.0.0",
-            "requested": "3.0.0"
-        },
         "com.google.guava:guava": {
             "locked": "18.0",
             "requested": "18.0"
@@ -441,11 +407,11 @@
             "requested": "18.0"
         },
         "com.netflix.nebula:gradle-info-plugin": {
-            "locked": "3.5.2",
+            "locked": "3.6.0",
             "requested": "3.+"
         },
         "com.netflix.nebula:nebula-test": {
-            "locked": "6.0.1",
+            "locked": "6.1.0",
             "requested": "3.1.0"
         },
         "commons-io:commons-io": {
@@ -475,10 +441,6 @@
         "org.elasticsearch:elasticsearch": {
             "locked": "1.7.2",
             "requested": "1.7.2"
-        },
-        "org.projectlombok:lombok": {
-            "locked": "1.16.6",
-            "requested": "1.16.6"
         }
     },
     "jacocoAgent": {
@@ -513,7 +475,7 @@
             "requested": "18.0"
         },
         "com.netflix.nebula:gradle-info-plugin": {
-            "locked": "3.5.2",
+            "locked": "3.6.0",
             "requested": "3.+"
         },
         "commons-io:commons-io": {
@@ -543,16 +505,6 @@
         "org.elasticsearch:elasticsearch": {
             "locked": "1.7.2",
             "requested": "1.7.2"
-        }
-    },
-    "provided": {
-        "com.google.code.findbugs:jsr305": {
-            "locked": "3.0.0",
-            "requested": "3.0.0"
-        },
-        "org.projectlombok:lombok": {
-            "locked": "1.16.6",
-            "requested": "1.16.6"
         }
     },
     "runtime": {
@@ -572,16 +524,12 @@
             "locked": "2.3.2",
             "requested": "2.3.2"
         },
-        "com.google.code.findbugs:jsr305": {
-            "locked": "3.0.0",
-            "requested": "3.0.0"
-        },
         "com.google.guava:guava": {
             "locked": "18.0",
             "requested": "18.0"
         },
         "com.netflix.nebula:gradle-info-plugin": {
-            "locked": "3.5.2",
+            "locked": "3.6.0",
             "requested": "3.+"
         },
         "commons-io:commons-io": {
@@ -611,10 +559,6 @@
         "org.elasticsearch:elasticsearch": {
             "locked": "1.7.2",
             "requested": "1.7.2"
-        },
-        "org.projectlombok:lombok": {
-            "locked": "1.16.6",
-            "requested": "1.16.6"
         }
     },
     "runtimeClasspath": {
@@ -634,16 +578,12 @@
             "locked": "2.3.2",
             "requested": "2.3.2"
         },
-        "com.google.code.findbugs:jsr305": {
-            "locked": "3.0.0",
-            "requested": "3.0.0"
-        },
         "com.google.guava:guava": {
             "locked": "18.0",
             "requested": "18.0"
         },
         "com.netflix.nebula:gradle-info-plugin": {
-            "locked": "3.5.2",
+            "locked": "3.6.0",
             "requested": "3.+"
         },
         "commons-io:commons-io": {
@@ -673,10 +613,6 @@
         "org.elasticsearch:elasticsearch": {
             "locked": "1.7.2",
             "requested": "1.7.2"
-        },
-        "org.projectlombok:lombok": {
-            "locked": "1.16.6",
-            "requested": "1.16.6"
         }
     },
     "testCompile": {
@@ -696,10 +632,6 @@
             "locked": "2.3.2",
             "requested": "2.3.2"
         },
-        "com.google.code.findbugs:jsr305": {
-            "locked": "3.0.0",
-            "requested": "3.0.0"
-        },
         "com.google.guava:guava": {
             "locked": "18.0",
             "requested": "18.0"
@@ -709,11 +641,11 @@
             "requested": "18.0"
         },
         "com.netflix.nebula:gradle-info-plugin": {
-            "locked": "3.5.2",
+            "locked": "3.6.0",
             "requested": "3.+"
         },
         "com.netflix.nebula:nebula-test": {
-            "locked": "6.0.1",
+            "locked": "6.1.0",
             "requested": "3.1.0"
         },
         "commons-io:commons-io": {
@@ -743,10 +675,6 @@
         "org.elasticsearch:elasticsearch": {
             "locked": "1.7.2",
             "requested": "1.7.2"
-        },
-        "org.projectlombok:lombok": {
-            "locked": "1.16.6",
-            "requested": "1.16.6"
         }
     },
     "testCompileClasspath": {
@@ -766,10 +694,6 @@
             "locked": "2.3.2",
             "requested": "2.3.2"
         },
-        "com.google.code.findbugs:jsr305": {
-            "locked": "3.0.0",
-            "requested": "3.0.0"
-        },
         "com.google.guava:guava": {
             "locked": "18.0",
             "requested": "18.0"
@@ -779,11 +703,11 @@
             "requested": "18.0"
         },
         "com.netflix.nebula:gradle-info-plugin": {
-            "locked": "3.5.2",
+            "locked": "3.6.0",
             "requested": "3.+"
         },
         "com.netflix.nebula:nebula-test": {
-            "locked": "6.0.1",
+            "locked": "6.1.0",
             "requested": "3.1.0"
         },
         "commons-io:commons-io": {
@@ -813,10 +737,6 @@
         "org.elasticsearch:elasticsearch": {
             "locked": "1.7.2",
             "requested": "1.7.2"
-        },
-        "org.projectlombok:lombok": {
-            "locked": "1.16.6",
-            "requested": "1.16.6"
         }
     },
     "testRuntime": {
@@ -836,10 +756,6 @@
             "locked": "2.3.2",
             "requested": "2.3.2"
         },
-        "com.google.code.findbugs:jsr305": {
-            "locked": "3.0.0",
-            "requested": "3.0.0"
-        },
         "com.google.guava:guava": {
             "locked": "18.0",
             "requested": "18.0"
@@ -849,11 +765,11 @@
             "requested": "18.0"
         },
         "com.netflix.nebula:gradle-info-plugin": {
-            "locked": "3.5.2",
+            "locked": "3.6.0",
             "requested": "3.+"
         },
         "com.netflix.nebula:nebula-test": {
-            "locked": "6.0.1",
+            "locked": "6.1.0",
             "requested": "3.1.0"
         },
         "commons-io:commons-io": {
@@ -883,10 +799,6 @@
         "org.elasticsearch:elasticsearch": {
             "locked": "1.7.2",
             "requested": "1.7.2"
-        },
-        "org.projectlombok:lombok": {
-            "locked": "1.16.6",
-            "requested": "1.16.6"
         }
     },
     "testRuntimeClasspath": {
@@ -906,10 +818,6 @@
             "locked": "2.3.2",
             "requested": "2.3.2"
         },
-        "com.google.code.findbugs:jsr305": {
-            "locked": "3.0.0",
-            "requested": "3.0.0"
-        },
         "com.google.guava:guava": {
             "locked": "18.0",
             "requested": "18.0"
@@ -919,11 +827,11 @@
             "requested": "18.0"
         },
         "com.netflix.nebula:gradle-info-plugin": {
-            "locked": "3.5.2",
+            "locked": "3.6.0",
             "requested": "3.+"
         },
         "com.netflix.nebula:nebula-test": {
-            "locked": "6.0.1",
+            "locked": "6.1.0",
             "requested": "3.1.0"
         },
         "commons-io:commons-io": {
@@ -953,10 +861,6 @@
         "org.elasticsearch:elasticsearch": {
             "locked": "1.7.2",
             "requested": "1.7.2"
-        },
-        "org.projectlombok:lombok": {
-            "locked": "1.16.6",
-            "requested": "1.16.6"
         }
     }
 }
