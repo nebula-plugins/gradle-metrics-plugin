@@ -237,9 +237,11 @@ class ESMetricsPluginIntegTest extends IntegrationSpec {
 
         ${applyPlugin(InfoBrokerPlugin)}
 
-        task createReport << {
-            def broker = project.plugins.findPlugin(${InfoBrokerPlugin.name})
-            broker.addReport('lintViolations', ['one', 'two', 'three'])
+        task createReport {
+            doFirst {
+                def broker = project.plugins.findPlugin(${InfoBrokerPlugin.name})
+                broker.addReport('lintViolations', ['one', 'two', 'three'])
+            }
         }
 
         """
