@@ -16,7 +16,7 @@
 
 
 plugins {
-    id 'nebula.plugin-plugin' version '5.17.1'
+    id 'nebula.plugin-plugin' version '5.17.2'
     id 'com.github.johnrengelman.shadow' version '1.2.3'
 }
 
