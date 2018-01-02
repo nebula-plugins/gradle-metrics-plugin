@@ -26,6 +26,7 @@ import org.gradle.api.plugins.JavaPlugin
 import org.gradle.api.tasks.testing.Test
 import org.gradle.api.tasks.testing.TestDescriptor
 import org.gradle.api.tasks.testing.TestListener
+import org.gradle.api.tasks.testing.TestOutputListener
 import org.gradle.api.tasks.testing.TestResult
 import org.gradle.internal.event.ListenerBroadcast
 import org.gradle.invocation.DefaultGradle
@@ -67,9 +68,9 @@ class MetricsPluginLifecycleTest extends ProjectSpec {
         def task = project.tasks.getByName('test') as Test
 
         // This is pretty coupley, but it means we can use the same infrastructure as Gradle to trigger the result (I'll use test execution in integration tests)
-        def method = Test.getDeclaredMethod('getTestListenerBroadcaster')
-        method.setAccessible(true)
-        def listener = method.invoke(task) as ListenerBroadcast<TestListener>
+        def field = Test.superclass.getDeclaredField('testListenerBroadcaster')
+        field.setAccessible(true)
+        def listener = field.get(task) as ListenerBroadcast<TestListener>
         def testListener = listener.getSource()
 
         def descriptor = Mock(TestDescriptor)
