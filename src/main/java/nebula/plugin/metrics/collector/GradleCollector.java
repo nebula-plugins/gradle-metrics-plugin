@@ -203,15 +203,13 @@ public final class GradleCollector extends BuildAdapter implements ProfileListen
         }
 
         MetricsDispatcher dispatcher = this.dispatcherSupplier.get();
-        if (dispatcher.isRunning()) {
-            logger.info("Shutting down dispatcher");
-            try {
-                dispatcher.stopAsync().awaitTerminated(TIMEOUT_MS, TimeUnit.MILLISECONDS);
-            } catch (TimeoutException e) {
-                logger.debug("Timed out after {}ms while waiting for metrics dispatcher to terminate", TIMEOUT_MS);
-            } catch (IllegalStateException e) {
-                logger.debug("Could not stop metrics dispatcher service (error message: {})", getRootCauseMessage(e));
-            }
+        logger.info("Shutting down dispatcher");
+        try {
+            dispatcher.stopAsync().awaitTerminated(TIMEOUT_MS, TimeUnit.MILLISECONDS);
+        } catch (TimeoutException e) {
+            logger.debug("Timed out after {}ms while waiting for metrics dispatcher to terminate", TIMEOUT_MS);
+        } catch (IllegalStateException e) {
+            logger.debug("Could not stop metrics dispatcher service (error message: {})", getRootCauseMessage(e));
         }
 
         Optional<String> receipt = dispatcher.receipt();
