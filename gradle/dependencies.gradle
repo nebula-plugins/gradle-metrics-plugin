@@ -104,5 +104,5 @@ shadowJar {
     relocate 'org.apache.http', 'nebula.plugin.metrics.org.apache.http'
 }
 
-jar.deleteAllActions()
+jar.enabled = false
 jar.dependsOn shadowJar
