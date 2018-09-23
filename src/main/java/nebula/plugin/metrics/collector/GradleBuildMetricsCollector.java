@@ -1,20 +1,3 @@
-/*
- *  Copyright 2015-2016 Netflix, Inc.
- *
- *  Licensed under the Apache License, Version 2.0 (the "License");
- *  you may not use this file except in compliance with the License.
- *  You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- *  Unless required by applicable law or agreed to in writing, software
- *  distributed under the License is distributed on an "AS IS" BASIS,
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and
- *  limitations under the License.
- *
- */
-
 package nebula.plugin.metrics.collector;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -22,21 +5,32 @@ import com.google.common.base.Optional;
 import com.google.common.base.Supplier;
 import nebula.plugin.info.InfoBrokerPlugin;
 import nebula.plugin.metrics.MetricsLoggerFactory;
-import nebula.plugin.metrics.MetricsPluginExtension;
 import nebula.plugin.metrics.dispatcher.MetricsDispatcher;
 import nebula.plugin.metrics.model.GradleToolContainer;
 import nebula.plugin.metrics.model.Info;
 import nebula.plugin.metrics.model.Result;
-import nebula.plugin.metrics.model.Task;
-import org.gradle.BuildAdapter;
+import nebula.plugin.metrics.model.profile.BuildProfile;
+import nebula.plugin.metrics.model.profile.CompositeOperation;
+import nebula.plugin.metrics.model.profile.ContinuousOperation;
+import nebula.plugin.metrics.model.profile.ProjectProfile;
+import nebula.plugin.metrics.model.profile.TaskExecution;
+import org.gradle.BuildListener;
 import org.gradle.BuildResult;
 import org.gradle.StartParameter;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
+import org.gradle.api.ProjectEvaluationListener;
+import org.gradle.api.ProjectState;
+import org.gradle.api.Task;
+import org.gradle.api.artifacts.DependencyResolutionListener;
+import org.gradle.api.artifacts.ResolvableDependencies;
+import org.gradle.api.execution.TaskExecutionListener;
 import org.gradle.api.initialization.Settings;
 import org.gradle.api.invocation.Gradle;
 import org.gradle.api.tasks.TaskState;
-import org.gradle.profile.*;
+import org.gradle.initialization.BuildCompletionListener;
+import org.gradle.internal.buildevents.BuildStartedTime;
+import org.gradle.internal.time.Clock;
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
 
@@ -49,12 +43,8 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 import static org.apache.commons.lang3.exception.ExceptionUtils.getRootCauseMessage;
 
-/**
- * Collector for Gradle.
- *
- * @author Danny Thomas
- */
-public final class GradleCollector extends BuildAdapter implements ProfileListener {
+public final class GradleBuildMetricsCollector  implements BuildListener, ProjectEvaluationListener, TaskExecutionListener, DependencyResolutionListener, BuildCompletionListener {
+
     private static final long TIMEOUT_MS = 5000;
 
     private final Logger logger = MetricsLoggerFactory.getLogger(GradleCollector.class);
@@ -63,13 +53,101 @@ public final class GradleCollector extends BuildAdapter implements ProfileListen
     private final AtomicBoolean buildProfileComplete = new AtomicBoolean(false);
     private final AtomicBoolean buildResultComplete = new AtomicBoolean(false);
 
-    public GradleCollector(Supplier<MetricsDispatcher> dispatcherSupplier) {
+    public GradleBuildMetricsCollector(Supplier<MetricsDispatcher> dispatcherSupplier) {
         this.dispatcherSupplier = checkNotNull(dispatcherSupplier);
+        this.buildStartedTime = null;
+        this.clock = null;
+    }
+
+    private final BuildStartedTime buildStartedTime;
+    private final Clock clock;
+    private final ThreadLocal<ContinuousOperation> currentTransform = new ThreadLocal<ContinuousOperation>();
+    private BuildProfile buildProfile;
+
+    // BuildListener
+    @Override
+    public void buildStarted(Gradle gradle) {
+        checkNotNull(gradle);
+        long now = clock.getCurrentTime();
+        buildProfile = new BuildProfile(gradle.getStartParameter());
+        buildProfile.setBuildStarted(now);
+        buildProfile.setProfilingStarted(buildStartedTime.getStartTime());
+    }
+
+    @Override
+    public void settingsEvaluated(Settings settings) {
+        checkNotNull(settings);
+        buildProfile.setSettingsEvaluated(clock.getCurrentTime());
+    }
+
+    @Override
+    public void projectsLoaded(Gradle gradle) {
+        checkNotNull(gradle);
+        buildProfile.setProjectsLoaded(clock.getCurrentTime());
+    }
+
+    @Override
+    public void completed() {
+        if (buildProfile != null) {
+            buildProfile.setBuildFinished(clock.getCurrentTime());
+            try {
+                buildFinished(buildProfile);
+            } finally {
+                buildProfile = null;
+            }
+        }
+    }
+
+    // ProjectEvaluationListener
+    @Override
+    public void beforeEvaluate(Project project) {
+        long now = clock.getCurrentTime();
+        buildProfile.getProjectProfile(project.getPath()).getConfigurationOperation().setStart(now);
+    }
+
+    @Override
+    public void afterEvaluate(Project project, ProjectState state) {
+        long now = clock.getCurrentTime();
+        ProjectProfile projectProfile = buildProfile.getProjectProfile(project.getPath());
+        projectProfile.getConfigurationOperation().setFinish(now);
+    }
+
+    // TaskExecutionListener
+    @Override
+    public void beforeExecute(Task task) {
+        long now = clock.getCurrentTime();
+        Project project = task.getProject();
+        ProjectProfile projectProfile = buildProfile.getProjectProfile(project.getPath());
+        projectProfile.getTaskProfile(task.getPath()).setStart(now);
+    }
+
+    @Override
+    public void afterExecute(Task task, TaskState state) {
+        long now = clock.getCurrentTime();
+        Project project = task.getProject();
+        ProjectProfile projectProfile = buildProfile.getProjectProfile(project.getPath());
+        TaskExecution taskExecution = projectProfile.getTaskProfile(task.getPath());
+        taskExecution.setFinish(now);
+        taskExecution.completed(state);
+    }
+
+    // DependencyResolutionListener
+    @Override
+    public void beforeResolve(ResolvableDependencies dependencies) {
+        long now = clock.getCurrentTime();
+        buildProfile.getDependencySetProfile(dependencies.getPath()).setStart(now);
+    }
+
+    @Override
+    public void afterResolve(ResolvableDependencies dependencies) {
+        long now = clock.getCurrentTime();
+        buildProfile.getDependencySetProfile(dependencies.getPath()).setFinish(now);
     }
 
     @Override
     public void projectsEvaluated(Gradle gradle) {
         checkNotNull(gradle);
+        buildProfile.setProjectsEvaluated(clock.getCurrentTime());
         StartParameter startParameter = gradle.getStartParameter();
         checkState(!startParameter.isOffline(), "Collectors should not be registered when Gradle is running offline");
         try {
@@ -133,6 +211,10 @@ public final class GradleCollector extends BuildAdapter implements ProfileListen
     }
 
     @Override
+    public void buildFinished(BuildResult result) {
+        buildProfile.setSuccessful(result.getFailure() == null);
+    }
+
     public void buildFinished(BuildProfile result) {
         checkNotNull(result);
         long startupElapsed = result.getElapsedStartup();
@@ -170,7 +252,7 @@ public final class GradleCollector extends BuildAdapter implements ProfileListen
             for (TaskExecution execution : tasks.getOperations()) {
                 Result taskResult = getTaskExecutionResult(execution);
                 long taskElapsed = execution.getElapsedTime();
-                Task task = new Task(execution.getDescription(), taskResult, new DateTime(execution.getStartTime()), taskElapsed);
+                nebula.plugin.metrics.model.Task task = new nebula.plugin.metrics.model.Task(execution.getDescription(), taskResult, new DateTime(execution.getStartTime()), taskElapsed);
                 dispatcher.task(task);
                 totalTaskElapsed += taskElapsed;
             }
@@ -232,21 +314,6 @@ public final class GradleCollector extends BuildAdapter implements ProfileListen
             }
         }
         return result;
-    }
-
-    @Override
-    public void buildStarted(Gradle gradle) {
-        checkNotNull(gradle);
-    }
-
-    @Override
-    public void settingsEvaluated(Settings settings) {
-        checkNotNull(settings);
-    }
-
-    @Override
-    public void projectsLoaded(Gradle gradle) {
-        checkNotNull(gradle);
     }
 
 

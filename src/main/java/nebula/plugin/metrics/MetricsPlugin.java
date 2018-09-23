@@ -20,7 +20,7 @@ package nebula.plugin.metrics;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Supplier;
 import groovy.lang.Closure;
-import nebula.plugin.metrics.collector.GradleCollector;
+import nebula.plugin.metrics.collector.GradleBuildMetricsCollector;
 import nebula.plugin.metrics.collector.GradleTestSuiteCollector;
 import nebula.plugin.metrics.dispatcher.*;
 import org.gradle.BuildResult;
@@ -33,8 +33,10 @@ import org.gradle.api.invocation.Gradle;
 import org.gradle.api.plugins.ExtensionContainer;
 import org.gradle.api.tasks.TaskContainer;
 import org.gradle.api.tasks.testing.Test;
+import org.gradle.internal.service.scopes.BuildScopeServices;
 import org.slf4j.Logger;
 
+import javax.inject.Inject;
 import java.util.Set;
 
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -57,6 +59,9 @@ public final class MetricsPlugin implements Plugin<Project> {
             return dispatcher;
         }
     };
+
+    @Inject
+    BuildScopeServices buildScopeServices;
 
     @Override
     public void apply(Project project) {
@@ -119,7 +124,7 @@ public final class MetricsPlugin implements Plugin<Project> {
 
     private void configureRootProjectCollectors(Project rootProject) {
         Gradle gradle = rootProject.getGradle();
-        final GradleCollector gradleCollector = new GradleCollector(dispatcherSupplier);
+        final GradleBuildMetricsCollector gradleCollector = new GradleBuildMetricsCollector(dispatcherSupplier);
         gradle.addListener(gradleCollector);
         gradle.buildFinished(new Closure(null) {
             protected Object doCall(Object arguments) {
