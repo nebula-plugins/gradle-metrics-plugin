@@ -1,5 +1,5 @@
 /*
- *  Copyright 2015-2016 Netflix, Inc.
+ *  Copyright 2015-2018 Netflix, Inc.
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -14,7 +14,6 @@
  *  limitations under the License.
  *
  */
-
 package nebula.plugin.metrics.collector;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -22,21 +21,32 @@ import com.google.common.base.Optional;
 import com.google.common.base.Supplier;
 import nebula.plugin.info.InfoBrokerPlugin;
 import nebula.plugin.metrics.MetricsLoggerFactory;
-import nebula.plugin.metrics.MetricsPluginExtension;
 import nebula.plugin.metrics.dispatcher.MetricsDispatcher;
 import nebula.plugin.metrics.model.GradleToolContainer;
 import nebula.plugin.metrics.model.Info;
 import nebula.plugin.metrics.model.Result;
-import nebula.plugin.metrics.model.Task;
-import org.gradle.BuildAdapter;
+import nebula.plugin.metrics.model.BuildMetrics;
+import nebula.plugin.metrics.model.CompositeOperation;
+import nebula.plugin.metrics.model.ContinuousOperation;
+import nebula.plugin.metrics.model.ProjectMetrics;
+import nebula.plugin.metrics.model.TaskExecution;
+import nebula.plugin.metrics.time.BuildStartedTime;
+import nebula.plugin.metrics.time.Clock;
+import org.gradle.BuildListener;
 import org.gradle.BuildResult;
 import org.gradle.StartParameter;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
+import org.gradle.api.ProjectEvaluationListener;
+import org.gradle.api.ProjectState;
+import org.gradle.api.Task;
+import org.gradle.api.artifacts.DependencyResolutionListener;
+import org.gradle.api.artifacts.ResolvableDependencies;
+import org.gradle.api.execution.TaskExecutionListener;
 import org.gradle.api.initialization.Settings;
 import org.gradle.api.invocation.Gradle;
 import org.gradle.api.tasks.TaskState;
-import org.gradle.profile.*;
+import org.gradle.initialization.BuildCompletionListener;
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
 
@@ -49,27 +59,124 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 import static org.apache.commons.lang3.exception.ExceptionUtils.getRootCauseMessage;
 
-/**
- * Collector for Gradle.
- *
- * @author Danny Thomas
- */
-public final class GradleCollector extends BuildAdapter implements ProfileListener {
+public final class GradleBuildMetricsCollector implements BuildListener, ProjectEvaluationListener, TaskExecutionListener, DependencyResolutionListener, BuildCompletionListener {
+
     private static final long TIMEOUT_MS = 5000;
 
-    private final Logger logger = MetricsLoggerFactory.getLogger(GradleCollector.class);
+    private final Logger logger = MetricsLoggerFactory.getLogger(GradleBuildMetricsCollector.class);
     private final Supplier<MetricsDispatcher> dispatcherSupplier;
 
     private final AtomicBoolean buildProfileComplete = new AtomicBoolean(false);
     private final AtomicBoolean buildResultComplete = new AtomicBoolean(false);
 
-    public GradleCollector(Supplier<MetricsDispatcher> dispatcherSupplier) {
+    public GradleBuildMetricsCollector(Supplier<MetricsDispatcher> dispatcherSupplier, BuildStartedTime buildStartedTime, Clock clock) {
+        checkNotNull(dispatcherSupplier);
+        checkNotNull(buildStartedTime);
+        checkNotNull(clock);
         this.dispatcherSupplier = checkNotNull(dispatcherSupplier);
+        this.buildStartedTime = buildStartedTime;
+        this.clock = clock;
+    }
+
+    private final BuildStartedTime buildStartedTime;
+    private final Clock clock;
+    private BuildMetrics buildMetrics;
+
+    /**
+     * This method is called explicity from projectsEvaluated.
+     * There is no way for users to hook in before the build starts, this method is mostly used by internal listeners in Gradle
+     * @see <a href="https://github.com/gradle/gradle/issues/4315">https://github.com/gradle/gradle/issues/4315</a>
+     * @param gradle
+     */
+    @Override
+    public void buildStarted(Gradle gradle) {
+        checkNotNull(gradle);
+        long now = clock.getCurrentTime();
+        buildMetrics = new BuildMetrics(gradle.getStartParameter());
+        buildMetrics.setBuildStarted(now);
+        buildMetrics.setProfilingStarted(buildStartedTime.getStartTime());
+    }
+
+    @Override
+    public void settingsEvaluated(Settings settings) {
+        checkNotNull(settings);
+        buildMetrics.setSettingsEvaluated(clock.getCurrentTime());
+    }
+
+    @Override
+    public void projectsLoaded(Gradle gradle) {
+        checkNotNull(gradle);
+        buildMetrics.setProjectsLoaded(clock.getCurrentTime());
+    }
+
+    @Override
+    public void completed() {
+        if (buildMetrics != null) {
+            buildMetrics.setBuildFinished(clock.getCurrentTime());
+            try {
+                buildFinished(buildMetrics);
+            } finally {
+                buildMetrics = null;
+            }
+        }
+    }
+
+    // ProjectEvaluationListener
+    @Override
+    public void beforeEvaluate(Project project) {
+        long now = clock.getCurrentTime();
+        buildMetrics.getProjectProfile(project.getPath()).getConfigurationOperation().setStart(now);
+    }
+
+    @Override
+    public void afterEvaluate(Project project, ProjectState state) {
+        long now = clock.getCurrentTime();
+        ProjectMetrics projectMetrics = buildMetrics.getProjectProfile(project.getPath());
+        projectMetrics.getConfigurationOperation().setFinish(now);
+    }
+
+    // TaskExecutionListener
+    @Override
+    public void beforeExecute(Task task) {
+        long now = clock.getCurrentTime();
+        Project project = task.getProject();
+        ProjectMetrics projectMetrics = buildMetrics.getProjectProfile(project.getPath());
+        projectMetrics.getTaskProfile(task.getPath()).setStart(now);
+    }
+
+    @Override
+    public void afterExecute(Task task, TaskState state) {
+        long now = clock.getCurrentTime();
+        Project project = task.getProject();
+        ProjectMetrics projectMetrics = buildMetrics.getProjectProfile(project.getPath());
+        TaskExecution taskExecution = projectMetrics.getTaskProfile(task.getPath());
+        taskExecution.setFinish(now);
+        taskExecution.completed(state);
+    }
+
+    @Override
+    public void beforeResolve(ResolvableDependencies dependencies) {
+        long now = clock.getCurrentTime();
+        buildMetrics.getDependencySetProfile(dependencies.getPath()).setStart(now);
+    }
+
+    @Override
+    public void afterResolve(ResolvableDependencies dependencies) {
+        long now = clock.getCurrentTime();
+        buildMetrics.getDependencySetProfile(dependencies.getPath()).setFinish(now);
     }
 
     @Override
     public void projectsEvaluated(Gradle gradle) {
         checkNotNull(gradle);
+
+        /*
+         * There is no way for users to hook in before the build starts, this method is mostly used by internal listeners in Gradle
+         * @see <a href="https://github.com/gradle/gradle/issues/4315">https://github.com/gradle/gradle/issues/4315</a>
+         */
+        buildStarted(gradle);
+
+        buildMetrics.setProjectsEvaluated(clock.getCurrentTime());
         StartParameter startParameter = gradle.getStartParameter();
         checkState(!startParameter.isOffline(), "Collectors should not be registered when Gradle is running offline");
         try {
@@ -133,7 +240,11 @@ public final class GradleCollector extends BuildAdapter implements ProfileListen
     }
 
     @Override
-    public void buildFinished(BuildProfile result) {
+    public void buildFinished(BuildResult result) {
+        buildMetrics.setSuccessful(result.getFailure() == null);
+    }
+
+    public void buildFinished(BuildMetrics result) {
         checkNotNull(result);
         long startupElapsed = result.getElapsedStartup();
         long settingsElapsed = result.getElapsedSettings();
@@ -149,8 +260,8 @@ public final class GradleCollector extends BuildAdapter implements ProfileListen
         expectedTotal += settingsElapsed;
         dispatcher.event("projectsLoading", "configure", loadingElapsed);
         expectedTotal += loadingElapsed;
-        for (ProjectProfile projectProfile : result.getProjects()) {
-            ContinuousOperation configurationOperation = projectProfile.getConfigurationOperation();
+        for (ProjectMetrics projectMetrics : result.getProjects()) {
+            ContinuousOperation configurationOperation = projectMetrics.getConfigurationOperation();
             long configurationElapsed = configurationOperation.getElapsedTime();
             dispatcher.event(configurationOperation.getDescription(), "configure", configurationElapsed);
             expectedTotal += configurationElapsed;
@@ -164,13 +275,13 @@ public final class GradleCollector extends BuildAdapter implements ProfileListen
         }
 
         // Execution
-        for (ProjectProfile projectProfile : result.getProjects()) {
+        for (ProjectMetrics projectMetrics : result.getProjects()) {
             long totalTaskElapsed = 0;
-            CompositeOperation<TaskExecution> tasks = projectProfile.getTasks();
+            CompositeOperation<TaskExecution> tasks = projectMetrics.getTasks();
             for (TaskExecution execution : tasks.getOperations()) {
                 Result taskResult = getTaskExecutionResult(execution);
                 long taskElapsed = execution.getElapsedTime();
-                Task task = new Task(execution.getDescription(), taskResult, new DateTime(execution.getStartTime()), taskElapsed);
+                nebula.plugin.metrics.model.Task task = new nebula.plugin.metrics.model.Task(execution.getDescription(), taskResult, new DateTime(execution.getStartTime()), taskElapsed);
                 dispatcher.task(task);
                 totalTaskElapsed += taskElapsed;
             }
@@ -232,20 +343,5 @@ public final class GradleCollector extends BuildAdapter implements ProfileListen
             }
         }
         return result;
-    }
-
-    @Override
-    public void buildStarted(Gradle gradle) {
-        checkNotNull(gradle);
-    }
-
-    @Override
-    public void settingsEvaluated(Settings settings) {
-        checkNotNull(settings);
-    }
-
-    @Override
-    public void projectsLoaded(Gradle gradle) {
-        checkNotNull(gradle);
     }
 }

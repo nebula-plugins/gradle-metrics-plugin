@@ -58,9 +58,11 @@ class MetricsPluginTest extends ProjectSpec {
 
     def 'project evaluation dispatches result event'() {
         def dispatcher = applyPluginWithMockedDispatcher(project)
+        def buildResult = new BuildResult(project.gradle, null)
 
         when:
-        buildListenerBroadcaster(project).buildFinished(new BuildResult(project.gradle, null))
+        buildListenerBroadcaster(project).buildStarted(project.gradle)
+        buildListenerBroadcaster(project).buildFinished(buildResult)
 
         then:
         1 * dispatcher.result(_)
