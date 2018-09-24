@@ -13,8 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package nebula.plugin.metrics.model.profile
+package nebula.plugin.metrics.model
 
+import nebula.plugin.metrics.model.CompositeOperation
+import nebula.plugin.metrics.model.Operation
 import spock.lang.Specification
 import spock.lang.Subject
 

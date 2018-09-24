@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package nebula.plugin.metrics.model.profile;
+package nebula.plugin.metrics.model;
 
 import com.google.common.collect.Lists;
 

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package nebula.plugin.metrics.model.profile;
+package nebula.plugin.metrics.model;
 
 import com.google.common.collect.Sets;
 

@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package nebula.plugin.metrics.model.profile;
+package nebula.plugin.metrics.model;
 
 import org.gradle.api.tasks.TaskState;
 import static com.google.common.base.Preconditions.checkNotNull;

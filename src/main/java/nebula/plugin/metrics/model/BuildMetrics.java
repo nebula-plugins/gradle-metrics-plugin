@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package nebula.plugin.metrics.model.profile;
+package nebula.plugin.metrics.model;
 
 import com.google.common.collect.Maps;
 import org.gradle.StartParameter;
@@ -28,11 +28,11 @@ import java.util.Map;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-public class BuildProfile {
+public class BuildMetrics {
 
     private static final DateFormat DATE_FORMAT = new SimpleDateFormat("yyyy/MM/dd - HH:mm:ss");
 
-    private final Map<String, ProjectProfile> projects = new LinkedHashMap<String, ProjectProfile>();
+    private final Map<String, ProjectMetrics> projects = new LinkedHashMap<String, ProjectMetrics>();
     private final Map<String, ContinuousOperation> dependencySets = new LinkedHashMap<String, ContinuousOperation>();
     private final Map<String, FragmentedOperation> transforms = Maps.newLinkedHashMap();
     private long profilingStarted;
@@ -44,7 +44,7 @@ public class BuildProfile {
     private final StartParameter startParameter;
     private boolean successful;
 
-    public BuildProfile(StartParameter startParameter) {
+    public BuildMetrics(StartParameter startParameter) {
         checkNotNull(startParameter);
         this.startParameter = startParameter;
     }
@@ -86,10 +86,10 @@ public class BuildProfile {
      * Get the profiling container for the specified project
      * @param projectPath to look up
      */
-    public ProjectProfile getProjectProfile(String projectPath) {
-        ProjectProfile result = projects.get(projectPath);
+    public ProjectMetrics getProjectProfile(String projectPath) {
+        ProjectMetrics result = projects.get(projectPath);
         if (result == null) {
-            result = new ProjectProfile(projectPath);
+            result = new ProjectMetrics(projectPath);
             projects.put(projectPath, result);
         }
         return result;
@@ -99,14 +99,14 @@ public class BuildProfile {
      * Get a list of the profiling containers for all projects
      * @return list
      */
-    public List<ProjectProfile> getProjects() {
+    public List<ProjectMetrics> getProjects() {
         return CollectionUtils.sort(projects.values(), Operation.slowestFirst());
     }
 
     public CompositeOperation<Operation> getProjectConfiguration() {
         List<Operation> operations = new ArrayList<Operation>();
-        for (ProjectProfile projectProfile : projects.values()) {
-            operations.add(projectProfile.getConfigurationOperation());
+        for (ProjectMetrics projectMetrics : projects.values()) {
+            operations.add(projectMetrics.getConfigurationOperation());
         }
         operations = CollectionUtils.sort(operations, Operation.slowestFirst());
         return new CompositeOperation<Operation>(operations);
@@ -239,8 +239,8 @@ public class BuildProfile {
      */
     public long getElapsedTotalExecutionTime() {
         long result = 0;
-        for (ProjectProfile projectProfile : projects.values()) {
-            result += projectProfile.getElapsedTime();
+        for (ProjectMetrics projectMetrics : projects.values()) {
+            result += projectMetrics.getElapsedTime();
         }
         return result;
     }

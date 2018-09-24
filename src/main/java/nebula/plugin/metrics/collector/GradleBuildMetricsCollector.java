@@ -25,11 +25,11 @@ import nebula.plugin.metrics.dispatcher.MetricsDispatcher;
 import nebula.plugin.metrics.model.GradleToolContainer;
 import nebula.plugin.metrics.model.Info;
 import nebula.plugin.metrics.model.Result;
-import nebula.plugin.metrics.model.profile.BuildProfile;
-import nebula.plugin.metrics.model.profile.CompositeOperation;
-import nebula.plugin.metrics.model.profile.ContinuousOperation;
-import nebula.plugin.metrics.model.profile.ProjectProfile;
-import nebula.plugin.metrics.model.profile.TaskExecution;
+import nebula.plugin.metrics.model.BuildMetrics;
+import nebula.plugin.metrics.model.CompositeOperation;
+import nebula.plugin.metrics.model.ContinuousOperation;
+import nebula.plugin.metrics.model.ProjectMetrics;
+import nebula.plugin.metrics.model.TaskExecution;
 import nebula.plugin.metrics.time.BuildStartedTime;
 import nebula.plugin.metrics.time.Clock;
 import org.gradle.BuildListener;
@@ -59,7 +59,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 import static org.apache.commons.lang3.exception.ExceptionUtils.getRootCauseMessage;
 
-public final class GradleBuildMetricsCollector  implements BuildListener, ProjectEvaluationListener, TaskExecutionListener, DependencyResolutionListener, BuildCompletionListener {
+public final class GradleBuildMetricsCollector implements BuildListener, ProjectEvaluationListener, TaskExecutionListener, DependencyResolutionListener, BuildCompletionListener {
 
     private static final long TIMEOUT_MS = 5000;
 
@@ -80,7 +80,7 @@ public final class GradleBuildMetricsCollector  implements BuildListener, Projec
 
     private final BuildStartedTime buildStartedTime;
     private final Clock clock;
-    private BuildProfile buildProfile;
+    private BuildMetrics buildMetrics;
 
     /**
      * This method is called explicity from projectsEvaluated.
@@ -92,31 +92,31 @@ public final class GradleBuildMetricsCollector  implements BuildListener, Projec
     public void buildStarted(Gradle gradle) {
         checkNotNull(gradle);
         long now = clock.getCurrentTime();
-        buildProfile = new BuildProfile(gradle.getStartParameter());
-        buildProfile.setBuildStarted(now);
-        buildProfile.setProfilingStarted(buildStartedTime.getStartTime());
+        buildMetrics = new BuildMetrics(gradle.getStartParameter());
+        buildMetrics.setBuildStarted(now);
+        buildMetrics.setProfilingStarted(buildStartedTime.getStartTime());
     }
 
     @Override
     public void settingsEvaluated(Settings settings) {
         checkNotNull(settings);
-        buildProfile.setSettingsEvaluated(clock.getCurrentTime());
+        buildMetrics.setSettingsEvaluated(clock.getCurrentTime());
     }
 
     @Override
     public void projectsLoaded(Gradle gradle) {
         checkNotNull(gradle);
-        buildProfile.setProjectsLoaded(clock.getCurrentTime());
+        buildMetrics.setProjectsLoaded(clock.getCurrentTime());
     }
 
     @Override
     public void completed() {
-        if (buildProfile != null) {
-            buildProfile.setBuildFinished(clock.getCurrentTime());
+        if (buildMetrics != null) {
+            buildMetrics.setBuildFinished(clock.getCurrentTime());
             try {
-                buildFinished(buildProfile);
+                buildFinished(buildMetrics);
             } finally {
-                buildProfile = null;
+                buildMetrics = null;
             }
         }
     }
@@ -125,14 +125,14 @@ public final class GradleBuildMetricsCollector  implements BuildListener, Projec
     @Override
     public void beforeEvaluate(Project project) {
         long now = clock.getCurrentTime();
-        buildProfile.getProjectProfile(project.getPath()).getConfigurationOperation().setStart(now);
+        buildMetrics.getProjectProfile(project.getPath()).getConfigurationOperation().setStart(now);
     }
 
     @Override
     public void afterEvaluate(Project project, ProjectState state) {
         long now = clock.getCurrentTime();
-        ProjectProfile projectProfile = buildProfile.getProjectProfile(project.getPath());
-        projectProfile.getConfigurationOperation().setFinish(now);
+        ProjectMetrics projectMetrics = buildMetrics.getProjectProfile(project.getPath());
+        projectMetrics.getConfigurationOperation().setFinish(now);
     }
 
     // TaskExecutionListener
@@ -140,16 +140,16 @@ public final class GradleBuildMetricsCollector  implements BuildListener, Projec
     public void beforeExecute(Task task) {
         long now = clock.getCurrentTime();
         Project project = task.getProject();
-        ProjectProfile projectProfile = buildProfile.getProjectProfile(project.getPath());
-        projectProfile.getTaskProfile(task.getPath()).setStart(now);
+        ProjectMetrics projectMetrics = buildMetrics.getProjectProfile(project.getPath());
+        projectMetrics.getTaskProfile(task.getPath()).setStart(now);
     }
 
     @Override
     public void afterExecute(Task task, TaskState state) {
         long now = clock.getCurrentTime();
         Project project = task.getProject();
-        ProjectProfile projectProfile = buildProfile.getProjectProfile(project.getPath());
-        TaskExecution taskExecution = projectProfile.getTaskProfile(task.getPath());
+        ProjectMetrics projectMetrics = buildMetrics.getProjectProfile(project.getPath());
+        TaskExecution taskExecution = projectMetrics.getTaskProfile(task.getPath());
         taskExecution.setFinish(now);
         taskExecution.completed(state);
     }
@@ -157,22 +157,26 @@ public final class GradleBuildMetricsCollector  implements BuildListener, Projec
     @Override
     public void beforeResolve(ResolvableDependencies dependencies) {
         long now = clock.getCurrentTime();
-        buildProfile.getDependencySetProfile(dependencies.getPath()).setStart(now);
+        buildMetrics.getDependencySetProfile(dependencies.getPath()).setStart(now);
     }
 
     @Override
     public void afterResolve(ResolvableDependencies dependencies) {
         long now = clock.getCurrentTime();
-        buildProfile.getDependencySetProfile(dependencies.getPath()).setFinish(now);
+        buildMetrics.getDependencySetProfile(dependencies.getPath()).setFinish(now);
     }
 
     @Override
     public void projectsEvaluated(Gradle gradle) {
         checkNotNull(gradle);
 
+        /*
+         * There is no way for users to hook in before the build starts, this method is mostly used by internal listeners in Gradle
+         * @see <a href="https://github.com/gradle/gradle/issues/4315">https://github.com/gradle/gradle/issues/4315</a>
+         */
         buildStarted(gradle);
 
-        buildProfile.setProjectsEvaluated(clock.getCurrentTime());
+        buildMetrics.setProjectsEvaluated(clock.getCurrentTime());
         StartParameter startParameter = gradle.getStartParameter();
         checkState(!startParameter.isOffline(), "Collectors should not be registered when Gradle is running offline");
         try {
@@ -237,10 +241,10 @@ public final class GradleBuildMetricsCollector  implements BuildListener, Projec
 
     @Override
     public void buildFinished(BuildResult result) {
-        buildProfile.setSuccessful(result.getFailure() == null);
+        buildMetrics.setSuccessful(result.getFailure() == null);
     }
 
-    public void buildFinished(BuildProfile result) {
+    public void buildFinished(BuildMetrics result) {
         checkNotNull(result);
         long startupElapsed = result.getElapsedStartup();
         long settingsElapsed = result.getElapsedSettings();
@@ -256,8 +260,8 @@ public final class GradleBuildMetricsCollector  implements BuildListener, Projec
         expectedTotal += settingsElapsed;
         dispatcher.event("projectsLoading", "configure", loadingElapsed);
         expectedTotal += loadingElapsed;
-        for (ProjectProfile projectProfile : result.getProjects()) {
-            ContinuousOperation configurationOperation = projectProfile.getConfigurationOperation();
+        for (ProjectMetrics projectMetrics : result.getProjects()) {
+            ContinuousOperation configurationOperation = projectMetrics.getConfigurationOperation();
             long configurationElapsed = configurationOperation.getElapsedTime();
             dispatcher.event(configurationOperation.getDescription(), "configure", configurationElapsed);
             expectedTotal += configurationElapsed;
@@ -271,9 +275,9 @@ public final class GradleBuildMetricsCollector  implements BuildListener, Projec
         }
 
         // Execution
-        for (ProjectProfile projectProfile : result.getProjects()) {
+        for (ProjectMetrics projectMetrics : result.getProjects()) {
             long totalTaskElapsed = 0;
-            CompositeOperation<TaskExecution> tasks = projectProfile.getTasks();
+            CompositeOperation<TaskExecution> tasks = projectMetrics.getTasks();
             for (TaskExecution execution : tasks.getOperations()) {
                 Result taskResult = getTaskExecutionResult(execution);
                 long taskElapsed = execution.getElapsedTime();

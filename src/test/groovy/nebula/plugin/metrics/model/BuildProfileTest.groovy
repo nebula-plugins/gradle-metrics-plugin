@@ -13,7 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package nebula.plugin.metrics.model.profile
+package nebula.plugin.metrics.model
+
 
 import org.gradle.StartParameter
 import org.gradle.api.tasks.TaskState
@@ -23,7 +24,7 @@ import spock.lang.Subject
 @Subject(BuildProfileTest)
 class BuildProfileTest extends Specification {
 
-    private profile = new BuildProfile(new StartParameter())
+    private profile = new BuildMetrics(new StartParameter())
 
     def "creates dependency set profile on first get"() {
         expect:
@@ -72,7 +73,7 @@ class BuildProfileTest extends Specification {
         param.setExcludedTaskNames(["one", "two"])
 
         when:
-        profile = new BuildProfile(param)
+        profile = new BuildMetrics(param)
 
         then:
         profile.buildDescription.contains(" -x one -x two foo bar")
@@ -83,7 +84,7 @@ class BuildProfileTest extends Specification {
         def param = new StartParameter()
 
         when:
-        profile = new BuildProfile(param)
+        profile = new BuildMetrics(param)
 
         then:
         profile.buildDescription.contains(" (no tasks specified)")

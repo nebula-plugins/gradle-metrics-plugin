@@ -13,15 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package nebula.plugin.metrics.model.profile
+package nebula.plugin.metrics.model
 
+import nebula.plugin.metrics.model.ProjectMetrics
 import org.gradle.api.tasks.TaskState
 import spock.lang.Specification
 
-class ProjectProfileTest extends Specification {
+class ProjectMetricsTest extends Specification {
 
     def "provides sorted tasks"() {
-        def profile = new ProjectProfile(":foo")
+        def profile = new ProjectMetrics(":foo")
         def a = profile.getTaskProfile("foo:a").completed(Stub(TaskState)).setStart(100).setFinish(300)
         def b = profile.getTaskProfile("foo:b").completed(Stub(TaskState)).setStart(300).setFinish(300)
         def c = profile.getTaskProfile("foo:c").completed(Stub(TaskState)).setStart(300).setFinish(300)

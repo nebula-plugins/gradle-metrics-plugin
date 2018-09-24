@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package nebula.plugin.metrics.model.profile;
+package nebula.plugin.metrics.model;
 
 import org.gradle.util.CollectionUtils;
 
@@ -21,12 +21,12 @@ import java.util.HashMap;
 import java.util.List;
 import static com.google.common.base.Preconditions.checkNotNull;
 
-public class ProjectProfile extends Operation {
+public class ProjectMetrics extends Operation {
     private HashMap<String, TaskExecution> tasks = new HashMap<String, TaskExecution>();
     private final ContinuousOperation configurationOperation;
     private String projectPath;
 
-    public ProjectProfile(String projectPath) {
+    public ProjectMetrics(String projectPath) {
         checkNotNull(projectPath);
         this.projectPath = projectPath;
         this.configurationOperation = new ContinuousOperation(projectPath);
@@ -48,7 +48,7 @@ public class ProjectProfile extends Operation {
      * Returns the task executions for this project.
      */
     public CompositeOperation<TaskExecution> getTasks() {
-        List<TaskExecution> taskExecutions = CollectionUtils.sort(tasks.values(), Operation.slowestFirst());
+        List<TaskExecution> taskExecutions = CollectionUtils.sort(tasks.values(), slowestFirst());
         return new CompositeOperation<TaskExecution>(taskExecutions);
     }
 
