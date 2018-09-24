@@ -16,6 +16,7 @@
 package nebula.plugin.metrics.model.profile;
 
 import org.gradle.api.tasks.TaskState;
+import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
  * Container for task profiling information.
@@ -30,6 +31,7 @@ public class TaskExecution extends ContinuousOperation {
 
     public TaskExecution(String taskPath) {
         super(taskPath);
+        checkNotNull(taskPath);
         this.path = taskPath;
     }
 
@@ -49,6 +51,7 @@ public class TaskExecution extends ContinuousOperation {
     }
 
     public TaskExecution completed(TaskState state) {
+        checkNotNull(state);
         this.state = state;
         return this;
     }

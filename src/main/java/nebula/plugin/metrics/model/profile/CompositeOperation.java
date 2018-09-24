@@ -19,6 +19,7 @@ import com.google.common.collect.Lists;
 
 import java.util.Iterator;
 import java.util.List;
+import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
  * An operation made up of other operations of type T.
@@ -27,6 +28,7 @@ public class CompositeOperation<T extends Operation> extends Operation implement
     private final List<T> children;
 
     public CompositeOperation(Iterable<? extends T> children) {
+        checkNotNull(children);
         this.children = Lists.newArrayList(children);
     }
 

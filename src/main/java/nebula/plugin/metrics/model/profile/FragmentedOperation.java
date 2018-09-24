@@ -19,12 +19,14 @@ package nebula.plugin.metrics.model.profile;
 import com.google.common.collect.Sets;
 
 import java.util.Collection;
+import static com.google.common.base.Preconditions.checkNotNull;
 
 public class FragmentedOperation extends Operation {
     private final String description;
     private final Collection<ContinuousOperation> children = Sets.newHashSet();
 
     public FragmentedOperation(String description) {
+        checkNotNull(description);
         this.description = description;
     }
 

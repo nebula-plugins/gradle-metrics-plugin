@@ -23,6 +23,9 @@ import groovy.lang.Closure;
 import nebula.plugin.metrics.collector.GradleBuildMetricsCollector;
 import nebula.plugin.metrics.collector.GradleTestSuiteCollector;
 import nebula.plugin.metrics.dispatcher.*;
+import nebula.plugin.metrics.time.BuildStartedTime;
+import nebula.plugin.metrics.time.Clock;
+import nebula.plugin.metrics.time.MonotonicClock;
 import org.gradle.BuildResult;
 import org.gradle.StartParameter;
 import org.gradle.api.Action;
@@ -49,6 +52,7 @@ import static com.google.common.base.Preconditions.checkState;
  */
 public final class MetricsPlugin implements Plugin<Project> {
     private final Logger logger = MetricsLoggerFactory.getLogger(MetricsPlugin.class);
+    private final Clock clock = new MonotonicClock();
     private MetricsDispatcher dispatcher = new UninitializedMetricsDispatcher();
     /**
      * Supplier allowing the dispatcher to be fetched lazily, so we can replace the instance for testing.
@@ -66,6 +70,10 @@ public final class MetricsPlugin implements Plugin<Project> {
     @Override
     public void apply(Project project) {
         checkNotNull(project);
+
+        //This is probably the easiest/best way to set the BuildStartedTime. It probably won't be accurate as the one set by gradle internals which we don't have access to.
+        BuildStartedTime buildStartedTime = BuildStartedTime.startingAt(System.currentTimeMillis());
+
         checkState(project == project.getRootProject(), "The metrics plugin may only be applied to the root project");
         ExtensionContainer extensions = project.getExtensions();
         extensions.add("metrics", new MetricsPluginExtension());
@@ -83,7 +91,7 @@ public final class MetricsPlugin implements Plugin<Project> {
             return;
         }
 
-        configureRootProjectCollectors(project);
+        configureRootProjectCollectors(project, buildStartedTime);
         project.afterEvaluate(new Action<Project>() {
             @Override
             public void execute(Project project) {
@@ -122,9 +130,9 @@ public final class MetricsPlugin implements Plugin<Project> {
         this.dispatcher = checkNotNull(dispatcher);
     }
 
-    private void configureRootProjectCollectors(Project rootProject) {
-        Gradle gradle = rootProject.getGradle();
-        final GradleBuildMetricsCollector gradleCollector = new GradleBuildMetricsCollector(dispatcherSupplier);
+    private void configureRootProjectCollectors(Project rootProject, BuildStartedTime buildStartedTime) {
+        final Gradle gradle = rootProject.getGradle();
+        final GradleBuildMetricsCollector gradleCollector = new GradleBuildMetricsCollector(dispatcherSupplier, buildStartedTime, clock);
         gradle.addListener(gradleCollector);
         gradle.buildFinished(new Closure(null) {
             protected Object doCall(Object arguments) {

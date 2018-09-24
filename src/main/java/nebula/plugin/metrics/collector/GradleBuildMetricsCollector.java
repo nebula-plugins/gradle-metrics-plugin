@@ -1,3 +1,19 @@
+/*
+ *  Copyright 2015-2018 Netflix, Inc.
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ *
+ */
 package nebula.plugin.metrics.collector;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -14,6 +30,8 @@ import nebula.plugin.metrics.model.profile.CompositeOperation;
 import nebula.plugin.metrics.model.profile.ContinuousOperation;
 import nebula.plugin.metrics.model.profile.ProjectProfile;
 import nebula.plugin.metrics.model.profile.TaskExecution;
+import nebula.plugin.metrics.time.BuildStartedTime;
+import nebula.plugin.metrics.time.Clock;
 import org.gradle.BuildListener;
 import org.gradle.BuildResult;
 import org.gradle.StartParameter;
@@ -29,8 +47,6 @@ import org.gradle.api.initialization.Settings;
 import org.gradle.api.invocation.Gradle;
 import org.gradle.api.tasks.TaskState;
 import org.gradle.initialization.BuildCompletionListener;
-import org.gradle.internal.buildevents.BuildStartedTime;
-import org.gradle.internal.time.Clock;
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
 
@@ -47,24 +63,31 @@ public final class GradleBuildMetricsCollector  implements BuildListener, Projec
 
     private static final long TIMEOUT_MS = 5000;
 
-    private final Logger logger = MetricsLoggerFactory.getLogger(GradleCollector.class);
+    private final Logger logger = MetricsLoggerFactory.getLogger(GradleBuildMetricsCollector.class);
     private final Supplier<MetricsDispatcher> dispatcherSupplier;
 
     private final AtomicBoolean buildProfileComplete = new AtomicBoolean(false);
     private final AtomicBoolean buildResultComplete = new AtomicBoolean(false);
 
-    public GradleBuildMetricsCollector(Supplier<MetricsDispatcher> dispatcherSupplier) {
+    public GradleBuildMetricsCollector(Supplier<MetricsDispatcher> dispatcherSupplier, BuildStartedTime buildStartedTime, Clock clock) {
+        checkNotNull(dispatcherSupplier);
+        checkNotNull(buildStartedTime);
+        checkNotNull(clock);
         this.dispatcherSupplier = checkNotNull(dispatcherSupplier);
-        this.buildStartedTime = null;
-        this.clock = null;
+        this.buildStartedTime = buildStartedTime;
+        this.clock = clock;
     }
 
     private final BuildStartedTime buildStartedTime;
     private final Clock clock;
-    private final ThreadLocal<ContinuousOperation> currentTransform = new ThreadLocal<ContinuousOperation>();
     private BuildProfile buildProfile;
 
-    // BuildListener
+    /**
+     * This method is called explicity from projectsEvaluated.
+     * There is no way for users to hook in before the build starts, this method is mostly used by internal listeners in Gradle
+     * @see <a href="https://github.com/gradle/gradle/issues/4315">https://github.com/gradle/gradle/issues/4315</a>
+     * @param gradle
+     */
     @Override
     public void buildStarted(Gradle gradle) {
         checkNotNull(gradle);
@@ -131,7 +154,6 @@ public final class GradleBuildMetricsCollector  implements BuildListener, Projec
         taskExecution.completed(state);
     }
 
-    // DependencyResolutionListener
     @Override
     public void beforeResolve(ResolvableDependencies dependencies) {
         long now = clock.getCurrentTime();
@@ -147,6 +169,9 @@ public final class GradleBuildMetricsCollector  implements BuildListener, Projec
     @Override
     public void projectsEvaluated(Gradle gradle) {
         checkNotNull(gradle);
+
+        buildStarted(gradle);
+
         buildProfile.setProjectsEvaluated(clock.getCurrentTime());
         StartParameter startParameter = gradle.getStartParameter();
         checkState(!startParameter.isOffline(), "Collectors should not be registered when Gradle is running offline");
@@ -315,6 +340,4 @@ public final class GradleBuildMetricsCollector  implements BuildListener, Projec
         }
         return result;
     }
-
-
 }

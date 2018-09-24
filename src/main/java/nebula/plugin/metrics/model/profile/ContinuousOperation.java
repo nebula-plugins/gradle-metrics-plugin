@@ -15,6 +15,8 @@
  */
 package nebula.plugin.metrics.model.profile;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 /**
  * A continuous operation with a start and finish time.
  */
@@ -24,6 +26,7 @@ public class ContinuousOperation extends Operation {
     private String description;
 
     public ContinuousOperation(String description) {
+        checkNotNull(description);
         this.description = description;
     }
 

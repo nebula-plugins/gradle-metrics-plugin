@@ -19,6 +19,7 @@ import org.gradle.util.CollectionUtils;
 
 import java.util.HashMap;
 import java.util.List;
+import static com.google.common.base.Preconditions.checkNotNull;
 
 public class ProjectProfile extends Operation {
     private HashMap<String, TaskExecution> tasks = new HashMap<String, TaskExecution>();
@@ -26,6 +27,7 @@ public class ProjectProfile extends Operation {
     private String projectPath;
 
     public ProjectProfile(String projectPath) {
+        checkNotNull(projectPath);
         this.projectPath = projectPath;
         this.configurationOperation = new ContinuousOperation(projectPath);
     }
