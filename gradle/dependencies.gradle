@@ -58,12 +58,12 @@ dependencies {
     plugin 'org.apache.commons:commons-lang3:3.4' // also transitive of Jest
     plugin 'commons-io:commons-io:2.5'
 
-    plugin 'com.netflix.nebula:gradle-info-plugin:3.+', optional
+    plugin 'com.netflix.nebula:gradle-info-plugin:4.+', optional
 
     compileOnly 'org.projectlombok:lombok:1.16.6'
     compileOnly 'com.google.code.findbugs:jsr305:3.0.0'
 
-    testCompile 'com.netflix.nebula:nebula-test:3.1.0'
+    testCompile 'com.netflix.nebula:nebula-test:7.+'
     testCompile "com.google.guava:guava-testlib:$versions.guava"
     integTestCompile 'com.github.tlrx:elasticsearch-test:1.2.1'
 }
