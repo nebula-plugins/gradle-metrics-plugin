@@ -65,7 +65,6 @@ class InfoTest extends Specification {
         expect:
         mapper.writeValueAsString(info) == expectedResult
 
-        
         where:
         description                       | version     | runtimeName                         | vendor         | expectedResult
         "is Oracle"                       | "1.8.0_181" | "Oracle"                            | ""             | '{"build":{"type":null},"scm":{"type":null},"ci":{"type":null},"environmentVariables":[{"key":"mykey1","value":"myvalue1"},{"key":"mykey2","value":"myvalue2"}],"systemProperties":[{"key":"java.runtime.name","value":"Oracle"},{"key":"java.version","value":"1.8.0_181"},{"key":"java.vm.vendor","value":""}],"javaVersion":"1.8.0_181","detailedJavaVersion":"Oracle 1.8.0_181"}'

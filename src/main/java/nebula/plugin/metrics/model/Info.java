@@ -30,7 +30,7 @@ import java.util.Map;
  * Environment.
  */
 @Value
-@JsonPropertyOrder({"build", "scm", "ci", "environmentVariables", "systemProperties"})
+@JsonPropertyOrder({"build", "scm", "ci", "environmentVariables", "systemProperties", "javaVersion", "detailedJavaVersion"})
 public class Info {
     private static final String UNKNOWN = "UNKNOWN";
     private static final String OPEN_JDK = "OpenJDK";
