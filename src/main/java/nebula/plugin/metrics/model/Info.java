@@ -30,8 +30,16 @@ import java.util.Map;
  * Environment.
  */
 @Value
-@JsonPropertyOrder({"build", "scm", "ci", "environmentVariables", "systemProperties"})
+@JsonPropertyOrder({"build", "scm", "ci", "environmentVariables", "systemProperties", "javaVersion", "detailedJavaVersion"})
 public class Info {
+    private static final String UNKNOWN = "UNKNOWN";
+    private static final String OPEN_JDK = "OpenJDK";
+    private static final String ORACLE_JDK = "Oracle";
+    private static final String SE_RUNTIME_ENVIRONMENT = "Java(TM) SE Runtime Environment";
+    private static final String HOTSPOT = "HotSpot(TM)";
+    private static final String EMPTY_STRING = "";
+    private static final String SPACE = " ";
+
     public static Info create(GradleToolContainer tool) {
         return create(tool, new UnknownTool(), new UnknownTool());
     }
@@ -80,11 +88,42 @@ public class Info {
     private List<KeyValue> systemProperties;
 
     public String getJavaVersion() {
+        String javaVersion = findProperty("java.version");
+        return !javaVersion.isEmpty() ? javaVersion : "unknown";
+    }
+
+    public String getDetailedJavaVersion() {
+        String javaRuntimeName = findProperty("java.runtime.name");
+        String javaVersion = findProperty("java.version");
+        String javaVendor = findProperty("java.vm.vendor");
+        return determineJavaVersion(javaRuntimeName, javaVersion, javaVendor);
+    }
+
+    private String findProperty(String propertyName) {
         for (KeyValue systemProperty : systemProperties) {
-            if (systemProperty.getKey().equals("java.version")) {
+            if (systemProperty.getKey().equals(propertyName)) {
                 return systemProperty.getValue();
             }
         }
-        return "unknown";
+        return EMPTY_STRING;
+    }
+
+    private String determineJavaVersion(String javaRuntimeName, String javaVersion, String javaVendor) {
+        if(javaVersion.isEmpty()) {
+          return UNKNOWN.toLowerCase();
+        }
+
+        String javaRuntimeNameLowerCase = javaRuntimeName.toLowerCase();
+        if(javaRuntimeName.toLowerCase().contains(OPEN_JDK.toLowerCase())) {
+            String version = OPEN_JDK.concat(SPACE).concat(javaVersion);
+            if(javaVendor.toLowerCase().contains("azul")) {
+                version = version.concat("-zulu");
+            }
+            return version;
+        } else if(javaRuntimeNameLowerCase.contains(SE_RUNTIME_ENVIRONMENT.toLowerCase()) || javaRuntimeNameLowerCase.contains(HOTSPOT.toLowerCase()) || javaRuntimeNameLowerCase.contains(ORACLE_JDK.toLowerCase())) {
+            return ORACLE_JDK.concat(SPACE).concat(javaVersion);
+        } else {
+            return UNKNOWN.concat(SPACE).concat(javaVersion);
+        }
     }
 }
