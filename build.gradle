@@ -27,7 +27,7 @@ apply from: 'gradle/dependencies.gradle'
 description 'Gradle metrics plugin'
 
 lombok {
-    version = '1.16.20' // or whatever version you require
+    version = '1.16.20'
 }
 
 contacts {
