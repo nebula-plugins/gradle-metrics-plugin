@@ -60,7 +60,6 @@ dependencies {
 
     plugin 'com.netflix.nebula:gradle-info-plugin:4.+', optional
 
-    compileOnly 'org.projectlombok:lombok:1.16.6'
     compileOnly 'com.google.code.findbugs:jsr305:3.0.0'
 
     testCompile 'com.netflix.nebula:nebula-test:7.+'
