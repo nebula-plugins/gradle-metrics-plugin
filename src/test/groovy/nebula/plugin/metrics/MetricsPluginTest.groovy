@@ -17,6 +17,8 @@
 
 package nebula.plugin.metrics
 
+import com.google.common.base.Optional
+import com.google.common.util.concurrent.Service
 import nebula.plugin.metrics.dispatcher.MetricsDispatcher
 import nebula.test.ProjectSpec
 import org.gradle.BuildListener
@@ -27,6 +29,9 @@ import org.gradle.api.internal.project.DefaultProject
 import org.gradle.invocation.DefaultGradle
 
 class MetricsPluginTest extends ProjectSpec {
+
+    def mockService = Mock(Service)
+
     def 'plugin can only be applied to root project'() {
         given:
         def subproject = addSubproject('subproject')
@@ -44,6 +49,8 @@ class MetricsPluginTest extends ProjectSpec {
             dispatcher.isRunning() >> true
             dispatcher
         }
+        1 * dispatcher.stopAsync() >> mockService
+        1 * dispatcher.receipt() >> Optional.of("")
 
         DefaultGradle gradle = project.gradle
 
@@ -66,6 +73,8 @@ class MetricsPluginTest extends ProjectSpec {
 
         then:
         1 * dispatcher.result(_)
+        1 * dispatcher.stopAsync() >> mockService
+        1 * dispatcher.receipt() >> Optional.of("")
     }
 
     BuildListener buildListenerBroadcaster(Project project) {
