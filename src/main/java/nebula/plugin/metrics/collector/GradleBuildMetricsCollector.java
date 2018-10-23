@@ -46,7 +46,6 @@ import org.gradle.api.execution.TaskExecutionListener;
 import org.gradle.api.initialization.Settings;
 import org.gradle.api.invocation.Gradle;
 import org.gradle.api.tasks.TaskState;
-import org.gradle.initialization.BuildCompletionListener;
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
 
@@ -59,7 +58,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 import static org.apache.commons.lang3.exception.ExceptionUtils.getRootCauseMessage;
 
-public final class GradleBuildMetricsCollector implements BuildListener, ProjectEvaluationListener, TaskExecutionListener, DependencyResolutionListener, BuildCompletionListener {
+public final class GradleBuildMetricsCollector implements BuildListener, ProjectEvaluationListener, TaskExecutionListener, DependencyResolutionListener {
 
     private static final long TIMEOUT_MS = 5000;
 
@@ -107,18 +106,6 @@ public final class GradleBuildMetricsCollector implements BuildListener, Project
     public void projectsLoaded(Gradle gradle) {
         checkNotNull(gradle);
         buildMetrics.setProjectsLoaded(clock.getCurrentTime());
-    }
-
-    @Override
-    public void completed() {
-        if (buildMetrics != null) {
-            buildMetrics.setBuildFinished(clock.getCurrentTime());
-            try {
-                buildFinished(buildMetrics);
-            } finally {
-                buildMetrics = null;
-            }
-        }
     }
 
     // ProjectEvaluationListener
@@ -241,7 +228,10 @@ public final class GradleBuildMetricsCollector implements BuildListener, Project
 
     @Override
     public void buildFinished(BuildResult result) {
+        buildMetrics.setBuildFinished(clock.getCurrentTime());
+        buildFinished(buildMetrics);
         buildMetrics.setSuccessful(result.getFailure() == null);
+        buildMetrics = null;
     }
 
     public void buildFinished(BuildMetrics result) {
