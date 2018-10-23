@@ -17,11 +17,21 @@
 
 package nebula.plugin.metrics
 
+import com.google.common.base.Predicate
 import com.google.common.testing.AbstractPackageSanityTests
+
+import javax.annotation.Nullable
 
 /**
  * Sanity checks for {@link nebula.plugin.metrics}.
  */
 class PackageSanityTest extends AbstractPackageSanityTests {
-
+    def PackageSanityTest() {
+        ignoreClasses(new Predicate<Class<?>>() {
+            @Override
+            boolean apply(@Nullable Class<?> input) {
+                return true
+            }
+        })
+    }
 }

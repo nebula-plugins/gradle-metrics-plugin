@@ -36,7 +36,7 @@ import org.gradle.api.invocation.Gradle;
 import org.gradle.api.plugins.ExtensionContainer;
 import org.gradle.api.tasks.TaskContainer;
 import org.gradle.api.tasks.testing.Test;
-import org.gradle.internal.service.scopes.BuildScopeServices;
+import org.gradle.internal.scan.time.BuildScanBuildStartedTime;
 import org.slf4j.Logger;
 
 import javax.inject.Inject;
@@ -64,15 +64,19 @@ public final class MetricsPlugin implements Plugin<Project> {
         }
     };
 
+    private final BuildScanBuildStartedTime buildScanBuildStartedTime;
+
     @Inject
-    BuildScopeServices buildScopeServices;
+    public MetricsPlugin(BuildScanBuildStartedTime buildScanBuildStartedTime) {
+        this.buildScanBuildStartedTime = buildScanBuildStartedTime;
+    }
 
     @Override
     public void apply(Project project) {
         checkNotNull(project);
 
-        //This is probably the easiest/best way to set the BuildStartedTime. It probably won't be accurate as the one set by gradle internals which we don't have access to.
-        BuildStartedTime buildStartedTime = BuildStartedTime.startingAt(System.currentTimeMillis());
+        //Using internal API to retrieve build start time but still storing it in our own data structure
+        BuildStartedTime buildStartedTime = BuildStartedTime.startingAt(buildScanBuildStartedTime.getBuildStartedTime());
 
         checkState(project == project.getRootProject(), "The metrics plugin may only be applied to the root project");
         ExtensionContainer extensions = project.getExtensions();
