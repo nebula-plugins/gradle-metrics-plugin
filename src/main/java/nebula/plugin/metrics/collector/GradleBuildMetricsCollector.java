@@ -108,6 +108,7 @@ public final class GradleBuildMetricsCollector implements BuildListener, Project
     // ProjectEvaluationListener
     @Override
     public void beforeEvaluate(Project project) {
+        initializeBuildMetrics(project.getGradle());
         long now = clock.getCurrentTime();
         buildMetrics.getProjectProfile(project.getPath()).getConfigurationOperation().setStart(now);
     }
