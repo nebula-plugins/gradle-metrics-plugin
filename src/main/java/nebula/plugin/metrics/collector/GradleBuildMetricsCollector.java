@@ -228,10 +228,12 @@ public final class GradleBuildMetricsCollector implements BuildListener, Project
 
     @Override
     public void buildFinished(BuildResult result) {
-        buildMetrics.setBuildFinished(clock.getCurrentTime());
-        buildFinished(buildMetrics);
-        buildMetrics.setSuccessful(result.getFailure() == null);
-        buildMetrics = null;
+        if(buildMetrics != null) {
+            buildMetrics.setBuildFinished(clock.getCurrentTime());
+            buildFinished(buildMetrics);
+            buildMetrics.setSuccessful(result.getFailure() == null);
+            buildMetrics = null;
+        }
     }
 
     public void buildFinished(BuildMetrics result) {
