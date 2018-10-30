@@ -32,11 +32,11 @@ import org.gradle.api.Action;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 import org.gradle.api.Task;
+import org.gradle.api.invocation.BuildInvocationDetails;
 import org.gradle.api.invocation.Gradle;
 import org.gradle.api.plugins.ExtensionContainer;
 import org.gradle.api.tasks.TaskContainer;
 import org.gradle.api.tasks.testing.Test;
-import org.gradle.internal.scan.time.BuildScanBuildStartedTime;
 import org.slf4j.Logger;
 
 import javax.inject.Inject;
@@ -64,11 +64,11 @@ public final class MetricsPlugin implements Plugin<Project> {
         }
     };
 
-    private final BuildScanBuildStartedTime buildScanBuildStartedTime;
+    private final BuildInvocationDetails buildInvocationDetails;
 
     @Inject
-    public MetricsPlugin(BuildScanBuildStartedTime buildScanBuildStartedTime) {
-        this.buildScanBuildStartedTime = buildScanBuildStartedTime;
+    public MetricsPlugin(BuildInvocationDetails buildInvocationDetails) {
+        this.buildInvocationDetails = buildInvocationDetails;
     }
 
     @Override
@@ -76,7 +76,7 @@ public final class MetricsPlugin implements Plugin<Project> {
         checkNotNull(project);
 
         //Using internal API to retrieve build start time but still storing it in our own data structure
-        BuildStartedTime buildStartedTime = BuildStartedTime.startingAt(buildScanBuildStartedTime.getBuildStartedTime());
+        BuildStartedTime buildStartedTime = BuildStartedTime.startingAt(buildInvocationDetails.getBuildStartedTime());
 
         checkState(project == project.getRootProject(), "The metrics plugin may only be applied to the root project");
         ExtensionContainer extensions = project.getExtensions();
