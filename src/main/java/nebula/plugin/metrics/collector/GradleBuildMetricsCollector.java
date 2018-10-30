@@ -90,10 +90,7 @@ public final class GradleBuildMetricsCollector implements BuildListener, Project
     @Override
     public void buildStarted(Gradle gradle) {
         checkNotNull(gradle);
-        long now = clock.getCurrentTime();
-        buildMetrics = new BuildMetrics(gradle.getStartParameter());
-        buildMetrics.setBuildStarted(now);
-        buildMetrics.setProfilingStarted(buildStartedTime.getStartTime());
+        initializeBuildMetrics(gradle);
     }
 
     @Override
@@ -117,6 +114,7 @@ public final class GradleBuildMetricsCollector implements BuildListener, Project
 
     @Override
     public void afterEvaluate(Project project, ProjectState state) {
+        initializeBuildMetrics(project.getGradle());
         long now = clock.getCurrentTime();
         ProjectMetrics projectMetrics = buildMetrics.getProjectProfile(project.getPath());
         projectMetrics.getConfigurationOperation().setFinish(now);
@@ -125,6 +123,7 @@ public final class GradleBuildMetricsCollector implements BuildListener, Project
     // TaskExecutionListener
     @Override
     public void beforeExecute(Task task) {
+        initializeBuildMetrics(task.getProject().getGradle());
         long now = clock.getCurrentTime();
         Project project = task.getProject();
         ProjectMetrics projectMetrics = buildMetrics.getProjectProfile(project.getPath());
@@ -133,6 +132,7 @@ public final class GradleBuildMetricsCollector implements BuildListener, Project
 
     @Override
     public void afterExecute(Task task, TaskState state) {
+        initializeBuildMetrics(task.getProject().getGradle());
         long now = clock.getCurrentTime();
         Project project = task.getProject();
         ProjectMetrics projectMetrics = buildMetrics.getProjectProfile(project.getPath());
@@ -153,9 +153,20 @@ public final class GradleBuildMetricsCollector implements BuildListener, Project
         buildMetrics.getDependencySetProfile(dependencies.getPath()).setFinish(now);
     }
 
+    private void initializeBuildMetrics(Gradle gradle) {
+        if(buildMetrics != null) {
+            return;
+        }
+        long now = clock.getCurrentTime();
+        buildMetrics = new BuildMetrics(gradle.getStartParameter());
+        buildMetrics.setBuildStarted(buildStartedTime.getStartTime());
+        buildMetrics.setProfilingStarted(now);
+    }
+
     @Override
     public void projectsEvaluated(Gradle gradle) {
         checkNotNull(gradle);
+        initializeBuildMetrics(gradle);
 
         /*
          * There is no way for users to hook in before the build starts, this method is mostly used by internal listeners in Gradle
