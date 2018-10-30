@@ -136,7 +136,7 @@ public final class MetricsPlugin implements Plugin<Project> {
 
     private void configureRootProjectCollectors(Project rootProject, BuildStartedTime buildStartedTime) {
         final Gradle gradle = rootProject.getGradle();
-        final GradleBuildMetricsCollector gradleCollector = new GradleBuildMetricsCollector(dispatcherSupplier, buildStartedTime, clock);
+        final GradleBuildMetricsCollector gradleCollector = new GradleBuildMetricsCollector(dispatcherSupplier, gradle, buildStartedTime, clock);
         gradle.addListener(gradleCollector);
         gradle.buildFinished(new Closure(null) {
             protected Object doCall(Object arguments) {
