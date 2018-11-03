@@ -30,6 +30,7 @@ import nebula.plugin.metrics.model.CompositeOperation;
 import nebula.plugin.metrics.model.ContinuousOperation;
 import nebula.plugin.metrics.model.ProjectMetrics;
 import nebula.plugin.metrics.model.TaskExecution;
+import nebula.plugin.metrics.time.BuildStartedTime;
 import nebula.plugin.metrics.time.Clock;
 import org.gradle.BuildListener;
 import org.gradle.BuildResult;
@@ -67,12 +68,12 @@ public final class GradleBuildMetricsCollector implements BuildListener, Project
     private final AtomicBoolean buildProfileComplete = new AtomicBoolean(false);
     private final AtomicBoolean buildResultComplete = new AtomicBoolean(false);
 
-    public GradleBuildMetricsCollector(Supplier<MetricsDispatcher> dispatcherSupplier, BuildMetrics buildMetrics, Clock clock) {
+    public GradleBuildMetricsCollector(Supplier<MetricsDispatcher> dispatcherSupplier, BuildStartedTime buildStartedTime, Gradle gradle, Clock clock) {
         checkNotNull(dispatcherSupplier);
         checkNotNull(clock);
         this.dispatcherSupplier = checkNotNull(dispatcherSupplier);
         this.clock = clock;
-        this.buildMetrics = buildMetrics;
+        this.buildMetrics = initializeBuildMetrics(buildStartedTime, gradle);
     }
 
     private final Clock clock;
@@ -304,6 +305,15 @@ public final class GradleBuildMetricsCollector implements BuildListener, Project
         if (receipt.isPresent()) {
             logger.warn(receipt.get());
         }
+    }
+
+
+    private BuildMetrics initializeBuildMetrics(BuildStartedTime buildStartedTime, Gradle gradle) {
+        long now = clock.getCurrentTime();
+        BuildMetrics buildMetrics = new BuildMetrics(gradle.getStartParameter());
+        buildMetrics.setBuildStarted(buildStartedTime.getStartTime());
+        buildMetrics.setProfilingStarted(now);
+        return buildMetrics;
     }
 
     @VisibleForTesting

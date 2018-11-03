@@ -137,8 +137,7 @@ public final class MetricsPlugin implements Plugin<Project> {
 
     private void configureRootProjectCollectors(Project rootProject, BuildStartedTime buildStartedTime) {
         final Gradle gradle = rootProject.getGradle();
-        BuildMetrics buildMetrics = initializeBuildMetrics(buildStartedTime, gradle);
-        final GradleBuildMetricsCollector gradleCollector = new GradleBuildMetricsCollector(dispatcherSupplier, buildMetrics, clock);
+        final GradleBuildMetricsCollector gradleCollector = new GradleBuildMetricsCollector(dispatcherSupplier, buildStartedTime, gradle, clock);
         gradle.addListener(gradleCollector);
         gradle.buildFinished(new Closure(null) {
             protected Object doCall(Object arguments) {
@@ -161,11 +160,4 @@ public final class MetricsPlugin implements Plugin<Project> {
         }
     }
 
-    private BuildMetrics initializeBuildMetrics(BuildStartedTime buildStartedTime, Gradle gradle) {
-        long now = clock.getCurrentTime();
-        BuildMetrics buildMetrics = new BuildMetrics(gradle.getStartParameter());
-        buildMetrics.setBuildStarted(buildStartedTime.getStartTime());
-        buildMetrics.setProfilingStarted(now);
-        return buildMetrics;
-    }
 }
