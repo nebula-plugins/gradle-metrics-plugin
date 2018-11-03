@@ -23,6 +23,7 @@ import groovy.lang.Closure;
 import nebula.plugin.metrics.collector.GradleBuildMetricsCollector;
 import nebula.plugin.metrics.collector.GradleTestSuiteCollector;
 import nebula.plugin.metrics.dispatcher.*;
+import nebula.plugin.metrics.model.BuildMetrics;
 import nebula.plugin.metrics.time.BuildStartedTime;
 import nebula.plugin.metrics.time.Clock;
 import nebula.plugin.metrics.time.MonotonicClock;
@@ -136,7 +137,8 @@ public final class MetricsPlugin implements Plugin<Project> {
 
     private void configureRootProjectCollectors(Project rootProject, BuildStartedTime buildStartedTime) {
         final Gradle gradle = rootProject.getGradle();
-        final GradleBuildMetricsCollector gradleCollector = new GradleBuildMetricsCollector(dispatcherSupplier, gradle, buildStartedTime, clock);
+        BuildMetrics buildMetrics = initializeBuildMetrics(buildStartedTime, gradle);
+        final GradleBuildMetricsCollector gradleCollector = new GradleBuildMetricsCollector(dispatcherSupplier, buildMetrics, clock);
         gradle.addListener(gradleCollector);
         gradle.buildFinished(new Closure(null) {
             protected Object doCall(Object arguments) {
@@ -157,5 +159,13 @@ public final class MetricsPlugin implements Plugin<Project> {
                 }
             }
         }
+    }
+
+    private BuildMetrics initializeBuildMetrics(BuildStartedTime buildStartedTime, Gradle gradle) {
+        long now = clock.getCurrentTime();
+        BuildMetrics buildMetrics = new BuildMetrics(gradle.getStartParameter());
+        buildMetrics.setBuildStarted(buildStartedTime.getStartTime());
+        buildMetrics.setProfilingStarted(now);
+        return buildMetrics;
     }
 }
