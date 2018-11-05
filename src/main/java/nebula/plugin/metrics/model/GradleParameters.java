@@ -52,7 +52,6 @@ public class GradleParameters {
                 start.isOffline(),
                 start.getProjectCacheDir(),
                 start.isRefreshDependencies(),
-                start.isRecompileScripts(),
                 start.getMaxWorkerCount(),
                 start.isConfigureOnDemand()
         );
@@ -95,8 +94,6 @@ public class GradleParameters {
     private File projectCacheDir;
 
     private boolean refreshDependencies;
-
-    private boolean recompileScripts;
 
     private int maxWorkerCount;
 
