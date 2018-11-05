@@ -73,9 +73,12 @@ public final class GradleBuildMetricsCollector implements BuildListener, Project
         checkNotNull(clock);
         this.dispatcherSupplier = checkNotNull(dispatcherSupplier);
         this.clock = clock;
-        this.buildMetrics = initializeBuildMetrics(buildStartedTime, gradle);
+        this.buildStartedTime = buildStartedTime;
+        this.gradle = gradle;
     }
 
+    private final BuildStartedTime buildStartedTime;
+    private final Gradle gradle;
     private final Clock clock;
     private BuildMetrics buildMetrics;
 
@@ -91,11 +94,13 @@ public final class GradleBuildMetricsCollector implements BuildListener, Project
     @Override
     public void settingsEvaluated(Settings settings) {
         checkNotNull(settings);
+        initializeBuildMetrics();
         buildMetrics.setSettingsEvaluated(clock.getCurrentTime());
     }
 
     @Override
     public void projectsLoaded(Gradle gradle) {
+        initializeBuildMetrics();
         checkNotNull(gradle);
         buildMetrics.setProjectsLoaded(clock.getCurrentTime());
     }
@@ -103,12 +108,14 @@ public final class GradleBuildMetricsCollector implements BuildListener, Project
     // ProjectEvaluationListener
     @Override
     public void beforeEvaluate(Project project) {
+        initializeBuildMetrics();
         long now = clock.getCurrentTime();
         buildMetrics.getProjectProfile(project.getPath()).getConfigurationOperation().setStart(now);
     }
 
     @Override
     public void afterEvaluate(Project project, ProjectState state) {
+        initializeBuildMetrics();
         long now = clock.getCurrentTime();
         ProjectMetrics projectMetrics = buildMetrics.getProjectProfile(project.getPath());
         projectMetrics.getConfigurationOperation().setFinish(now);
@@ -117,6 +124,7 @@ public final class GradleBuildMetricsCollector implements BuildListener, Project
     // TaskExecutionListener
     @Override
     public void beforeExecute(Task task) {
+        initializeBuildMetrics();
         long now = clock.getCurrentTime();
         Project project = task.getProject();
         ProjectMetrics projectMetrics = buildMetrics.getProjectProfile(project.getPath());
@@ -125,6 +133,7 @@ public final class GradleBuildMetricsCollector implements BuildListener, Project
 
     @Override
     public void afterExecute(Task task, TaskState state) {
+        initializeBuildMetrics();
         long now = clock.getCurrentTime();
         Project project = task.getProject();
         ProjectMetrics projectMetrics = buildMetrics.getProjectProfile(project.getPath());
@@ -135,6 +144,7 @@ public final class GradleBuildMetricsCollector implements BuildListener, Project
 
     @Override
     public void beforeResolve(ResolvableDependencies dependencies) {
+        initializeBuildMetrics();
         long now = clock.getCurrentTime();
         buildMetrics.getDependencySetProfile(dependencies.getPath()).setStart(now);
     }
@@ -148,6 +158,7 @@ public final class GradleBuildMetricsCollector implements BuildListener, Project
 
     @Override
     public void projectsEvaluated(Gradle gradle) {
+        initializeBuildMetrics();
         checkNotNull(gradle);
         buildMetrics.setProjectsEvaluated(clock.getCurrentTime());
         StartParameter startParameter = gradle.getStartParameter();
@@ -308,12 +319,15 @@ public final class GradleBuildMetricsCollector implements BuildListener, Project
     }
 
 
-    private BuildMetrics initializeBuildMetrics(BuildStartedTime buildStartedTime, Gradle gradle) {
+    private void initializeBuildMetrics() {
+        if(buildMetrics != null) {
+            return;
+        }
         long now = clock.getCurrentTime();
         BuildMetrics buildMetrics = new BuildMetrics(gradle.getStartParameter());
         buildMetrics.setBuildStarted(buildStartedTime.getStartTime());
         buildMetrics.setProfilingStarted(now);
-        return buildMetrics;
+        this.buildMetrics = buildMetrics;
     }
 
     @VisibleForTesting
