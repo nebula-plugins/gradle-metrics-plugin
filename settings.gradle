@@ -17,5 +17,3 @@
 
 rootProject.name = 'gradle-metrics-plugin'
 
-enableFeaturePreview('STABLE_PUBLISHING')
-
