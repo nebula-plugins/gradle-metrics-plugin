@@ -1,4 +1,10 @@
 {
+    "annotationProcessor": {
+        "org.projectlombok:lombok": {
+            "locked": "1.16.20",
+            "requested": "1.16.20"
+        }
+    },
     "compile": {
         "com.fasterxml.jackson.core:jackson-annotations": {
             "locked": "2.5.0",
@@ -21,7 +27,7 @@
             "requested": "18.0"
         },
         "com.netflix.nebula:gradle-info-plugin": {
-            "locked": "4.0.2",
+            "locked": "4.0.3",
             "requested": "4.+"
         },
         "commons-io:commons-io": {
@@ -79,7 +85,7 @@
             "requested": "18.0"
         },
         "com.netflix.nebula:gradle-info-plugin": {
-            "locked": "4.0.2",
+            "locked": "4.0.3",
             "requested": "4.+"
         },
         "commons-io:commons-io": {
@@ -111,8 +117,8 @@
             "requested": "1.7.2"
         },
         "org.projectlombok:lombok": {
-            "locked": "1.16.6",
-            "requested": "1.16.6"
+            "locked": "1.16.20",
+            "requested": "1.16.20"
         }
     },
     "compileOnly": {
@@ -121,8 +127,8 @@
             "requested": "3.0.0"
         },
         "org.projectlombok:lombok": {
-            "locked": "1.16.6",
-            "requested": "1.16.6"
+            "locked": "1.16.20",
+            "requested": "1.16.20"
         }
     },
     "default": {
@@ -147,7 +153,7 @@
             "requested": "18.0"
         },
         "com.netflix.nebula:gradle-info-plugin": {
-            "locked": "4.0.2",
+            "locked": "4.0.3",
             "requested": "4.+"
         },
         "commons-io:commons-io": {
@@ -209,11 +215,11 @@
             "requested": "18.0"
         },
         "com.netflix.nebula:gradle-info-plugin": {
-            "locked": "4.0.2",
+            "locked": "4.0.3",
             "requested": "4.+"
         },
         "com.netflix.nebula:nebula-test": {
-            "locked": "7.1.0",
+            "locked": "7.1.2",
             "requested": "7.+"
         },
         "commons-io:commons-io": {
@@ -275,11 +281,11 @@
             "requested": "18.0"
         },
         "com.netflix.nebula:gradle-info-plugin": {
-            "locked": "4.0.2",
+            "locked": "4.0.3",
             "requested": "4.+"
         },
         "com.netflix.nebula:nebula-test": {
-            "locked": "7.1.0",
+            "locked": "7.1.2",
             "requested": "7.+"
         },
         "commons-io:commons-io": {
@@ -341,11 +347,11 @@
             "requested": "18.0"
         },
         "com.netflix.nebula:gradle-info-plugin": {
-            "locked": "4.0.2",
+            "locked": "4.0.3",
             "requested": "4.+"
         },
         "com.netflix.nebula:nebula-test": {
-            "locked": "7.1.0",
+            "locked": "7.1.2",
             "requested": "7.+"
         },
         "commons-io:commons-io": {
@@ -407,11 +413,11 @@
             "requested": "18.0"
         },
         "com.netflix.nebula:gradle-info-plugin": {
-            "locked": "4.0.2",
+            "locked": "4.0.3",
             "requested": "4.+"
         },
         "com.netflix.nebula:nebula-test": {
-            "locked": "7.1.0",
+            "locked": "7.1.2",
             "requested": "7.+"
         },
         "commons-io:commons-io": {
@@ -445,12 +451,12 @@
     },
     "jacocoAgent": {
         "org.jacoco:org.jacoco.agent": {
-            "locked": "0.8.1"
+            "locked": "0.8.2"
         }
     },
     "jacocoAnt": {
         "org.jacoco:org.jacoco.ant": {
-            "locked": "0.8.1"
+            "locked": "0.8.2"
         }
     },
     "plugin": {
@@ -475,7 +481,7 @@
             "requested": "18.0"
         },
         "com.netflix.nebula:gradle-info-plugin": {
-            "locked": "4.0.2",
+            "locked": "4.0.3",
             "requested": "4.+"
         },
         "commons-io:commons-io": {
@@ -529,7 +535,7 @@
             "requested": "18.0"
         },
         "com.netflix.nebula:gradle-info-plugin": {
-            "locked": "4.0.2",
+            "locked": "4.0.3",
             "requested": "4.+"
         },
         "commons-io:commons-io": {
@@ -583,7 +589,7 @@
             "requested": "18.0"
         },
         "com.netflix.nebula:gradle-info-plugin": {
-            "locked": "4.0.2",
+            "locked": "4.0.3",
             "requested": "4.+"
         },
         "commons-io:commons-io": {
@@ -615,6 +621,12 @@
             "requested": "1.7.2"
         }
     },
+    "testAnnotationProcessor": {
+        "org.projectlombok:lombok": {
+            "locked": "1.16.20",
+            "requested": "1.16.20"
+        }
+    },
     "testCompile": {
         "com.fasterxml.jackson.core:jackson-annotations": {
             "locked": "2.5.0",
@@ -641,11 +653,11 @@
             "requested": "18.0"
         },
         "com.netflix.nebula:gradle-info-plugin": {
-            "locked": "4.0.2",
+            "locked": "4.0.3",
             "requested": "4.+"
         },
         "com.netflix.nebula:nebula-test": {
-            "locked": "7.1.0",
+            "locked": "7.1.2",
             "requested": "7.+"
         },
         "commons-io:commons-io": {
@@ -703,11 +715,11 @@
             "requested": "18.0"
         },
         "com.netflix.nebula:gradle-info-plugin": {
-            "locked": "4.0.2",
+            "locked": "4.0.3",
             "requested": "4.+"
         },
         "com.netflix.nebula:nebula-test": {
-            "locked": "7.1.0",
+            "locked": "7.1.2",
             "requested": "7.+"
         },
         "commons-io:commons-io": {
@@ -737,6 +749,16 @@
         "org.elasticsearch:elasticsearch": {
             "locked": "1.7.2",
             "requested": "1.7.2"
+        },
+        "org.projectlombok:lombok": {
+            "locked": "1.16.20",
+            "requested": "1.16.20"
+        }
+    },
+    "testCompileOnly": {
+        "org.projectlombok:lombok": {
+            "locked": "1.16.20",
+            "requested": "1.16.20"
         }
     },
     "testRuntime": {
@@ -765,11 +787,11 @@
             "requested": "18.0"
         },
         "com.netflix.nebula:gradle-info-plugin": {
-            "locked": "4.0.2",
+            "locked": "4.0.3",
             "requested": "4.+"
         },
         "com.netflix.nebula:nebula-test": {
-            "locked": "7.1.0",
+            "locked": "7.1.2",
             "requested": "7.+"
         },
         "commons-io:commons-io": {
@@ -827,11 +849,11 @@
             "requested": "18.0"
         },
         "com.netflix.nebula:gradle-info-plugin": {
-            "locked": "4.0.2",
+            "locked": "4.0.3",
             "requested": "4.+"
         },
         "com.netflix.nebula:nebula-test": {
-            "locked": "7.1.0",
+            "locked": "7.1.2",
             "requested": "7.+"
         },
         "commons-io:commons-io": {
