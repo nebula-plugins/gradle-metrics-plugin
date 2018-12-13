@@ -201,6 +201,42 @@ class ESMetricsPluginIntegTest extends IntegrationSpec {
         dispatcherType << [DispatcherType.ES_CLIENT, DispatcherType.ES_HTTP]
     }
 
+    @Unroll
+    def 'properties are sanitized via regex'(DispatcherType dispatcherType) {
+        setValidBuildFile(dispatcherType)
+
+        def regex = "(?i).*\\\\_(TOKEN|KEY|SECRET|PASSWORD)\\\$"
+        buildFile << """
+                     metrics {
+                        sanitizedPropertiesRegex = "$regex"
+                     }
+                     """
+        def runResult
+
+        when:
+        runResult = runTasksSuccessfully('-DMY_KEY=myvalue1', '-DMY_PASSWORD=myvalue2', '-DMY_SECRET=myvalue3', '-DMY_TOKEN=myvalue4', '-Dsomething=value5', 'projects')
+
+        then:
+        runResult.standardError.isEmpty()
+
+        def (buildId, index) = getBuildIdAndIndex(runResult.standardOutput)
+
+        indexExists(index as String)
+        def client = node.client()
+        def result = client.prepareGet(index, 'build', buildId).execute().actionGet()
+        result.isExists()
+
+        def props = result.source.info.systemProperties
+        props.find { it.key == "MY_KEY" }?.value == 'SANITIZED'
+        props.find { it.key == "MY_PASSWORD" }?.value == 'SANITIZED'
+        props.find { it.key == "MY_SECRET" }?.value == 'SANITIZED'
+        props.find { it.key == "MY_TOKEN" }?.value == 'SANITIZED'
+        props.find { it.key == "something" }?.value == 'value5'
+
+        where:
+        dispatcherType << [DispatcherType.ES_CLIENT, DispatcherType.ES_HTTP]
+    }
+
     @Unroll('running offline results in no metrics being recorded (#dispatcherType)')
     def 'running offline results in no metrics being recorded'(DispatcherType dispatcherType) {
         setValidBuildFile(dispatcherType)

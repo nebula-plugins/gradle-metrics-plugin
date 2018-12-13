@@ -64,6 +64,7 @@ public class MetricsPluginExtension {
 
     private DispatcherType dispatcherType = DispatcherType.ES_HTTP;
     private List<String> sanitizedProperties = new ArrayList<>();
+    private String sanitizedPropertiesRegex;
     private boolean failOnError = true;
     private boolean verboseErrorOutput = false;
 
@@ -142,6 +143,15 @@ public class MetricsPluginExtension {
 
     public void setSanitizedProperties(List<String> sanitizedProperties) {
         this.sanitizedProperties = checkNotNull(sanitizedProperties);
+    }
+
+
+    public String getSanitizedPropertiesRegex() {
+        return sanitizedPropertiesRegex;
+    }
+
+    public void setSanitizedPropertiesRegex(String sanitizedPropertiesRegex) {
+        this.sanitizedPropertiesRegex = sanitizedPropertiesRegex;
     }
 
     public String getRestLogEventName() {
