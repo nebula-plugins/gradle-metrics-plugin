@@ -150,7 +150,7 @@ public class MetricsPluginExtension {
     }
 
     public void setSanitizedPropertiesRegex(String sanitizedPropertiesRegex) {
-        this.sanitizedPropertiesRegex = sanitizedPropertiesRegex;
+        this.sanitizedPropertiesRegex =  checkNotNull(sanitizedPropertiesRegex);
     }
 
     public String getRestLogEventName() {
