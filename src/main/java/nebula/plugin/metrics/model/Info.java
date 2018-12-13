@@ -57,32 +57,16 @@ public class Info {
         return new Info(tool, scm, ci, envList, systemPropertiesList);
     }
 
-    public static Info sanitize(Info info, List<String> sanitizedProperties) {
-        return new Info(info.getBuild(), info.getScm(), info.getCi(), sanitizeKeyValues(info.getEnvironmentVariables(), sanitizedProperties), sanitizeKeyValues(info.getSystemProperties(), sanitizedProperties));
-    }
-
-    public static Info sanitize(Info info, String sanitizedPropertiesRegex) {
+    public static Info sanitize(Info info, List<String> sanitizedProperties, String sanitizedPropertiesRegex) {
         Pattern sanitizedPropertiesPattern = Pattern.compile(sanitizedPropertiesRegex);
-        return new Info(info.getBuild(), info.getScm(), info.getCi(), sanitizeKeyValues(info.getEnvironmentVariables(), sanitizedPropertiesPattern), sanitizeKeyValues(info.getSystemProperties(), sanitizedPropertiesPattern));
+        return new Info(info.getBuild(), info.getScm(), info.getCi(), sanitizeKeyValues(info.getEnvironmentVariables(), sanitizedProperties, sanitizedPropertiesPattern), sanitizeKeyValues(info.getSystemProperties(), sanitizedProperties, sanitizedPropertiesPattern));
     }
 
-    private static List<KeyValue> sanitizeKeyValues(List<KeyValue> keyValues, List<String> sanitizedProperties) {
-        List<KeyValue> sanitizedKeyValues = new ArrayList<>();
-        for (KeyValue keyValue : keyValues) {
-            if (sanitizedProperties.contains(keyValue.getKey()) ) {
-                sanitizedKeyValues.add(new KeyValue(keyValue.getKey(), SANITIZED));
-            } else {
-                sanitizedKeyValues.add(keyValue);
-            }
-        }
-        return sanitizedKeyValues;
-    }
-
-    private static List<KeyValue> sanitizeKeyValues(List<KeyValue> keyValues, Pattern sanitizedPropertiesPattern) {
+    private static List<KeyValue> sanitizeKeyValues(List<KeyValue> keyValues, List<String> sanitizedProperties, Pattern sanitizedPropertiesPattern) {
         List<KeyValue> sanitizedKeyValues = new ArrayList<>();
         for (KeyValue keyValue : keyValues) {
             Matcher m = sanitizedPropertiesPattern.matcher(keyValue.getKey());
-            if (m.matches()) {
+            if (sanitizedProperties.contains(keyValue.getKey()) || m.matches()) {
                 sanitizedKeyValues.add(new KeyValue(keyValue.getKey(), SANITIZED));
             } else {
                 sanitizedKeyValues.add(keyValue);

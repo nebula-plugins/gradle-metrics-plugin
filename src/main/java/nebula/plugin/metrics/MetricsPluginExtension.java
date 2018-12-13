@@ -64,7 +64,7 @@ public class MetricsPluginExtension {
 
     private DispatcherType dispatcherType = DispatcherType.ES_HTTP;
     private List<String> sanitizedProperties = new ArrayList<>();
-    private String sanitizedPropertiesRegex;
+    private String sanitizedPropertiesRegex = "(?i).*_(TOKEN|KEY|SECRET|PASSWORD)$";
     private boolean failOnError = true;
     private boolean verboseErrorOutput = false;
 

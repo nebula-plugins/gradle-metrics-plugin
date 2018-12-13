@@ -202,15 +202,42 @@ class ESMetricsPluginIntegTest extends IntegrationSpec {
     }
 
     @Unroll
-    def 'properties are sanitized via regex'(DispatcherType dispatcherType) {
+    def 'properties are sanitized via custom regex'(DispatcherType dispatcherType) {
         setValidBuildFile(dispatcherType)
 
-        def regex = "(?i).*\\\\_(TOKEN|KEY|SECRET|PASSWORD)\\\$"
+        def regex = "(?i).*\\\\_(ID)\\\$"
         buildFile << """
                      metrics {
                         sanitizedPropertiesRegex = "$regex"
                      }
                      """
+        def runResult
+
+        when:
+        runResult = runTasksSuccessfully('-DMY_ID=myvalue1','-Dsomething=value5', 'projects')
+
+        then:
+        runResult.standardError.isEmpty()
+
+        def (buildId, index) = getBuildIdAndIndex(runResult.standardOutput)
+
+        indexExists(index as String)
+        def client = node.client()
+        def result = client.prepareGet(index, 'build', buildId).execute().actionGet()
+        result.isExists()
+
+        def props = result.source.info.systemProperties
+        props.find { it.key == "MY_ID" }?.value == 'SANITIZED'
+        props.find { it.key == "something" }?.value == 'value5'
+
+        where:
+        dispatcherType << [DispatcherType.ES_CLIENT, DispatcherType.ES_HTTP]
+    }
+
+    @Unroll
+    def 'properties are sanitized via default regex'(DispatcherType dispatcherType) {
+        setValidBuildFile(dispatcherType)
+
         def runResult
 
         when:
