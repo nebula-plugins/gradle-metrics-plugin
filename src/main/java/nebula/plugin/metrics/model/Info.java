@@ -25,6 +25,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Environment.
@@ -39,6 +41,7 @@ public class Info {
     private static final String HOTSPOT = "HotSpot(TM)";
     private static final String EMPTY_STRING = "";
     private static final String SPACE = " ";
+    private static final String SANITIZED = "SANITIZED";
 
     public static Info create(GradleToolContainer tool) {
         return create(tool, new UnknownTool(), new UnknownTool());
@@ -54,17 +57,17 @@ public class Info {
         return new Info(tool, scm, ci, envList, systemPropertiesList);
     }
 
-    public static Info sanitize(Info info, List<String> sanitizedProperties) {
-        List<KeyValue> systemProperties = sanitizeKeyValues(info.getSystemProperties(), sanitizedProperties);
-        List<KeyValue> environmentVariables = sanitizeKeyValues(info.getEnvironmentVariables(), sanitizedProperties);
-        return new Info(info.getBuild(), info.getScm(), info.getCi(), environmentVariables, systemProperties);
+    public static Info sanitize(Info info, List<String> sanitizedProperties, String sanitizedPropertiesRegex) {
+        Pattern sanitizedPropertiesPattern = Pattern.compile(sanitizedPropertiesRegex);
+        return new Info(info.getBuild(), info.getScm(), info.getCi(), sanitizeKeyValues(info.getEnvironmentVariables(), sanitizedProperties, sanitizedPropertiesPattern), sanitizeKeyValues(info.getSystemProperties(), sanitizedProperties, sanitizedPropertiesPattern));
     }
 
-    private static List<KeyValue> sanitizeKeyValues(List<KeyValue> keyValues, List<String> sanitizedProperties) {
+    private static List<KeyValue> sanitizeKeyValues(List<KeyValue> keyValues, List<String> sanitizedProperties, Pattern sanitizedPropertiesPattern) {
         List<KeyValue> sanitizedKeyValues = new ArrayList<>();
         for (KeyValue keyValue : keyValues) {
-            if (sanitizedProperties.contains(keyValue.getKey())) {
-                sanitizedKeyValues.add(new KeyValue(keyValue.getKey(), "SANITIZED"));
+            Matcher m = sanitizedPropertiesPattern.matcher(keyValue.getKey());
+            if (sanitizedProperties.contains(keyValue.getKey()) || m.matches()) {
+                sanitizedKeyValues.add(new KeyValue(keyValue.getKey(), SANITIZED));
             } else {
                 sanitizedKeyValues.add(keyValue);
             }
