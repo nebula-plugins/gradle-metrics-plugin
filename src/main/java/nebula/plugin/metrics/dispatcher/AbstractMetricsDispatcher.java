@@ -180,7 +180,7 @@ public abstract class AbstractMetricsDispatcher extends AbstractQueuedExecutionT
     private void sanitizeProperties(Build build) {
         Info info = build.getInfo();
         if (info != null) {
-            build.setInfo(Info.sanitize(info, extension.getSanitizedProperties()));
+            build.setInfo(Info.sanitize(info, extension.getSanitizedProperties(), extension.getSanitizedPropertiesRegex()));
         }
     }
 
