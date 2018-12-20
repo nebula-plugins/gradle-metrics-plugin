@@ -30,6 +30,7 @@ import nebula.plugin.metrics.time.MonotonicClock;
 import org.gradle.BuildResult;
 import org.gradle.StartParameter;
 import org.gradle.api.Action;
+import org.gradle.api.GradleException;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 import org.gradle.api.Task;
@@ -122,6 +123,12 @@ public final class MetricsPlugin implements Plugin<Project> {
                             dispatcher = new NoopMetricsDispatcher(extension);
                             break;
                         }
+                        case CUSTOM: {
+                            if(dispatcher instanceof UninitializedMetricsDispatcher) {
+                                throw new GradleException("setDispatcher should be called to set dispatcher when CUSTOM is selected as type");
+                            }
+                            break;
+                        }
                     }
                 }
                 configureProjectCollectors(project.getAllprojects());
@@ -130,9 +137,13 @@ public final class MetricsPlugin implements Plugin<Project> {
 
     }
 
-    @VisibleForTesting
-    void setDispatcher(MetricsDispatcher dispatcher) {
+    public void setDispatcher(MetricsDispatcher dispatcher) {
         this.dispatcher = checkNotNull(dispatcher);
+    }
+
+    @VisibleForTesting
+    MetricsDispatcher getDispatcher() {
+        return dispatcher;
     }
 
     private void configureRootProjectCollectors(Project rootProject, BuildStartedTime buildStartedTime) {
