@@ -125,7 +125,7 @@ public final class MetricsPlugin implements Plugin<Project> {
                         }
                         case CUSTOM: {
                             if(dispatcher instanceof UninitializedMetricsDispatcher) {
-                                throw new GradleException("addCustomDispatcher should be called to set dispatcher when CUSTOM is selected as type");
+                                throw new GradleException("setDispatcher should be called to set dispatcher when CUSTOM is selected as type");
                             }
                             break;
                         }
