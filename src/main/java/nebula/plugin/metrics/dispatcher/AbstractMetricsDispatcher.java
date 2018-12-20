@@ -147,7 +147,7 @@ public abstract class AbstractMetricsDispatcher extends AbstractQueuedExecutionT
             public void run() {
                 try {
                     sanitizeProperties(build);
-                    Object transformed = transformBuild(build);
+                    Object transformed = buildId.isPresent() ? transformBuild(build, buildId.get()) : transformBuild(build);
                     String json = mapper.writeValueAsString(transformed);
                     buildId = Optional.of(index(getCollectionName(), BUILD_TYPE, json, buildId));
                     logger.info("Build id is {}", buildId.get());
@@ -174,6 +174,17 @@ public abstract class AbstractMetricsDispatcher extends AbstractQueuedExecutionT
      */
     protected Object transformBuild(Build build) {
         checkNotNull(build);
+        return build;
+    }
+
+
+    /*
+     * Override this method to transform the Build object into a different Build representation. For
+     * example, when the Build format needs to be flattened out.
+     */
+    protected Object transformBuild(Build build, String buildId) {
+        checkNotNull(build);
+        checkNotNull(buildId);
         return build;
     }
 
