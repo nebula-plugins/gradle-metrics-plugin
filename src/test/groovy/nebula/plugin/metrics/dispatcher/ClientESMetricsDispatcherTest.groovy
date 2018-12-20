@@ -71,7 +71,7 @@ class ClientESMetricsDispatcherTest extends LoggingCaptureSpecification {
             builder
         }
         // TODO Ignoring the tail because it includes timestamps which I'm being too lazy to match right now
-        json.startsWith('{"project":{"name":"project","version":"1.0"},"events":[],"tasks":[],"tests":[],"result":{"status":"unknown"}')
+        json.contains('"project":{"name":"project","version":"1.0"},"events":[],"tasks":[],"tests":[],"result":{"status":"unknown"}')
         json.contains('"eventsCount":0')
         json.contains('"eventsElapsedTime":0')
 

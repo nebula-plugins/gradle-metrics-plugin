@@ -26,6 +26,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -35,6 +36,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
  * @author Danny Thomas
  */
 public class Build {
+    private String uuid = UUID.randomUUID().toString();
     private Project project;
     private final List<Event> events = new ArrayList<>();
     private final List<Task> tasks = new ArrayList<>();
@@ -158,5 +160,9 @@ public class Build {
 
     public Long getElapsedTime() {
         return elapsedTime;
+    }
+
+    public String getUuid() {
+        return uuid;
     }
 }
