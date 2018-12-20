@@ -137,12 +137,7 @@ public final class MetricsPlugin implements Plugin<Project> {
 
     }
 
-    public void addCustomDispatcher(MetricsDispatcher dispatcher) {
-        this.dispatcher = checkNotNull(dispatcher);
-    }
-
-    @VisibleForTesting
-    void setDispatcher(MetricsDispatcher dispatcher) {
+    public void setDispatcher(MetricsDispatcher dispatcher) {
         this.dispatcher = checkNotNull(dispatcher);
     }
 

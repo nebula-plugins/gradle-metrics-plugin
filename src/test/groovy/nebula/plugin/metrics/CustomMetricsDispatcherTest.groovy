@@ -51,7 +51,7 @@ class CustomMetricsDispatcherTest extends ProjectSpec {
 
         when:
         metricsPluginExtension.dispatcherType = MetricsPluginExtension.DispatcherType.CUSTOM
-        plugin.addCustomDispatcher(myCustomMetricsDispatcher)
+        plugin.setDispatcher(myCustomMetricsDispatcher)
 
         and:
         def defaultProject = ((DefaultProject) project)
