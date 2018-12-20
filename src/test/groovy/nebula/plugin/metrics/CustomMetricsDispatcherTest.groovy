@@ -39,7 +39,7 @@ class CustomMetricsDispatcherTest extends ProjectSpec {
 
         then:
         GradleException e = thrown(GradleException)
-        e.message == 'addCustomDispatcher should be called to set dispatcher when CUSTOM is selected as type'
+        e.message == 'setDispatcher should be called to set dispatcher when CUSTOM is selected as type'
     }
 
     def 'should evaluate project if CUSTOM dispatcher is provided'() {
