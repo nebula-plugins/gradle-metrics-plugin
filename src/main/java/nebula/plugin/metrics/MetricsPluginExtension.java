@@ -239,6 +239,7 @@ public class MetricsPluginExtension {
         ES_HTTP,
         SPLUNK,
         REST,
-        NOOP
+        NOOP,
+        CUSTOM
     }
 }
