@@ -30,7 +30,7 @@ public class PackageSanityTest extends AbstractPackageSanityTests {
         ignoreClasses(new Predicate<Class<?>>() {
             @Override
             boolean apply(@Nullable Class<?> input) {
-                return input == UninitializedMetricsDispatcher || input == NoopMetricsDispatcher
+                return input == UninitializedMetricsDispatcher || input == NoopMetricsDispatcher || input == SplunkMetricsDispatcher
             }
         })
     }

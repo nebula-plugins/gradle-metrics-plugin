@@ -50,14 +50,14 @@ public class SplunkMetricsDispatcher extends RestMetricsDispatcher {
         buildId = Optional.of(UUID.randomUUID().toString());
     }
 
-	@Override
-	protected Object transformBuild(Build build) {
+    @Override
+    protected Object transformBuild(Build build, String buildId) {
         checkNotNull(build);
-    	
+
         /*
-        *  The only event we want to submit to splunk is the complete build info,
-        *  this switch will exclude the logstash from posting
-        */
+         *  The only event we want to submit to splunk is the complete build info,
+         *  this switch will exclude the logstash from posting
+         */
         if(build.getEvents().isEmpty()){
             this.submit = false;
         } else {
@@ -66,6 +66,7 @@ public class SplunkMetricsDispatcher extends RestMetricsDispatcher {
 
         return build;
     }
+
 
     @Override
     protected String index(String indexName, String type, String source, Optional<String> id){
