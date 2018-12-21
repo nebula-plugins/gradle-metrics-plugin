@@ -36,6 +36,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
  * @author Danny Thomas
  */
 public class Build {
+    private String buildId;
     private Project project;
     private final List<Event> events = new ArrayList<>();
     private final List<Task> tasks = new ArrayList<>();
@@ -160,4 +161,13 @@ public class Build {
     public Long getElapsedTime() {
         return elapsedTime;
     }
+
+    public String getBuildId() {
+        return buildId;
+    }
+
+    public void setBuildId(String buildId) {
+        this.buildId = buildId;
+    }
+
 }

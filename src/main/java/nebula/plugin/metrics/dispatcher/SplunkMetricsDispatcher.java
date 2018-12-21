@@ -51,7 +51,7 @@ public class SplunkMetricsDispatcher extends RestMetricsDispatcher {
     }
 
     @Override
-    protected Object transformBuild(Build build, String buildId) {
+    protected Object transformBuild(Build build) {
         checkNotNull(build);
 
         /*
