@@ -22,7 +22,7 @@ ext {
 
 versions.es = '1.7.2'
 versions.guava = '18.0'
-versions.jackson = '2.6.1'
+versions.jackson = '2.3.2'
 versions.slf4j = '1.7.12'
 versions.httpcomponents = '4.4.1'
 
