@@ -22,7 +22,7 @@ ext {
 
 versions.es = '1.7.2'
 versions.guava = '18.0'
-versions.jackson = '2.3.2'
+versions.jackson = '2.6.1'
 versions.slf4j = '1.7.12'
 versions.httpcomponents = '4.4.1'
 
@@ -65,6 +65,7 @@ dependencies {
     testCompile 'com.netflix.nebula:nebula-test:7.+'
     testCompile "com.google.guava:guava-testlib:$versions.guava"
     integTestCompile 'com.github.tlrx:elasticsearch-test:1.2.1'
+    integTestCompile 'com.github.tomakehurst:wiremock-standalone:2.20.0'
 }
 
 configurations.all ({
