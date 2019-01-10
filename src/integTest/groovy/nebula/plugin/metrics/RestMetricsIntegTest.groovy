@@ -41,6 +41,7 @@ class RestMetricsIntegTest extends IntegrationSpec {
         """.stripIndent()
 
 
+        //First post
         stubFor(post('/myserver')
                 .withRequestBody(containing("\"eventName\":\"build_metrics\""))
                 .withRequestBody(containing("buildId"))
@@ -50,7 +51,7 @@ class RestMetricsIntegTest extends IntegrationSpec {
                 .willReturn(
                 aResponse().withStatus(200).withHeader('Content-Type', 'application/json')))
 
-
+        //build is finished
         stubFor(post('/myserver')
                 .withRequestBody(containing("\"eventName\":\"build_metrics\""))
                 .withRequestBody(containing("buildId"))
@@ -58,7 +59,7 @@ class RestMetricsIntegTest extends IntegrationSpec {
                 .withRequestBody(containing("finishedTime"))
                 .withRequestBody(containing("elapsedTime"))
                 .withRequestBody(containing("elapsedTime"))
-                .withRequestBody(containing("project\":{\"name\":\"metrics-posts-data-to-preconfigured-REST-server\",\"version\":\"unspecified\"}"))
+                .withRequestBody(containing("project\":{\"name\":\"${moduleName}\",\"version\":\"unspecified\"}"))
                 .willReturn(
                 aResponse().withStatus(200).withHeader('Content-Type', 'application/json')))
         expect:
