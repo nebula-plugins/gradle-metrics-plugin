@@ -1,5 +1,5 @@
 /*
- *  Copyright 2015-2016 Netflix, Inc.
+ *  Copyright 2015-2019 Netflix, Inc.
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -17,77 +17,53 @@
 
 package nebula.plugin.metrics
 
-import com.sun.net.httpserver.HttpExchange
-import com.sun.net.httpserver.HttpHandler
-import com.sun.net.httpserver.HttpServer
-import groovy.json.JsonSlurper
+import com.github.tomakehurst.wiremock.core.WireMockConfiguration
+import com.github.tomakehurst.wiremock.junit.WireMockRule
 import nebula.test.IntegrationSpec
-import org.apache.commons.io.IOUtils
+import org.junit.Rule
 
-import static nebula.plugin.metrics.dispatcher.AbstractMetricsDispatcher.getObjectMapper
-import static nebula.plugin.metrics.dispatcher.RestMetricsDispatcher.RestPayload
+import static com.github.tomakehurst.wiremock.client.WireMock.*
 
 class RestMetricsIntegTest extends IntegrationSpec {
 
-    String lastReportedBuildMetricsEvent
-
-    class RestMockHandler implements HttpHandler {
-
-        public void handle(HttpExchange t) throws IOException {
-            if (t.getRequestMethod() == 'POST') {
-                def body = IOUtils.toString(t.getRequestBody())
-                if (body.contains('"eventName":"build_metrics"')) {
-                    lastReportedBuildMetricsEvent = body
-                }
-            } else {
-                throw new IllegalStateException('Metrics plugin should only POST data')
-            }
-            def response = 'OK'
-            t.sendResponseHeaders(200, response.length())
-            OutputStream os = t.getResponseBody()
-            os.write(response.getBytes())
-            os.close()
-        }
-
-    }
+    @Rule
+    WireMockRule wireMockRule = new WireMockRule(WireMockConfiguration.wireMockConfig().dynamicPort().dynamicPort())
 
     def 'metrics posts data to preconfigured REST server'() {
-        HttpServer server = HttpServer.create(new InetSocketAddress(0), 0)
-        server.createContext("/", new RestMockHandler())
-        server.setExecutor(null)
-        server.start()
-
+        setup:
         buildFile << """
             ${applyPlugin(MetricsPlugin)}
 
             metrics {
-                restUri = 'http://localhost:${server.address.port}'
+                restUri = 'http://localhost:${wireMockRule.port()}/myserver'
                 dispatcherType = 'REST'
             }
         """.stripIndent()
 
-        when:
+
+        //First post
+        stubFor(post('/myserver')
+                .withRequestBody(containing("\"eventName\":\"build_metrics\""))
+                .withRequestBody(containing("buildId"))
+                .withRequestBody(containing("startTime"))
+                .withRequestBody(containing("finishedTime"))
+                .withRequestBody(containing("elapsedTime"))
+                .willReturn(
+                aResponse().withStatus(200).withHeader('Content-Type', 'application/json')))
+
+        //build is finished
+        stubFor(post('/myserver')
+                .withRequestBody(containing("\"eventName\":\"build_metrics\""))
+                .withRequestBody(containing("buildId"))
+                .withRequestBody(containing("startTime"))
+                .withRequestBody(containing("finishedTime"))
+                .withRequestBody(containing("elapsedTime"))
+                .withRequestBody(containing("elapsedTime"))
+                .withRequestBody(containing("project\":{\"name\":\"${moduleName}\",\"version\":\"unspecified\"}"))
+                .willReturn(
+                aResponse().withStatus(200).withHeader('Content-Type', 'application/json')))
+        expect:
         runTasksSuccessfully('projects')
-
-        then:
-        RestPayload restPayload = getObjectMapper().readValue(lastReportedBuildMetricsEvent, RestPayload.class)
-        def buildJson = new JsonSlurper().parseText(restPayload.payload.get('build'))
-
-        restPayload.eventName == 'build_metrics'
-        buildJson.with {
-            project.name == moduleName
-            project.version == 'unspecified'
-            startTime
-            finishedTime
-            elapsedTime
-            result.status == 'success'
-            !events.isEmpty()
-            tasks.size() == 1
-            tests.isEmpty()
-        }
-
-        cleanup:
-        server?.stop(0)
     }
 
 }

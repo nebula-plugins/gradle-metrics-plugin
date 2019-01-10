@@ -1,5 +1,5 @@
 /*
- *  Copyright 2015-2016 Netflix, Inc.
+ *  Copyright 2015-2019 Netflix, Inc.
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -17,54 +17,24 @@
 
 package nebula.plugin.metrics
 
-import com.sun.net.httpserver.HttpExchange
-import com.sun.net.httpserver.HttpHandler
-import com.sun.net.httpserver.HttpServer
-import groovy.json.JsonSlurper
+import com.github.tomakehurst.wiremock.core.WireMockConfiguration
+import com.github.tomakehurst.wiremock.junit.WireMockRule
 import nebula.test.IntegrationSpec
-import org.apache.commons.io.IOUtils
-import org.apache.http.StatusLine
+import org.junit.Rule
 
-import org.apache.http.client.fluent.Request
-import org.apache.http.entity.ContentType
+import static com.github.tomakehurst.wiremock.client.WireMock.aResponse
+import static com.github.tomakehurst.wiremock.client.WireMock.containing
+import static com.github.tomakehurst.wiremock.client.WireMock.equalTo
+import static com.github.tomakehurst.wiremock.client.WireMock.post
+import static com.github.tomakehurst.wiremock.client.WireMock.stubFor
 
 class SplunkMetricsIntegTest extends IntegrationSpec {
 
-    String lastReportedBuildMetricsEvent
-    private def slurper = new JsonSlurper()
-    
-    private final def expectedBasicAuth = 'Basic YWRtaW46Y2hhbmdlbWU='
-    private final def expectedSplunkAuth = 'Splunk 8BA5A780-6B3A-472D-BF2F-CF4E9FFF4E9D'
-
-    class SplunkEndPointMock implements HttpHandler {
-
-        public void handle(HttpExchange t) throws IOException {
-            
-            def response = 'OK'
-            if (t.getRequestMethod() == 'POST') {
-
-                def authHeader = t.getRequestHeaders()['Authorization'][0]
-
-                if (authHeader == expectedBasicAuth || authHeader == expectedSplunkAuth){ 
-                    lastReportedBuildMetricsEvent = IOUtils.toString(t.getRequestBody())
-                    t.sendResponseHeaders(200, response.length())
-                } else {
-                    response = 'Unauthorized'
-                    t.sendResponseHeaders(401, response.length())
-                }
-                OutputStream os = t.getResponseBody()
-                os.write(response.getBytes())
-                os.close()
-            }
-        }
-    }
+    @Rule
+    WireMockRule wireMockRule = new WireMockRule(WireMockConfiguration.wireMockConfig().dynamicPort().dynamicPort())
 
     def 'metrics posts data to Mocked Splunk Universal forwarder with Basic Authorization Header'() {
-        HttpServer server = HttpServer.create(new InetSocketAddress(0), 0)
-        server.createContext("/", new SplunkEndPointMock())
-        server.setExecutor(null)
-        server.start()
-
+        setup:
         buildFile << """
             ${applyPlugin(MetricsPlugin)}
 
@@ -72,38 +42,30 @@ class SplunkMetricsIntegTest extends IntegrationSpec {
                 dispatcherType = 'SPLUNK'
 
                 splunkInputType = 'FORWARDER'
-                splunkUri = 'http://localhost:${server.address.port}/'
+                splunkUri = 'http://localhost:${wireMockRule.port()}/myserver'
                 headers['Authorization'] = 'Basic YWRtaW46Y2hhbmdlbWU='
             }
         """.stripIndent()
 
-        when:
+        stubFor(post('/myserver')
+                .withHeader("Authorization", equalTo("Basic YWRtaW46Y2hhbmdlbWU="))
+                .withRequestBody(containing("buildId"))
+                .withRequestBody(containing("startTime"))
+                .withRequestBody(containing("finishedTime"))
+                .withRequestBody(containing("elapsedTime"))
+                .withRequestBody(containing("elapsedTime"))
+                .withRequestBody(containing("project\":{\"name\":\"${moduleName}\",\"version\":\"unspecified\"}"))
+                .willReturn(
+                aResponse().withStatus(200).withHeader('Content-Type', 'application/json')))
+
+        expect:
         runTasksSuccessfully('projects')
 
-        then:
-        !lastReportedBuildMetricsEvent.isEmpty()
-        def buildJson = slurper.parseText(lastReportedBuildMetricsEvent)
 
-        buildJson.buildInfo.project.name == moduleName
-        buildJson.buildInfo.project.version == 'unspecified'
-        buildJson.buildInfo.result.status == 'success'
-        buildJson.buildInfo.startTime
-        buildJson.buildInfo.finishedTime
-        buildJson.buildInfo.elapsedTime
-        buildJson.buildInfo.tasks.size() == 1
-        buildJson.buildInfo.tests.isEmpty()
-        !buildJson.buildInfo.events.isEmpty()
-
-        cleanup:
-        server?.stop(0)
     }
 
     def 'metrics posts data to Mocked Splunk HTTP Collector with Splunk Authorization Header'() {
-        HttpServer server = HttpServer.create(new InetSocketAddress(0), 0)
-        server.createContext("/", new SplunkEndPointMock())
-        server.setExecutor(null)
-        server.start()
-
+        setup:
         buildFile << """
             ${applyPlugin(MetricsPlugin)}
 
@@ -111,29 +73,24 @@ class SplunkMetricsIntegTest extends IntegrationSpec {
                 dispatcherType = 'SPLUNK'
 
                 splunkInputType = 'HTTP_COLLECTOR'
-                splunkUri = 'http://localhost:${server.address.port}/'
+                splunkUri = 'http://localhost:${wireMockRule.port()}/myserver'
                 headers['Authorization'] = 'Splunk 8BA5A780-6B3A-472D-BF2F-CF4E9FFF4E9D'
             }
         """.stripIndent()
 
-        when:
+        stubFor(post('/myserver')
+                .withHeader("Authorization", equalTo("Splunk 8BA5A780-6B3A-472D-BF2F-CF4E9FFF4E9D"))
+                .withRequestBody(containing("buildId"))
+                .withRequestBody(containing("startTime"))
+                .withRequestBody(containing("finishedTime"))
+                .withRequestBody(containing("elapsedTime"))
+                .withRequestBody(containing("elapsedTime"))
+                .withRequestBody(containing("project\":{\"name\":\"${moduleName}\",\"version\":\"unspecified\"}"))
+                .willReturn(
+                aResponse().withStatus(200).withHeader('Content-Type', 'application/json')))
+
+        expect:
         runTasksSuccessfully('projects')
 
-        then:
-        !lastReportedBuildMetricsEvent.isEmpty()
-        def buildJson = slurper.parseText(lastReportedBuildMetricsEvent)
-
-        buildJson.event.buildInfo.project.name == moduleName
-        buildJson.event.buildInfo.project.version == 'unspecified'
-        buildJson.event.buildInfo.result.status == 'success'
-        buildJson.event.buildInfo.startTime
-        buildJson.event.buildInfo.finishedTime
-        buildJson.event.buildInfo.elapsedTime
-        buildJson.event.buildInfo.tasks.size() == 1
-        buildJson.event.buildInfo.tests.isEmpty()
-        !buildJson.event.buildInfo.events.isEmpty()
-
-        cleanup:
-        server?.stop(0)
     }
 }
