@@ -39,7 +39,7 @@ class ESMetricsPluginIntegTest extends IntegrationSpec {
 
     def setupSpec() {
         dataDir = Files.createTempDir()
-        def settings = ImmutableSettings.settingsBuilder().put('path.data', dataDir).put('http.port', 19200).put('transport.tcp.port', 19300).put('cluster.name', 'elasticsearch_mpit').build()
+        def settings = ImmutableSettings.settingsBuilder().put('path.data', dataDir).put('http.port', 8090).put('transport.tcp.port', 32769).put('cluster.name', 'elasticsearch_mpit').build()
         node = NodeBuilder.nodeBuilder().settings(settings).build()
         node.start()
     }
@@ -285,8 +285,8 @@ class ESMetricsPluginIntegTest extends IntegrationSpec {
             ${applyPlugin(MetricsPlugin)}
 
             metrics {
-                httpPort = 19200
-                transportPort = 19300
+                httpPort = 8090
+                transportPort = 32769
                 clusterName = 'elasticsearch_mpit'
                 dispatcherType = '$dispatcherType'
             }

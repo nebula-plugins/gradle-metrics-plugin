@@ -52,7 +52,7 @@ class RestMetricsIntegTest extends IntegrationSpec {
     }
 
     def 'metrics posts data to preconfigured REST server'() {
-        HttpServer server = HttpServer.create(new InetSocketAddress(1337), 0)
+        HttpServer server = HttpServer.create(new InetSocketAddress(0), 0)
         server.createContext("/", new RestMockHandler())
         server.setExecutor(null)
         server.start()
@@ -61,7 +61,7 @@ class RestMetricsIntegTest extends IntegrationSpec {
             ${applyPlugin(MetricsPlugin)}
 
             metrics {
-                restUri = 'http://localhost:1337'
+                restUri = 'http://localhost:${server.address.port}'
                 dispatcherType = 'REST'
             }
         """.stripIndent()

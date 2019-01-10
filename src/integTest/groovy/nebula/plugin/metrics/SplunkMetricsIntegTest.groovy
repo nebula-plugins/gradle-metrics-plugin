@@ -60,7 +60,7 @@ class SplunkMetricsIntegTest extends IntegrationSpec {
     }
 
     def 'metrics posts data to Mocked Splunk Universal forwarder with Basic Authorization Header'() {
-        HttpServer server = HttpServer.create(new InetSocketAddress(1337), 0)
+        HttpServer server = HttpServer.create(new InetSocketAddress(0), 0)
         server.createContext("/", new SplunkEndPointMock())
         server.setExecutor(null)
         server.start()
@@ -72,7 +72,7 @@ class SplunkMetricsIntegTest extends IntegrationSpec {
                 dispatcherType = 'SPLUNK'
 
                 splunkInputType = 'FORWARDER'
-                splunkUri = 'http://localhost:1337/'
+                splunkUri = 'http://localhost:${server.address.port}/'
                 headers['Authorization'] = 'Basic YWRtaW46Y2hhbmdlbWU='
             }
         """.stripIndent()
@@ -99,7 +99,7 @@ class SplunkMetricsIntegTest extends IntegrationSpec {
     }
 
     def 'metrics posts data to Mocked Splunk HTTP Collector with Splunk Authorization Header'() {
-        HttpServer server = HttpServer.create(new InetSocketAddress(1338), 0)
+        HttpServer server = HttpServer.create(new InetSocketAddress(0), 0)
         server.createContext("/", new SplunkEndPointMock())
         server.setExecutor(null)
         server.start()
@@ -111,7 +111,7 @@ class SplunkMetricsIntegTest extends IntegrationSpec {
                 dispatcherType = 'SPLUNK'
 
                 splunkInputType = 'HTTP_COLLECTOR'
-                splunkUri = 'http://localhost:1338/'
+                splunkUri = 'http://localhost:${server.address.port}/'
                 headers['Authorization'] = 'Splunk 8BA5A780-6B3A-472D-BF2F-CF4E9FFF4E9D'
             }
         """.stripIndent()
