@@ -235,7 +235,6 @@ public class MetricsPluginExtension {
     }
 
     public enum DispatcherType {
-        ES_CLIENT,
         ES_HTTP,
         SPLUNK,
         REST,

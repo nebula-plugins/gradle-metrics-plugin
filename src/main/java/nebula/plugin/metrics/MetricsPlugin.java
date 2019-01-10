@@ -103,10 +103,6 @@ public final class MetricsPlugin implements Plugin<Project> {
             public void execute(Project project) {
                 if (dispatcher instanceof UninitializedMetricsDispatcher) {
                     switch (extension.getDispatcherType()) {
-                        case ES_CLIENT: {
-                            dispatcher = new ClientESMetricsDispatcher(extension);
-                            break;
-                        }
                         case ES_HTTP: {
                             dispatcher = new HttpESMetricsDispatcher(extension);
                             break;
