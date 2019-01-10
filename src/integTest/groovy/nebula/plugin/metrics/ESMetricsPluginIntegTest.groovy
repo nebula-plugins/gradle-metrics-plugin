@@ -25,7 +25,6 @@ import org.elasticsearch.common.settings.ImmutableSettings
 import org.elasticsearch.node.Node
 import org.elasticsearch.node.NodeBuilder
 import spock.lang.Shared
-import spock.lang.Unroll
 
 /**
  * Integration tests for {@link MetricsPlugin}.
@@ -71,9 +70,8 @@ class ESMetricsPluginIntegTest extends IntegrationSpec {
         return [buildId, index]
     }
 
-    @Unroll('running projects task causes no errors and the build id to standard out (#dispatcherType)')
-    def 'running projects task causes no errors and the build id to standard out'(DispatcherType dispatcherType) {
-        setValidBuildFile(dispatcherType)
+    def 'running projects task causes no errors and the build id to standard out'() {
+        setValidBuildFile(DispatcherType.ES_HTTP)
         def result
 
         when:
@@ -83,14 +81,10 @@ class ESMetricsPluginIntegTest extends IntegrationSpec {
         noExceptionThrown()
         result.standardError.isEmpty()
         result.standardOutput.contains('Build id is ')
-
-        where:
-        dispatcherType << [DispatcherType.ES_CLIENT, DispatcherType.ES_HTTP]
     }
 
-    @Unroll
     def "custom mapping file is used with #dispatcherType"() {
-        setValidBuildFile(dispatcherType)
+        setValidBuildFile(DispatcherType.ES_HTTP)
         File f = File.createTempFile('esmapping-', '')
         f.text = '''
         {
@@ -130,13 +124,10 @@ class ESMetricsPluginIntegTest extends IntegrationSpec {
         def mappings = indices.prepareGetMappings(index).get().mappings()
         mappings.get(index as String).get('build').source().string().contains('testingField')
 
-        where:
-        dispatcherType << [DispatcherType.ES_CLIENT, DispatcherType.ES_HTTP]
     }
 
-    @Unroll('recorded build model is valid (#dispatcherType)')
-    def 'recorded build model is valid'(DispatcherType dispatcherType) {
-        setValidBuildFile(dispatcherType)
+    def 'recorded build model is valid'() {
+        setValidBuildFile(DispatcherType.ES_HTTP)
         def runResult
 
         when:
@@ -164,14 +155,10 @@ class ESMetricsPluginIntegTest extends IntegrationSpec {
         !source.events.isEmpty()
         source.tasks.size() == 1
         source.tests.isEmpty()
-
-        where:
-        dispatcherType << [DispatcherType.ES_CLIENT, DispatcherType.ES_HTTP]
     }
 
-    @Unroll('properties are sanitized (#dispatcherType)')
-    def 'properties are sanitized'(DispatcherType dispatcherType) {
-        setValidBuildFile(dispatcherType)
+    def 'properties are sanitized'() {
+        setValidBuildFile(DispatcherType.ES_HTTP)
 
         def propKey = 'java.version'
         buildFile << """
@@ -197,13 +184,10 @@ class ESMetricsPluginIntegTest extends IntegrationSpec {
         def props = result.source.info.systemProperties
         props.find { it.key == propKey }?.value == 'SANITIZED'
 
-        where:
-        dispatcherType << [DispatcherType.ES_CLIENT, DispatcherType.ES_HTTP]
     }
 
-    @Unroll
-    def 'properties are sanitized via custom regex'(DispatcherType dispatcherType) {
-        setValidBuildFile(dispatcherType)
+    def 'properties are sanitized via custom regex'() {
+        setValidBuildFile(DispatcherType.ES_HTTP)
 
         def regex = "(?i).*\\\\_(ID)\\\$"
         buildFile << """
@@ -229,14 +213,10 @@ class ESMetricsPluginIntegTest extends IntegrationSpec {
         def props = result.source.info.systemProperties
         props.find { it.key == "MY_ID" }?.value == 'SANITIZED'
         props.find { it.key == "something" }?.value == 'value5'
-
-        where:
-        dispatcherType << [DispatcherType.ES_CLIENT, DispatcherType.ES_HTTP]
     }
 
-    @Unroll
-    def 'properties are sanitized via default regex'(DispatcherType dispatcherType) {
-        setValidBuildFile(dispatcherType)
+    def 'properties are sanitized via default regex'() {
+        setValidBuildFile(DispatcherType.ES_HTTP)
 
         def runResult
 
@@ -259,14 +239,10 @@ class ESMetricsPluginIntegTest extends IntegrationSpec {
         props.find { it.key == "MY_SECRET" }?.value == 'SANITIZED'
         props.find { it.key == "MY_TOKEN" }?.value == 'SANITIZED'
         props.find { it.key == "something" }?.value == 'value5'
-
-        where:
-        dispatcherType << [DispatcherType.ES_CLIENT, DispatcherType.ES_HTTP]
     }
 
-    @Unroll('running offline results in no metrics being recorded (#dispatcherType)')
-    def 'running offline results in no metrics being recorded'(DispatcherType dispatcherType) {
-        setValidBuildFile(dispatcherType)
+    def 'running offline results in no metrics being recorded'() {
+        setValidBuildFile(DispatcherType.ES_HTTP)
         def result
 
         when:
@@ -275,27 +251,11 @@ class ESMetricsPluginIntegTest extends IntegrationSpec {
         then:
         noExceptionThrown()
         result.standardOutput.contains("Build is running offline")
-
-        where:
-        dispatcherType << [DispatcherType.ES_CLIENT, DispatcherType.ES_HTTP]
     }
 
-    def setValidBuildFile(DispatcherType dispatcherType) {
-        def build = """
-            ${applyPlugin(MetricsPlugin)}
-
-            metrics {
-                httpPort = 8090
-                transportPort = 32769
-                clusterName = 'elasticsearch_mpit'
-                dispatcherType = '$dispatcherType'
-            }
-        """.stripIndent()
-        buildFile << build
-    }
 
     def 'report information is serialized correctly into elasticsearch'() {
-        setValidBuildFile(dispatcherType)
+        setValidBuildFile(DispatcherType.ES_HTTP)
         buildFile << """
 
         ${applyPlugin(InfoBrokerPlugin)}
@@ -322,8 +282,19 @@ class ESMetricsPluginIntegTest extends IntegrationSpec {
         lintViolationsReport != null
         lintViolationsReport instanceof List
         (lintViolationsReport as List).equals(['one', 'two', 'three'])
+    }
 
-        where:
-        dispatcherType << [DispatcherType.ES_CLIENT, DispatcherType.ES_HTTP]
+    def setValidBuildFile(DispatcherType dispatcherType) {
+        def build = """
+            ${applyPlugin(MetricsPlugin)}
+
+            metrics {
+                httpPort = 8090
+                transportPort = 32769
+                clusterName = 'elasticsearch_mpit'
+                dispatcherType = '$dispatcherType'
+            }
+        """.stripIndent()
+        buildFile << build
     }
 }
