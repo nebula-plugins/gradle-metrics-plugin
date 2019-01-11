@@ -69,7 +69,6 @@ class ESMetricsPluginIntegTest extends IntegrationSpec {
         then:
         noExceptionThrown()
         result.standardOutput.contains("Build is running offline")
-        !getBuildId(result.standardOutput)
     }
 
 
@@ -108,9 +107,6 @@ class ESMetricsPluginIntegTest extends IntegrationSpec {
 
     private getBuildId(String output) {
         def m = output =~ /Build id is (.*)/
-        if(!m.matches()) {
-            return null
-        }
         def buildId = m[0][1] as String
         return buildId
     }
