@@ -21,7 +21,6 @@ import groovy.util.logging.Slf4j
 import nebula.plugin.metrics.MetricsPluginExtension.DispatcherType
 import nebula.test.IntegrationSpec
 import org.testcontainers.elasticsearch.ElasticsearchContainer
-import org.testcontainers.shaded.com.fasterxml.jackson.databind.ObjectMapper
 import org.testcontainers.spock.Testcontainers
 import spock.lang.Shared
 
@@ -32,7 +31,6 @@ import spock.lang.Shared
 @Testcontainers
 class ESMetricsPluginIntegTest extends IntegrationSpec {
 
-    private final ObjectMapper objectMapper = new ObjectMapper()
 
     @Shared
     ElasticsearchContainer container = new ElasticsearchContainer("docker.elastic.co/elasticsearch/elasticsearch:5.4.1")
@@ -110,6 +108,9 @@ class ESMetricsPluginIntegTest extends IntegrationSpec {
 
     private getBuildId(String output) {
         def m = output =~ /Build id is (.*)/
+        if(!m.matches()) {
+            return null
+        }
         def buildId = m[0][1] as String
         return buildId
     }
