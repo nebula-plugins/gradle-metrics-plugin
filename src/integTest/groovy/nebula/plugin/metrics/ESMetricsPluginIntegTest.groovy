@@ -75,8 +75,7 @@ class ESMetricsPluginIntegTest extends IntegrationSpec {
 
         def buildId = getBuildIdAndIndex(runResult.standardOutput)
 
-        def response = callElastic("GET", "/build-metrics-default/build/${buildId}")
-        def result = objectMapper.readValue(response, Map)
+        def result = getBuild(buildId)
         def source = result._source
         def project = source.project
         project.name == moduleName
@@ -138,12 +137,12 @@ class ESMetricsPluginIntegTest extends IntegrationSpec {
 
         def buildId = getBuildIdAndIndex(runResult.standardOutput)
 
-        def response = callElastic("GET", "/build-metrics-default/build/${buildId}")
-        def result = objectMapper.readValue(response, Map)
+        def result = getBuild(buildId)
         def props = result._source.info.systemProperties
         props.find { it.key == "MY_ID" }?.value == 'SANITIZED'
         props.find { it.key == "something" }?.value == 'value5'
     }
+
 
     def 'properties are sanitized via default regex'() {
         setup:
@@ -160,8 +159,7 @@ class ESMetricsPluginIntegTest extends IntegrationSpec {
 
         def buildId = getBuildIdAndIndex(runResult.standardOutput)
 
-        def response = callElastic("GET", "/build-metrics-default/build/${buildId}")
-        def result = objectMapper.readValue(response, Map)
+        def result = getBuild(buildId)
         def props = result._source.info.systemProperties
         props.find { it.key == "MY_KEY" }?.value == 'SANITIZED'
         props.find { it.key == "MY_PASSWORD" }?.value == 'SANITIZED'
@@ -206,8 +204,7 @@ class ESMetricsPluginIntegTest extends IntegrationSpec {
         def runResult = runTasksSuccessfully('createReport')
 
         def buildId = getBuildIdAndIndex(runResult.standardOutput)
-        def response = callElastic("GET", "/build-metrics-default/build/${buildId}")
-        def result = objectMapper.readValue(response, Map)
+        def result = getBuild(buildId)
         def metricsSent = result._source
         def lintViolationsReport = metricsSent['lintViolations']
 
@@ -258,5 +255,14 @@ class ESMetricsPluginIntegTest extends IntegrationSpec {
         def m = output =~ /Build id is (.*)/
         def buildId = m[0][1] as String
         return buildId
+    }
+
+    private Map getBuild(String buildId) {
+        def result
+        while(!result || result.empty) {
+            def response = callElastic("GET", "/build-metrics-default/build/${buildId}")
+            result = objectMapper.readValue(response, Map)
+        }
+        return result
     }
 }
