@@ -1,5 +1,7 @@
 language: java
-sudo: false
+sudo: true
+services:
+  - docker
 jdk: openjdk8
 install: true
 script: "./gradle/buildViaTravis.sh"
