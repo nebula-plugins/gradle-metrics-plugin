@@ -22,6 +22,7 @@ import nebula.plugin.metrics.MetricsPluginExtension.DispatcherType
 import nebula.test.IntegrationSpec
 import org.testcontainers.elasticsearch.ElasticsearchContainer
 import org.testcontainers.spock.Testcontainers
+import spock.lang.IgnoreIf
 import spock.lang.Shared
 
 /**
@@ -29,6 +30,7 @@ import spock.lang.Shared
  */
 @Slf4j
 @Testcontainers
+@IgnoreIf({ Boolean.valueOf(env["NEBULA_IGNORE_TEST"]) })
 class ESMetricsPluginIntegTest extends IntegrationSpec {
 
 
