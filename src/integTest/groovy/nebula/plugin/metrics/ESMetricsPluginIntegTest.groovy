@@ -35,12 +35,6 @@ class ESMetricsPluginIntegTest extends IntegrationSpec {
     @Shared
     ElasticsearchContainer container = new ElasticsearchContainer("docker.elastic.co/elasticsearch/elasticsearch:5.4.1")
 
-    def setup() {
-        while(!container.running) {
-            log.info("waiting for container to be ready")
-        }
-    }
-
     def 'running projects task causes no errors and the build id to standard out'() {
         setup:
         createIndex()
