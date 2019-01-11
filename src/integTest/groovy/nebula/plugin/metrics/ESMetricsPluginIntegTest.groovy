@@ -18,7 +18,6 @@
 package nebula.plugin.metrics
 
 import groovy.util.logging.Slf4j
-import nebula.plugin.info.InfoBrokerPlugin
 import nebula.plugin.metrics.MetricsPluginExtension.DispatcherType
 import nebula.test.IntegrationSpec
 import org.testcontainers.elasticsearch.ElasticsearchContainer
@@ -57,36 +56,6 @@ class ESMetricsPluginIntegTest extends IntegrationSpec {
         noExceptionThrown()
         result.standardError.isEmpty()
         result.standardOutput.contains('Build id is ')
-    }
-
-
-    def 'recorded build model is valid'() {
-        setup:
-        createIndex()
-
-        setValidBuildFile(DispatcherType.ES_HTTP)
-        def runResult
-
-        when:
-        runResult = runTasksSuccessfully('projects')
-
-        then:
-        runResult.standardError.isEmpty()
-
-        def buildId = getBuildIdAndIndex(runResult.standardOutput)
-
-        def result = getBuild(buildId)
-        def source = result._source
-        def project = source.project
-        project.name == moduleName
-        project.version == 'unspecified'
-        source.startTime
-        source.finishedTime
-        source.elapsedTime
-        source.result.status == 'success'
-        !source.events.isEmpty()
-        source.tasks.size() == 1
-        source.tests.isEmpty()
     }
 
     def 'properties are sanitized'() {
@@ -182,37 +151,6 @@ class ESMetricsPluginIntegTest extends IntegrationSpec {
         result.standardOutput.contains("Build is running offline")
     }
 
-
-    def 'report information is serialized correctly into elasticsearch'() {
-        setup:
-        createIndex()
-        setValidBuildFile(DispatcherType.ES_HTTP)
-        buildFile << """
-
-        ${applyPlugin(InfoBrokerPlugin)}
-
-        task createReport {
-            doFirst {
-                def broker = project.plugins.findPlugin(${InfoBrokerPlugin.name})
-                broker.addReport('lintViolations', ['one', 'two', 'three'])
-            }
-        }
-
-        """
-
-        when:
-        def runResult = runTasksSuccessfully('createReport')
-
-        def buildId = getBuildIdAndIndex(runResult.standardOutput)
-        def result = getBuild(buildId)
-        def metricsSent = result._source
-        def lintViolationsReport = metricsSent['lintViolations']
-
-        then:
-        lintViolationsReport != null
-        lintViolationsReport instanceof List
-        (lintViolationsReport as List).equals(['one', 'two', 'three'])
-    }
 
     def setValidBuildFile(DispatcherType dispatcherType) {
         def build = """
