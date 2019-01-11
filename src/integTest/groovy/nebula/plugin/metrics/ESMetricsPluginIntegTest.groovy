@@ -196,7 +196,7 @@ class ESMetricsPluginIntegTest extends IntegrationSpec {
 
     private Map getBuild(String buildId) {
         def result = [:]
-        while(result.isEmpty() || !result._source) {
+        while(result.isEmpty() || !result._source || !result._source.info) {
             def response = callElastic("GET", "/build-metrics-default/build/${buildId}")
             result = objectMapper.readValue(response, Map)
         }
