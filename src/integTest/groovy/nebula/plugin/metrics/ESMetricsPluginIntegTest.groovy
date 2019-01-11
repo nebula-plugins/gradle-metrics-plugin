@@ -79,8 +79,7 @@ class ESMetricsPluginIntegTest extends IntegrationSpec {
 
         def buildId = getBuildIdAndIndex(runResult.standardOutput)
 
-        def response = callElastic("GET", "/build-metrics-default/build/${buildId}")
-        def result = objectMapper.readValue(response, Map)
+        def result = getBuild(buildId)
         def props = result._source.info.systemProperties
         props.find { it.key == propKey }?.value == 'SANITIZED'
     }
