@@ -31,7 +31,7 @@ import spock.lang.Shared
  */
 @Slf4j
 @Testcontainers
-@IgnoreIf({ Boolean.valueOf(env["TRAVIS_BUILD_ID"]) }) //TODO: remove once we figure out the stability issues with Travis
+@IgnoreIf({ Boolean.valueOf(env["CI"]) }) //TODO: remove once we figure out the stability issues with Travis
 class ESMetricsPluginIntegTest extends IntegrationSpec {
 
     private final ObjectMapper objectMapper = new ObjectMapper()
