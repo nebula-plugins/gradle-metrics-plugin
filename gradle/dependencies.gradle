@@ -64,8 +64,12 @@ dependencies {
 
     testCompile 'com.netflix.nebula:nebula-test:7.+'
     testCompile "com.google.guava:guava-testlib:$versions.guava"
-    integTestCompile 'com.github.tlrx:elasticsearch-test:1.2.1'
     integTestCompile 'com.github.tomakehurst:wiremock-standalone:2.20.0'
+    integTestCompile 'org.testcontainers:elasticsearch:1.10.5'
+    integTestCompile('org.testcontainers:spock:1.10.5') {
+        exclude group: 'org.codehaus.groovy'
+    }
+
 }
 
 configurations.all ({

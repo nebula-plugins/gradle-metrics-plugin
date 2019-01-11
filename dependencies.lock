@@ -202,9 +202,9 @@
             "locked": "2.3.2",
             "requested": "2.3.2"
         },
-        "com.github.tlrx:elasticsearch-test": {
-            "locked": "1.2.1",
-            "requested": "1.2.1"
+        "com.github.tomakehurst:wiremock-standalone": {
+            "locked": "2.20.0",
+            "requested": "2.20.0"
         },
         "com.google.guava:guava": {
             "locked": "18.0",
@@ -249,6 +249,14 @@
         "org.elasticsearch:elasticsearch": {
             "locked": "1.7.2",
             "requested": "1.7.2"
+        },
+        "org.testcontainers:elasticsearch": {
+            "locked": "1.10.5",
+            "requested": "1.10.5"
+        },
+        "org.testcontainers:spock": {
+            "locked": "1.10.5",
+            "requested": "1.10.5"
         }
     },
     "integTestCompileClasspath": {
@@ -268,9 +276,9 @@
             "locked": "2.3.2",
             "requested": "2.3.2"
         },
-        "com.github.tlrx:elasticsearch-test": {
-            "locked": "1.2.1",
-            "requested": "1.2.1"
+        "com.github.tomakehurst:wiremock-standalone": {
+            "locked": "2.20.0",
+            "requested": "2.20.0"
         },
         "com.google.guava:guava": {
             "locked": "18.0",
@@ -315,6 +323,14 @@
         "org.elasticsearch:elasticsearch": {
             "locked": "1.7.2",
             "requested": "1.7.2"
+        },
+        "org.testcontainers:elasticsearch": {
+            "locked": "1.10.5",
+            "requested": "1.10.5"
+        },
+        "org.testcontainers:spock": {
+            "locked": "1.10.5",
+            "requested": "1.10.5"
         }
     },
     "integTestRuntime": {
@@ -334,9 +350,9 @@
             "locked": "2.3.2",
             "requested": "2.3.2"
         },
-        "com.github.tlrx:elasticsearch-test": {
-            "locked": "1.2.1",
-            "requested": "1.2.1"
+        "com.github.tomakehurst:wiremock-standalone": {
+            "locked": "2.20.0",
+            "requested": "2.20.0"
         },
         "com.google.guava:guava": {
             "locked": "18.0",
@@ -381,6 +397,14 @@
         "org.elasticsearch:elasticsearch": {
             "locked": "1.7.2",
             "requested": "1.7.2"
+        },
+        "org.testcontainers:elasticsearch": {
+            "locked": "1.10.5",
+            "requested": "1.10.5"
+        },
+        "org.testcontainers:spock": {
+            "locked": "1.10.5",
+            "requested": "1.10.5"
         }
     },
     "integTestRuntimeClasspath": {
@@ -400,9 +424,9 @@
             "locked": "2.3.2",
             "requested": "2.3.2"
         },
-        "com.github.tlrx:elasticsearch-test": {
-            "locked": "1.2.1",
-            "requested": "1.2.1"
+        "com.github.tomakehurst:wiremock-standalone": {
+            "locked": "2.20.0",
+            "requested": "2.20.0"
         },
         "com.google.guava:guava": {
             "locked": "18.0",
@@ -447,6 +471,14 @@
         "org.elasticsearch:elasticsearch": {
             "locked": "1.7.2",
             "requested": "1.7.2"
+        },
+        "org.testcontainers:elasticsearch": {
+            "locked": "1.10.5",
+            "requested": "1.10.5"
+        },
+        "org.testcontainers:spock": {
+            "locked": "1.10.5",
+            "requested": "1.10.5"
         }
     },
     "jacocoAgent": {
