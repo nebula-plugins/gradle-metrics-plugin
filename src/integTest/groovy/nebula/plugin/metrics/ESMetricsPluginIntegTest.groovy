@@ -23,6 +23,7 @@ import nebula.test.IntegrationSpec
 import org.testcontainers.elasticsearch.ElasticsearchContainer
 import org.testcontainers.shaded.com.fasterxml.jackson.databind.ObjectMapper
 import org.testcontainers.spock.Testcontainers
+import spock.lang.IgnoreIf
 import spock.lang.Shared
 
 /**
@@ -30,6 +31,7 @@ import spock.lang.Shared
  */
 @Slf4j
 @Testcontainers
+@IgnoreIf({ Boolean.valueOf(env["TRAVIS_BUILD_ID"]) }) //TODO: remove once we figure out the stability issues with Travis
 class ESMetricsPluginIntegTest extends IntegrationSpec {
 
     private final ObjectMapper objectMapper = new ObjectMapper()
