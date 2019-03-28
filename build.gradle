@@ -15,7 +15,7 @@
  */
 
 plugins {
-    id 'nebula.plugin-plugin' version '9.3.4'
+    id 'nebula.plugin-plugin' version '9.3.7'
     id 'com.github.johnrengelman.shadow' version '4.0.0'
     id "io.franzbecker.gradle-lombok" version "1.14"
 }
