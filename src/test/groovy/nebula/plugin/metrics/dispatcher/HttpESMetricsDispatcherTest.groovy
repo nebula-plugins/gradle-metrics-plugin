@@ -62,8 +62,37 @@ class HttpESMetricsDispatcherTest extends Specification {
         where: basicAuth << [true, false]
     }
 
-    private static HttpServer createMockEsInstance(boolean basicAuth) {
-        HttpServer mockEsInstance = HttpServer.create(new InetSocketAddress(esPort), 0)
+    @Unroll
+    def "HttpESMetricsDispatcher should use full uri if configured: #fullUriPresent"(boolean fullUriPresent) {
+        given: 'running mock ES instance and HttpESMetricsDispatcher'
+        def port = fullUriPresent ? 1338 : esPort
+        HttpServer mockEsInstance = createMockEsInstance(false, port)
+        mockEsInstance.start()
+        MetricsPluginExtension metrics = new MetricsPluginExtension()
+        metrics.setHostname('localhost')
+        metrics.setHttpPort(esPort)
+        metrics.setIndexName('index')
+        if (fullUriPresent) {
+            metrics.setFullURI("http://localhost:$port")
+        }
+        HttpESMetricsDispatcher dispatcher = new HttpESMetricsDispatcher(metrics)
+        dispatcher.startAsync().awaitRunning()
+
+        when: 'dispatcher tries to create an index'
+        def indexExists = dispatcher.exists('index')
+
+        then: 'request should succeed, and we should see a valid response'
+        noExceptionThrown()
+        indexExists
+
+        cleanup:
+        mockEsInstance?.stop(0)
+
+        where: fullUriPresent << [true, false]
+    }
+
+    private static HttpServer createMockEsInstance(boolean basicAuth, int port = esPort) {
+        HttpServer mockEsInstance = HttpServer.create(new InetSocketAddress(port), 0)
         HttpContext rootCtx = mockEsInstance.createContext(context, buildEsHttpHandler())
         if (basicAuth) {
             rootCtx.setAuthenticator(new BasicAuthenticator(context) {

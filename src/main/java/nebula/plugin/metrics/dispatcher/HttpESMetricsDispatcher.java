@@ -51,7 +51,7 @@ public final class HttpESMetricsDispatcher extends AbstractESMetricsDispatcher {
     protected void startUpClient() {
         JestClientFactory factory = new JestClientFactory();
         HttpClientConfig.Builder config = new HttpClientConfig
-                .Builder("http://" + extension.getHostname() + ":" + extension.getHttpPort())
+                .Builder(getURI(this.extension))
                 .multiThreaded(false);
         if (!Strings.isNullOrEmpty(extension.getEsBasicAuthUsername())) {
             config.defaultCredentials(extension.getEsBasicAuthUsername(), extension.getEsBasicAuthPassword());

@@ -17,7 +17,6 @@
 
 package nebula.plugin.metrics;
 
-import org.gradle.api.logging.LogLevel;
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
@@ -44,6 +43,7 @@ public class MetricsPluginExtension {
 
     public static final String DEFAULT_INDEX_NAME = "default";
 
+    private String fullURI = null;
     private String hostname = "localhost";
     private int transportPort = 9300;
     private int httpPort = 9200;
@@ -74,6 +74,14 @@ public class MetricsPluginExtension {
 
     public void setHostname(String hostname) {
         this.hostname = checkNotNull(hostname);
+    }
+
+    public String getFullURI() {
+        return fullURI;
+    }
+
+    public void setFullURI(String fullURI) {
+        this.fullURI = fullURI;
     }
 
     public String getEsBasicAuthUsername() {

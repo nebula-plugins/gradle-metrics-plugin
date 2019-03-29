@@ -17,10 +17,8 @@
 
 package nebula.plugin.metrics.dispatcher;
 
-import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.LoggerContext;
 import ch.qos.logback.classic.spi.ILoggingEvent;
-import ch.qos.logback.classic.spi.LoggingEvent;
 import com.google.common.base.Optional;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
@@ -31,14 +29,15 @@ import net.logstash.logback.composite.JsonProviders;
 import net.logstash.logback.composite.loggingevent.MdcJsonProvider;
 import net.logstash.logback.layout.LogstashLayout;
 import org.apache.commons.io.IOUtils;
-import org.gradle.internal.logging.events.LogEvent;
 import org.slf4j.Logger;
 
-import java.io.*;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.StringWriter;
 import java.net.MalformedURLException;
 import java.net.URL;
 
-import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
 public abstract class AbstractESMetricsDispatcher extends AbstractMetricsDispatcher {
@@ -94,7 +93,7 @@ public abstract class AbstractESMetricsDispatcher extends AbstractMetricsDispatc
             String file = "/" + extension.getIndexName() + "/" + BUILD_TYPE + "/" + buildId.get();
             URL url;
             try {
-                url = new URL("http", extension.getHostname(), extension.getHttpPort(), file);
+                url = new URL(getURI(extension) + file);
             } catch (MalformedURLException e) {
                 throw Throwables.propagate(e);
             }
@@ -130,6 +129,10 @@ public abstract class AbstractESMetricsDispatcher extends AbstractMetricsDispatc
     @Override
     protected String getCollectionName() {
         return extension.getIndexName();
+    }
+
+    protected String getURI(MetricsPluginExtension extension) {
+        return extension.getFullURI() != null ? extension.getFullURI() : "http://" + extension.getHostname() + ":" + extension.getHttpPort();
     }
 
     protected abstract void createIndex(String indexName, String source);
