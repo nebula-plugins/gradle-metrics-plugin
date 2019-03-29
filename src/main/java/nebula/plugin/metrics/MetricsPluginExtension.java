@@ -43,7 +43,7 @@ public class MetricsPluginExtension {
 
     public static final String DEFAULT_INDEX_NAME = "default";
 
-    private String esURI = null;
+    private String fullURI = null;
     private String hostname = "localhost";
     private int transportPort = 9300;
     private int httpPort = 9200;
@@ -76,12 +76,12 @@ public class MetricsPluginExtension {
         this.hostname = checkNotNull(hostname);
     }
 
-    public String getEsURI() {
-        return esURI;
+    public String getFullURI() {
+        return fullURI;
     }
 
-    public void setEsURI(String esURI) {
-        this.esURI = esURI;
+    public void setFullURI(String fullURI) {
+        this.fullURI = fullURI;
     }
 
     public String getEsBasicAuthUsername() {

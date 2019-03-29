@@ -73,7 +73,7 @@ class HttpESMetricsDispatcherTest extends Specification {
         metrics.setHttpPort(esPort)
         metrics.setIndexName('index')
         if (fullUriPresent) {
-            metrics.setEsURI("http://localhost:$port")
+            metrics.setFullURI("http://localhost:$port")
         }
         HttpESMetricsDispatcher dispatcher = new HttpESMetricsDispatcher(metrics)
         dispatcher.startAsync().awaitRunning()
