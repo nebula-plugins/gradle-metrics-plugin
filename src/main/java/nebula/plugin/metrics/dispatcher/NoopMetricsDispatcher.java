@@ -31,10 +31,6 @@ public class NoopMetricsDispatcher extends AbstractESMetricsDispatcher {
     }
 
     @Override
-    protected void createIndex(String indexName, String source) {
-    }
-
-    @Override
     protected boolean exists(String indexName) {
         return true;
     }

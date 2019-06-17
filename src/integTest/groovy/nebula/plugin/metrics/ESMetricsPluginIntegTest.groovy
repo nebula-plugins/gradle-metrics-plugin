@@ -39,7 +39,6 @@ class ESMetricsPluginIntegTest extends IntegrationSpec {
 
     def 'running projects task causes no errors and the build id to standard out'() {
         setup:
-        createIndex()
         setValidBuildFile(DispatcherType.ES_HTTP)
         def result
 
@@ -55,7 +54,6 @@ class ESMetricsPluginIntegTest extends IntegrationSpec {
 
     def 'running offline results in no metrics being recorded'() {
         setup:
-        createIndex()
         setValidBuildFile(DispatcherType.ES_HTTP)
         def result
 
@@ -83,23 +81,6 @@ class ESMetricsPluginIntegTest extends IntegrationSpec {
     """.stripIndent()
         buildFile << build
     }
-
-    private void createIndex() {
-        try {
-            def url = new URL("http://${container.httpHostAddress}/build-metrics-default")
-            def http = url.openConnection()
-            http.setDoOutput(true)
-            http.setRequestMethod('PUT')
-            String userpass = "elastic:changeme"
-            String basicAuth = "Basic " + new String(Base64.getEncoder().encode(userpass.getBytes()))
-            http.setRequestProperty("Authorization", basicAuth)
-            http.setRequestProperty('User-agent', 'groovy script')
-            http.inputStream.getText("UTF-8")
-        } catch (all) {
-            log.info("Could not call create index - already exists")
-        }
-    }
-
 
     private getBuildId(String output) {
         def m = output =~ /Build id is (.*)/
