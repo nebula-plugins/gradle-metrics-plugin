@@ -17,7 +17,6 @@
 
 package nebula.plugin.metrics.dispatcher;
 
-import ch.qos.logback.classic.LoggerContext;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import com.google.common.base.Optional;
 import com.google.common.base.Supplier;
@@ -28,13 +27,6 @@ import nebula.plugin.metrics.MetricsPluginExtension;
 import net.logstash.logback.composite.JsonProviders;
 import net.logstash.logback.composite.loggingevent.MdcJsonProvider;
 import net.logstash.logback.layout.LogstashLayout;
-import org.apache.commons.io.IOUtils;
-import org.slf4j.Logger;
-
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.StringWriter;
 import java.net.MalformedURLException;
 import java.net.URL;
 
@@ -42,7 +34,6 @@ import static com.google.common.base.Preconditions.checkState;
 
 public abstract class AbstractESMetricsDispatcher extends AbstractMetricsDispatcher {
 
-    private final ch.qos.logback.classic.Logger logbackLogger = new LoggerContext().getLogger(Logger.ROOT_LOGGER_NAME);
     private final Supplier<LogstashLayout> logstashLayoutSupplier = Suppliers.memoize(new Supplier<LogstashLayout>() {
         @Override
         public LogstashLayout get() {
@@ -103,29 +94,6 @@ public abstract class AbstractESMetricsDispatcher extends AbstractMetricsDispatc
         }
     }
 
-    private String readFromFileOrDefault(String file, String defaultFile) throws IOException {
-        InputStream input = (file == null || "".equals(file)) ? this.getClass().getResourceAsStream(defaultFile) : new FileInputStream(file);
-        StringWriter sw = new StringWriter();
-        IOUtils.copy(input, sw);
-        return sw.toString();
-    }
-
-    @Override
-    protected void initDatastore() {
-        String indexName = extension.getIndexName();
-        try {
-            if (!exists(indexName)) {
-                String mapping = readFromFileOrDefault(extension.getMetricsIndexMappingFile(), "/default-build-metrics-mappings.json");
-                logger.info(String.format("Creating index %s for metrics", indexName));
-                createIndex(indexName, mapping);
-            } else {
-                logger.info(String.format("Using index %s for metrics", indexName));
-            }
-        } catch (IOException e) {
-            logger.debug("Error creating index(es)", e);
-        }
-    }
-
     @Override
     protected String getCollectionName() {
         return extension.getIndexName();
@@ -134,8 +102,6 @@ public abstract class AbstractESMetricsDispatcher extends AbstractMetricsDispatc
     protected String getURI(MetricsPluginExtension extension) {
         return extension.getFullURI() != null ? extension.getFullURI() : "http://" + extension.getHostname() + ":" + extension.getHttpPort();
     }
-
-    protected abstract void createIndex(String indexName, String source);
 
     protected abstract boolean exists(String indexName);
 

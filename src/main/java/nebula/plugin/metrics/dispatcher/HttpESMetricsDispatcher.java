@@ -27,7 +27,6 @@ import io.searchbox.client.JestResult;
 import io.searchbox.client.config.HttpClientConfig;
 import io.searchbox.core.Bulk;
 import io.searchbox.core.Index;
-import io.searchbox.indices.CreateIndex;
 import io.searchbox.indices.IndicesExists;
 import nebula.plugin.metrics.MetricsPluginExtension;
 
@@ -63,12 +62,6 @@ public final class HttpESMetricsDispatcher extends AbstractESMetricsDispatcher {
     @Override
     protected void shutDownClient() {
         client.shutdownClient();
-    }
-
-    @Override
-    protected void createIndex(String indexName, String source) {
-        CreateIndex createIndex = new CreateIndex.Builder(indexName).settings(source).build();
-        execute(createIndex, false);
     }
 
     @Override

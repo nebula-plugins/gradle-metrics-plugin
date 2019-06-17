@@ -115,7 +115,6 @@ public abstract class AbstractMetricsDispatcher extends AbstractQueuedExecutionT
         // This won't be accurate, but we at least want a value here if we have a failure that causes the duration not to be fired
         build.setStartTime(System.currentTimeMillis());
         startUpClient();
-        initDatastore();
 
         // indexBuildModel must be executed synchronously and block the service from continuing to "Running" state
         // because we want to record the state before the build started running. If we don't do this, we're risking
@@ -239,10 +238,6 @@ public abstract class AbstractMetricsDispatcher extends AbstractQueuedExecutionT
     }
 
     protected void shutDownClient() {
-        // empty implementation. Concrete classes may override to add functionality.
-    }
-
-    protected void initDatastore() {
         // empty implementation. Concrete classes may override to add functionality.
     }
 
