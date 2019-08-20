@@ -43,6 +43,8 @@ public class Info {
     private static final String SPACE = " ";
     private static final String SANITIZED = "SANITIZED";
 
+    public static Info create() { return create(new UnknownTool(), new UnknownTool(), new UnknownTool()); }
+    
     public static Info create(GradleToolContainer tool) {
         return create(tool, new UnknownTool(), new UnknownTool());
     }

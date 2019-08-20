@@ -186,6 +186,8 @@ public abstract class AbstractMetricsDispatcher extends AbstractQueuedExecutionT
         Info info = build.getInfo();
         if (info != null) {
             build.setInfo(Info.sanitize(info, extension.getSanitizedProperties(), extension.getSanitizedPropertiesRegex()));
+        } else {
+            build.setInfo(Info.create());
         }
     }
 
