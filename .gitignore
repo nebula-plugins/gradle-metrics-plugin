@@ -7,4 +7,3 @@ out/
 *.ipr
 *.iml
 *.iws
-gradle.properties
