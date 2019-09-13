@@ -23,6 +23,7 @@ import org.gradle.TaskExecutionRequest;
 
 import java.io.File;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -32,7 +33,7 @@ import java.util.Set;
 public class GradleParameters {
     public static GradleParameters fromGradle(org.gradle.api.invocation.Gradle gradle) {
         StartParameter start = gradle.getStartParameter();
-        List<KeyValue> projectProperties = KeyValue.mapToKeyValueList(start.getProjectProperties());
+        Map<String, String> projectProperties = start.getProjectProperties();
         return new GradleParameters(start.getTaskRequests(),
                 start.getExcludedTaskNames(),
                 start.isBuildProjectDependencies(),
@@ -69,7 +70,7 @@ public class GradleParameters {
 
     private boolean searchUpwards;
 
-    private List<KeyValue> projectProperties;
+    private Map<String, String> projectProperties;
 
     private File gradleUserHomeDir;
 

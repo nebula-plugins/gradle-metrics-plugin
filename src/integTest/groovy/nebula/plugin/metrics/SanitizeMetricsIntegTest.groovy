@@ -41,7 +41,7 @@ class SanitizeMetricsIntegTest extends IntegrationSpec {
                 .withRequestBody(containing("elapsedTime"))
                 .withRequestBody(containing("elapsedTime"))
                 .withRequestBody(containing("project\":{\"name\":\"${moduleName}\",\"version\":\"unspecified\"}"))
-                .withRequestBody(containing("{\"key\":\"MY_ID\",\"value\":\"SANITIZED\"}"))
+                .withRequestBody(containing("{\"MY_ID\":\"SANITIZED\"}"))
                 .willReturn(
                 aResponse().withStatus(200).withHeader('Content-Type', 'application/json')))
 
@@ -72,10 +72,10 @@ class SanitizeMetricsIntegTest extends IntegrationSpec {
                 .withRequestBody(containing("elapsedTime"))
                 .withRequestBody(containing("elapsedTime"))
                 .withRequestBody(containing("project\":{\"name\":\"${moduleName}\",\"version\":\"unspecified\"}"))
-                .withRequestBody(containing("{\"key\":\"MY_KEY\",\"value\":\"SANITIZED\"}"))
-                .withRequestBody(containing("{\"key\":\"MY_PASSWORD\",\"value\":\"SANITIZED\"}"))
-                .withRequestBody(containing("{\"key\":\"MY_SECRET\",\"value\":\"SANITIZED\"}"))
-                .withRequestBody(containing("{\"key\":\"MY_TOKEN\",\"value\":\"SANITIZED\"}"))
+                .withRequestBody(containing("{\"MY_KEY\":\"SANITIZED\"}"))
+                .withRequestBody(containing("{\"MY_PASSWORD\":\"SANITIZED\"}"))
+                .withRequestBody(containing("{\"MY_SECRET\":\"SANITIZED\"}"))
+                .withRequestBody(containing("{\"MY_TOKEN\":\"SANITIZED\"}"))
                 .willReturn(
                 aResponse().withStatus(200).withHeader('Content-Type', 'application/json')))
 

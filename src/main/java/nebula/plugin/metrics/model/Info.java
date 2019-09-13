@@ -21,10 +21,11 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import lombok.NonNull;
 import lombok.Value;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -52,27 +53,31 @@ public class Info {
     }
 
     public static Info create(Tool tool, Tool scm, Tool ci, Map<String, String> env, Map<String, String> systemProperties) {
-        List<KeyValue> envList = KeyValue.mapToKeyValueList(env);
-        List<KeyValue> systemPropertiesList = KeyValue.mapToKeyValueList(systemProperties);
-        return new Info(tool, scm, ci, envList, systemPropertiesList);
+        return new Info(tool, scm, ci, env, systemProperties);
     }
 
     public static Info sanitize(Info info, List<String> sanitizedProperties, String sanitizedPropertiesRegex) {
         Pattern sanitizedPropertiesPattern = Pattern.compile(sanitizedPropertiesRegex);
-        return new Info(info.getBuild(), info.getScm(), info.getCi(), sanitizeKeyValues(info.getEnvironmentVariables(), sanitizedProperties, sanitizedPropertiesPattern), sanitizeKeyValues(info.getSystemProperties(), sanitizedProperties, sanitizedPropertiesPattern));
+        return new Info(
+                info.getBuild(),
+                info.getScm(),
+                info.getCi(),
+                sanitizeMap(info.getEnvironmentVariables(), sanitizedProperties, sanitizedPropertiesPattern),
+                sanitizeMap(info.getSystemProperties(), sanitizedProperties, sanitizedPropertiesPattern)
+        );
     }
 
-    private static List<KeyValue> sanitizeKeyValues(List<KeyValue> keyValues, List<String> sanitizedProperties, Pattern sanitizedPropertiesPattern) {
-        List<KeyValue> sanitizedKeyValues = new ArrayList<>();
-        for (KeyValue keyValue : keyValues) {
-            Matcher m = sanitizedPropertiesPattern.matcher(keyValue.getKey());
-            if (sanitizedProperties.contains(keyValue.getKey()) || m.matches()) {
-                sanitizedKeyValues.add(new KeyValue(keyValue.getKey(), SANITIZED));
+    private static ConcurrentMap<String, String> sanitizeMap(Map<String, String> map, List<String> sanitizedProperties, Pattern sanitizedPropertiesPattern) {
+        ConcurrentHashMap<String, String> sanitizedMap = new ConcurrentHashMap<>();
+        for (Map.Entry<String, String> entry : map.entrySet()) {
+            Matcher m = sanitizedPropertiesPattern.matcher(entry.getKey());
+            if (sanitizedProperties.contains(entry.getKey()) || m.matches()) {
+                sanitizedMap.put(entry.getKey(), SANITIZED);
             } else {
-                sanitizedKeyValues.add(keyValue);
+                sanitizedMap.put(entry.getKey(), entry.getValue());
             }
         }
-        return sanitizedKeyValues;
+        return sanitizedMap;
     }
 
     @NonNull
@@ -85,10 +90,10 @@ public class Info {
     private Tool ci;
 
     @NonNull
-    private List<KeyValue> environmentVariables;
+    private Map<String, String> environmentVariables;
 
     @NonNull
-    private List<KeyValue> systemProperties;
+    private Map<String, String> systemProperties;
 
     public String getJavaVersion() {
         String javaVersion = findProperty("java.version");
@@ -103,12 +108,7 @@ public class Info {
     }
 
     private String findProperty(String propertyName) {
-        for (KeyValue systemProperty : systemProperties) {
-            if (systemProperty.getKey().equals(propertyName)) {
-                return systemProperty.getValue();
-            }
-        }
-        return EMPTY_STRING;
+        return systemProperties.getOrDefault(propertyName, EMPTY_STRING);
     }
 
     private String determineJavaVersion(String javaRuntimeName, String javaVersion, String javaVendor) {
@@ -130,3 +130,4 @@ public class Info {
         }
     }
 }
+
