@@ -92,6 +92,25 @@ class MetricsPluginLifecycleTest extends ProjectSpec {
         capturedTest.getClassName() == 'className'
     }
 
+    def 'TestListeners are registered to subprojects in multiproject setups'() {
+        def subproject = addSubproject('testingproject')
+        subproject.plugins.apply(JavaPlugin)
+        def dispatcher = applyPluginWithMockedDispatcher(project)
+        def task = subproject.tasks.getByName('test') as Test
+
+        // This is pretty coupley, but it means we can use the same infrastructure as Gradle to trigger the result (I'll use test execution in integration tests)
+        def field = Test.superclass.getDeclaredField('testListenerBroadcaster')
+        field.setAccessible(true)
+        def broadcastMock = Spy(ListenerBroadcast)
+        def listener = field.set(task, broadcastMock);
+
+        when:
+        subproject.evaluate()
+
+        then:
+        1 * broadcastMock.add(_)
+    }
+
     BuildListener buildListenerBroadcaster(Project project) {
         def gradle = project.gradle as DefaultGradle
         gradle.buildListenerBroadcaster

@@ -23,7 +23,6 @@ import groovy.lang.Closure;
 import nebula.plugin.metrics.collector.GradleBuildMetricsCollector;
 import nebula.plugin.metrics.collector.GradleTestSuiteCollector;
 import nebula.plugin.metrics.dispatcher.*;
-import nebula.plugin.metrics.model.BuildMetrics;
 import nebula.plugin.metrics.time.BuildStartedTime;
 import nebula.plugin.metrics.time.Clock;
 import nebula.plugin.metrics.time.MonotonicClock;
@@ -56,6 +55,18 @@ public final class MetricsPlugin implements Plugin<Project> {
     private final Logger logger = MetricsLoggerFactory.getLogger(MetricsPlugin.class);
     private final Clock clock = new MonotonicClock();
     private MetricsDispatcher dispatcher = new UninitializedMetricsDispatcher();
+    private Action<Project> configureProjectCollectorAction = new Action<Project>() {
+        @Override
+        public void execute(Project p) {
+            for (Task task : p.getTasks()) {
+                if (task instanceof Test) {
+                    GradleTestSuiteCollector suiteCollector = new GradleTestSuiteCollector(dispatcherSupplier, (Test) task);
+                    ((Test) task).addTestListener(suiteCollector);
+                }
+            }
+        }
+    };
+
     /**
      * Supplier allowing the dispatcher to be fetched lazily, so we can replace the instance for testing.
      */
@@ -127,7 +138,7 @@ public final class MetricsPlugin implements Plugin<Project> {
                         }
                     }
                 }
-                configureProjectCollectors(project.getAllprojects());
+                configureProjectCollectors(project);
             }
         });
 
@@ -154,16 +165,11 @@ public final class MetricsPlugin implements Plugin<Project> {
         });
     }
 
-    private void configureProjectCollectors(Set<Project> projects) {
-        for (Project project : projects) {
-            TaskContainer tasks = project.getTasks();
-            for (String name : tasks.getNames()) {
-                Task task = tasks.getByName(name);
-                if (task instanceof Test) {
-                    GradleTestSuiteCollector suiteCollector = new GradleTestSuiteCollector(dispatcherSupplier, (Test) task);
-                    ((Test) task).addTestListener(suiteCollector);
-                }
-            }
+    private void configureProjectCollectors(Project project) {
+        configureProjectCollectorAction.execute(project);
+        for (Project subproject : project.getSubprojects()) {
+            // perform task scan for subprojects after subproject evaluation
+            subproject.afterEvaluate(configureProjectCollectorAction);
         }
     }
 
