@@ -22,7 +22,6 @@ ext {
 
 versions.es = '1.7.2'
 versions.guava = '18.0'
-versions.jackson = '2.3.2'
 versions.slf4j = '1.7.12'
 versions.httpcomponents = '4.4.1'
 
@@ -38,10 +37,12 @@ dependencies {
     plugin libraries.guava
     plugin 'joda-time:joda-time:2.8.2'
 
-    plugin "com.fasterxml.jackson.core:jackson-core:$versions.jackson"
-    plugin "com.fasterxml.jackson.core:jackson-databind:$versions.jackson"
-    plugin "com.fasterxml.jackson.core:jackson-annotations:$versions.jackson"
-    plugin "com.fasterxml.jackson.datatype:jackson-datatype-joda:$versions.jackson"
+    plugin "com.fasterxml.jackson.core:jackson-core"
+    plugin "com.fasterxml.jackson.core:jackson-databind"
+    plugin "com.fasterxml.jackson.core:jackson-annotations"
+    plugin "com.fasterxml.jackson.datatype:jackson-datatype-joda"
+
+    plugin platform("com.fasterxml.jackson:jackson-bom:2.9.9.20190807")
 
     plugin 'net.logstash.logback:logstash-logback-encoder:4.5.1'
     // The logback encoder requires logback-classic, but we don't want it to bind and conflict with Gradle's SLF4J implementation
