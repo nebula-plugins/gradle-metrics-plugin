@@ -46,6 +46,7 @@ import org.gradle.api.execution.TaskExecutionListener;
 import org.gradle.api.initialization.Settings;
 import org.gradle.api.invocation.Gradle;
 import org.gradle.api.tasks.TaskState;
+import org.gradle.util.DeprecationLogger;
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
 
@@ -88,7 +89,8 @@ public final class GradleBuildMetricsCollector implements BuildListener, Project
      */
     @Override
     public void buildStarted(Gradle gradle) {
-        checkNotNull(gradle);
+        //Remove warning as this does nothing
+        DeprecationLogger.whileDisabled(() -> checkNotNull(gradle));
     }
 
     @Override
