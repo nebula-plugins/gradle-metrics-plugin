@@ -68,7 +68,6 @@ class MetricsPluginTest extends ProjectSpec {
         def buildResult = new BuildResult(project.gradle, null)
 
         when:
-        buildListenerBroadcaster(project).buildStarted(project.gradle)
         buildListenerBroadcaster(project).buildFinished(buildResult)
 
         then:

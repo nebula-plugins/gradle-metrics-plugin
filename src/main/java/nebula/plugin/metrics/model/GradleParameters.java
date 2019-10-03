@@ -38,11 +38,9 @@ public class GradleParameters {
                 start.isBuildProjectDependencies(),
                 start.getCurrentDir(),
                 start.getProjectDir(),
-                start.isSearchUpwards(),
                 projectProperties,
                 start.getGradleUserHomeDir(),
                 start.getSettingsFile(),
-                start.isUseEmptySettings(),
                 start.getBuildFile(),
                 start.getInitScripts(),
                 start.isDryRun(),
@@ -67,15 +65,11 @@ public class GradleParameters {
 
     private File projectDir;
 
-    private boolean searchUpwards;
-
     private List<KeyValue> projectProperties;
 
     private File gradleUserHomeDir;
 
     private File settingsFile;
-
-    private boolean useEmptySettings;
 
     private File buildFile;
 
