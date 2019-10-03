@@ -32,7 +32,7 @@ import nebula.plugin.metrics.model.ProjectMetrics;
 import nebula.plugin.metrics.model.TaskExecution;
 import nebula.plugin.metrics.time.BuildStartedTime;
 import nebula.plugin.metrics.time.Clock;
-import org.gradle.BuildListener;
+import org.gradle.BuildAdapter;
 import org.gradle.BuildResult;
 import org.gradle.StartParameter;
 import org.gradle.api.Plugin;
@@ -46,7 +46,6 @@ import org.gradle.api.execution.TaskExecutionListener;
 import org.gradle.api.initialization.Settings;
 import org.gradle.api.invocation.Gradle;
 import org.gradle.api.tasks.TaskState;
-import org.gradle.util.DeprecationLogger;
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
 
@@ -59,7 +58,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 import static org.apache.commons.lang3.exception.ExceptionUtils.getRootCauseMessage;
 
-public final class GradleBuildMetricsCollector implements BuildListener, ProjectEvaluationListener, TaskExecutionListener, DependencyResolutionListener {
+public final class GradleBuildMetricsCollector extends BuildAdapter implements ProjectEvaluationListener, TaskExecutionListener, DependencyResolutionListener {
 
     private static final long TIMEOUT_MS = 5000;
 
@@ -82,16 +81,6 @@ public final class GradleBuildMetricsCollector implements BuildListener, Project
     private final Gradle gradle;
     private final Clock clock;
     private BuildMetrics buildMetrics;
-
-    /**
-     * This is just to keep in sync with the interface
-     * @param gradle
-     */
-    @Override
-    public void buildStarted(Gradle gradle) {
-        //Remove warning as this does nothing
-        DeprecationLogger.whileDisabled(() -> checkNotNull(gradle));
-    }
 
     @Override
     public void settingsEvaluated(Settings settings) {
