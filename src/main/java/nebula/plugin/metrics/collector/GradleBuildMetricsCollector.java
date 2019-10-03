@@ -82,7 +82,6 @@ public final class GradleBuildMetricsCollector extends BuildAdapter implements P
     private final Clock clock;
     private BuildMetrics buildMetrics;
 
-
     @Override
     public void settingsEvaluated(Settings settings) {
         checkNotNull(settings);
