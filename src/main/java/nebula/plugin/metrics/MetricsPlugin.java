@@ -36,12 +36,10 @@ import org.gradle.api.Task;
 import org.gradle.api.invocation.BuildInvocationDetails;
 import org.gradle.api.invocation.Gradle;
 import org.gradle.api.plugins.ExtensionContainer;
-import org.gradle.api.tasks.TaskContainer;
 import org.gradle.api.tasks.testing.Test;
 import org.slf4j.Logger;
 
 import javax.inject.Inject;
-import java.util.Set;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
@@ -58,12 +56,10 @@ public final class MetricsPlugin implements Plugin<Project> {
     private Action<Project> configureProjectCollectorAction = new Action<Project>() {
         @Override
         public void execute(Project p) {
-            for (Task task : p.getTasks()) {
-                if (task instanceof Test) {
-                    GradleTestSuiteCollector suiteCollector = new GradleTestSuiteCollector(dispatcherSupplier, (Test) task);
-                    ((Test) task).addTestListener(suiteCollector);
-                }
-            }
+            p.getTasks().withType(Test.class).configureEach(test -> {
+                GradleTestSuiteCollector suiteCollector = new GradleTestSuiteCollector(dispatcherSupplier, test);
+                test.addTestListener(suiteCollector);
+            });
         }
     };
 
