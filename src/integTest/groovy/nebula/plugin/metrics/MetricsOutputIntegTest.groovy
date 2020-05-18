@@ -34,7 +34,7 @@ class MetricsOutputIntegTest extends IntegrationSpec {
             }
 
             dependencies {
-               testCompile 'junit:junit:4.11'
+               testImplementation 'junit:junit:4.11'
             }
 
             test.testLogging.showStandardStreams = true
@@ -72,8 +72,8 @@ class MetricsOutputIntegTest extends IntegrationSpec {
             }
 
             dependencies {
-               testCompile 'log4j:log4j:latest.release'
-               testCompile 'junit:junit:4.11'
+               testImplementation 'log4j:log4j:latest.release'
+               testImplementation 'junit:junit:4.11'
             }
 
             test.testLogging.showStandardStreams = true

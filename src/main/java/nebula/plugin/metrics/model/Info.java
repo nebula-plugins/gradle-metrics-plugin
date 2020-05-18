@@ -21,18 +21,18 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import lombok.NonNull;
 import lombok.Value;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.function.Consumer;
+import java.util.function.Predicate;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 /**
  * Environment.
  */
 @Value
-@JsonPropertyOrder({"build", "scm", "ci", "environmentVariables", "systemProperties", "javaVersion", "detailedJavaVersion"})
+@JsonPropertyOrder({"build", "scm", "ci", "environmentVariables", "systemProperties", "javaVersion", "detailedJavaVersion", "nebulaFeatures"})
 public class Info {
     private static final String UNKNOWN = "UNKNOWN";
     private static final String OPEN_JDK = "OpenJDK";
@@ -43,36 +43,20 @@ public class Info {
     private static final String SPACE = " ";
     private static final String SANITIZED = "SANITIZED";
 
-    public static Info create(GradleToolContainer tool) {
-        return create(tool, new UnknownTool(), new UnknownTool());
+    public static Info create(GradleToolContainer tool, org.gradle.api.Project gradleProject) {
+        return create(tool, new UnknownTool(), new UnknownTool(), gradleProject);
     }
 
-    public static Info create(Tool tool, Tool scm, Tool ci) {
-        return create(tool, scm, ci, System.getenv(), new HashMap(System.getProperties()));
+    public static Info create(Tool tool, Tool scm, Tool ci, org.gradle.api.Project gradleProject) {
+        Map<String, String> systemProps = new HashMap(System.getProperties());
+        return create(tool, scm, ci, System.getenv(), systemProps, getNebulaFeatures(gradleProject, systemProps));
     }
 
-    public static Info create(Tool tool, Tool scm, Tool ci, Map<String, String> env, Map<String, String> systemProperties) {
+    public static Info create(Tool tool, Tool scm, Tool ci, Map<String, String> env, Map<String, String> systemProperties, Map<String, String> nebulaFeatures) {
         List<KeyValue> envList = KeyValue.mapToKeyValueList(env);
         List<KeyValue> systemPropertiesList = KeyValue.mapToKeyValueList(systemProperties);
-        return new Info(tool, scm, ci, envList, systemPropertiesList);
-    }
-
-    public static Info sanitize(Info info, List<String> sanitizedProperties, String sanitizedPropertiesRegex) {
-        Pattern sanitizedPropertiesPattern = Pattern.compile(sanitizedPropertiesRegex);
-        return new Info(info.getBuild(), info.getScm(), info.getCi(), sanitizeKeyValues(info.getEnvironmentVariables(), sanitizedProperties, sanitizedPropertiesPattern), sanitizeKeyValues(info.getSystemProperties(), sanitizedProperties, sanitizedPropertiesPattern));
-    }
-
-    private static List<KeyValue> sanitizeKeyValues(List<KeyValue> keyValues, List<String> sanitizedProperties, Pattern sanitizedPropertiesPattern) {
-        List<KeyValue> sanitizedKeyValues = new ArrayList<>();
-        for (KeyValue keyValue : keyValues) {
-            Matcher m = sanitizedPropertiesPattern.matcher(keyValue.getKey());
-            if (sanitizedProperties.contains(keyValue.getKey()) || m.matches()) {
-                sanitizedKeyValues.add(new KeyValue(keyValue.getKey(), SANITIZED));
-            } else {
-                sanitizedKeyValues.add(keyValue);
-            }
-        }
-        return sanitizedKeyValues;
+        List<KeyValue> nebulaFeaturesList = KeyValue.mapToKeyValueList(nebulaFeatures);
+        return new Info(tool, scm, ci, envList, systemPropertiesList, nebulaFeaturesList);
     }
 
     @NonNull
@@ -89,6 +73,9 @@ public class Info {
 
     @NonNull
     private List<KeyValue> systemProperties;
+
+    @NonNull
+    private List<KeyValue> nebulaFeatures;
 
     public String getJavaVersion() {
         String javaVersion = findProperty("java.version");
@@ -128,5 +115,36 @@ public class Info {
         } else {
             return UNKNOWN.concat(SPACE).concat(javaVersion);
         }
+    }
+
+    public static Info sanitize(Info info, List<String> sanitizedProperties, String sanitizedPropertiesRegex) {
+        Pattern sanitizedPropertiesPattern = Pattern.compile(sanitizedPropertiesRegex);
+        return new Info(info.getBuild(), info.getScm(), info.getCi(), sanitizeKeyValues(info.getEnvironmentVariables(), sanitizedProperties, sanitizedPropertiesPattern), sanitizeKeyValues(info.getSystemProperties(), sanitizedProperties, sanitizedPropertiesPattern), sanitizeKeyValues(info.getNebulaFeatures(), sanitizedProperties, sanitizedPropertiesPattern));
+    }
+
+    private static List<KeyValue> sanitizeKeyValues(List<KeyValue> keyValues, List<String> sanitizedProperties, Pattern sanitizedPropertiesPattern) {
+        List<KeyValue> sanitizedKeyValues = new ArrayList<>();
+        for (KeyValue keyValue : keyValues) {
+            Matcher m = sanitizedPropertiesPattern.matcher(keyValue.getKey());
+            if (sanitizedProperties.contains(keyValue.getKey()) || m.matches()) {
+                sanitizedKeyValues.add(new KeyValue(keyValue.getKey(), SANITIZED));
+            } else {
+                sanitizedKeyValues.add(keyValue);
+            }
+        }
+        return sanitizedKeyValues;
+    }
+
+    private static Map<String, String> getNebulaFeatures(org.gradle.api.Project gradleProject,  Map<String, String> systemProperties) {
+        Map<String, String> nebulaFeatures = new HashMap<>();
+        List<Map.Entry<String, ?>> nebulaFeaturesFromProjectProperties = extractNebulaFeatures(gradleProject.getProperties());
+        List<Map.Entry<String, ?>> nebulaFeaturesFromSystemProperties = extractNebulaFeatures(systemProperties);
+        nebulaFeaturesFromProjectProperties.forEach(stringEntry -> nebulaFeatures.put(stringEntry.getKey(), stringEntry.getValue().toString()));
+        nebulaFeaturesFromSystemProperties.forEach(stringEntry -> nebulaFeatures.put(stringEntry.getKey(), stringEntry.getValue().toString()));
+        return nebulaFeatures;
+    }
+
+    private static  List<Map.Entry<String, ?>> extractNebulaFeatures(Map<String, ?> properties) {
+        return properties.entrySet().stream().filter((Predicate<Map.Entry<String, ?>>) stringEntry -> stringEntry.getKey().startsWith("nebula.feature")).collect(Collectors.toList());
     }
 }
