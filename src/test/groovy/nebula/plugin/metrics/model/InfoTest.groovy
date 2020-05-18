@@ -18,6 +18,8 @@
 package nebula.plugin.metrics.model
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import org.junit.Rule
+import org.junit.contrib.java.lang.system.ProvideSystemProperty
 import spock.lang.Specification
 import spock.lang.Unroll
 
@@ -25,16 +27,19 @@ import spock.lang.Unroll
  * Tests for {@link Info}.
  */
 class InfoTest extends Specification {
+
+    @Rule public final ProvideSystemProperty nebulaFeatureSystemProperty = new ProvideSystemProperty("nebula.feature.someOtherFeature.enabled", "true")
+
     def 'environment is json serialized in expected form'() {
         def map = new LinkedHashMap<String, String>()
         map.put("mykey1", "myvalue1")
         map.put("mykey2", "myvalue2")
         def tool = Mock(Tool)
-        def info = Info.create(tool, tool, tool, map, Collections.emptyMap())
+        def info = Info.create(tool, tool, tool, map, Collections.emptyMap(), Collections.emptyMap())
         def mapper = new ObjectMapper()
 
         expect:
-        mapper.writeValueAsString(info) == '{"build":{"type":null},"scm":{"type":null},"ci":{"type":null},"environmentVariables":[{"key":"mykey1","value":"myvalue1"},{"key":"mykey2","value":"myvalue2"}],"systemProperties":[],"javaVersion":"unknown","detailedJavaVersion":"unknown"}'
+        mapper.writeValueAsString(info) == '{"build":{"type":null},"scm":{"type":null},"ci":{"type":null},"environmentVariables":[{"key":"mykey1","value":"myvalue1"},{"key":"mykey2","value":"myvalue2"}],"systemProperties":[],"javaVersion":"unknown","detailedJavaVersion":"unknown","nebulaFeatures":[]}'
     }
 
     def 'properties are sanitized'() {
@@ -42,7 +47,7 @@ class InfoTest extends Specification {
         map.put("mykey1", "myvalue1")
         map.put("mykey2", "myvalue2")
         def tool = Mock(Tool)
-        def info = Info.create(tool, tool, tool, Collections.emptyMap(), map)
+        def info = Info.create(tool, tool, tool, Collections.emptyMap(), map, Collections.emptyMap())
         String regex = "(?i).*\\_(TOKEN|KEY|SECRET|PASSWORD)\$"
 
         expect:
@@ -58,7 +63,7 @@ class InfoTest extends Specification {
         map.put("MY_PASSWORD", "myvalue4")
         map.put("test", "myvalue5")
         def tool = Mock(Tool)
-        def info = Info.create(tool, tool, tool, Collections.emptyMap(), map)
+        def info = Info.create(tool, tool, tool, Collections.emptyMap(), map, Collections.emptyMap())
 
         when:
         String regex = "(?i).*\\_(TOKEN|KEY|SECRET|PASSWORD)\$"
@@ -82,7 +87,7 @@ class InfoTest extends Specification {
         systemProperties.put("java.version", version)
         systemProperties.put("java.vm.vendor", vendor)
         def tool = Mock(Tool)
-        def info = Info.create(tool, tool, tool, env, systemProperties)
+        def info = Info.create(tool, tool, tool, env, systemProperties, Collections.emptyMap())
         def mapper = new ObjectMapper()
 
         expect:
@@ -90,11 +95,30 @@ class InfoTest extends Specification {
 
         where:
         description                       | version     | runtimeName                         | vendor         | expectedResult
-        "is Oracle"                       | "1.8.0_181" | "Oracle"                            | ""             | '{"build":{"type":null},"scm":{"type":null},"ci":{"type":null},"environmentVariables":[{"key":"mykey1","value":"myvalue1"},{"key":"mykey2","value":"myvalue2"}],"systemProperties":[{"key":"java.runtime.name","value":"Oracle"},{"key":"java.version","value":"1.8.0_181"},{"key":"java.vm.vendor","value":""}],"javaVersion":"1.8.0_181","detailedJavaVersion":"Oracle 1.8.0_181"}'
-        "is Oracle"                       | "1.8.0_181" | "Java(TM) SE Runtime Environment"   | ""             | '{"build":{"type":null},"scm":{"type":null},"ci":{"type":null},"environmentVariables":[{"key":"mykey1","value":"myvalue1"},{"key":"mykey2","value":"myvalue2"}],"systemProperties":[{"key":"java.runtime.name","value":"Java(TM) SE Runtime Environment"},{"key":"java.version","value":"1.8.0_181"},{"key":"java.vm.vendor","value":""}],"javaVersion":"1.8.0_181","detailedJavaVersion":"Oracle 1.8.0_181"}'
-        "is Oracle"                       | "1.8.0_181" | "Java HotSpot(TM) 64-Bit Server VM" | ""             | '{"build":{"type":null},"scm":{"type":null},"ci":{"type":null},"environmentVariables":[{"key":"mykey1","value":"myvalue1"},{"key":"mykey2","value":"myvalue2"}],"systemProperties":[{"key":"java.runtime.name","value":"Java HotSpot(TM) 64-Bit Server VM"},{"key":"java.version","value":"1.8.0_181"},{"key":"java.vm.vendor","value":""}],"javaVersion":"1.8.0_181","detailedJavaVersion":"Oracle 1.8.0_181"}'
-        "is OpenJDK - zulu"               | "1.8.0_181" | "OpenJDK"                           | "Azul Systems" | '{"build":{"type":null},"scm":{"type":null},"ci":{"type":null},"environmentVariables":[{"key":"mykey1","value":"myvalue1"},{"key":"mykey2","value":"myvalue2"}],"systemProperties":[{"key":"java.runtime.name","value":"OpenJDK"},{"key":"java.version","value":"1.8.0_181"},{"key":"java.vm.vendor","value":"Azul Systems"}],"javaVersion":"1.8.0_181","detailedJavaVersion":"OpenJDK 1.8.0_181-zulu"}'
-        "is OpenJDK"                      | "1.8.0_181" | "OpenJDK"                           | ""             | '{"build":{"type":null},"scm":{"type":null},"ci":{"type":null},"environmentVariables":[{"key":"mykey1","value":"myvalue1"},{"key":"mykey2","value":"myvalue2"}],"systemProperties":[{"key":"java.runtime.name","value":"OpenJDK"},{"key":"java.version","value":"1.8.0_181"},{"key":"java.vm.vendor","value":""}],"javaVersion":"1.8.0_181","detailedJavaVersion":"OpenJDK 1.8.0_181"}'
-        "is case insensitive for openjdk" | "1.8.0_181" | "openjdk"                           | ""             | '{"build":{"type":null},"scm":{"type":null},"ci":{"type":null},"environmentVariables":[{"key":"mykey1","value":"myvalue1"},{"key":"mykey2","value":"myvalue2"}],"systemProperties":[{"key":"java.runtime.name","value":"openjdk"},{"key":"java.version","value":"1.8.0_181"},{"key":"java.vm.vendor","value":""}],"javaVersion":"1.8.0_181","detailedJavaVersion":"OpenJDK 1.8.0_181"}'
+        "is Oracle"                       | "1.8.0_181" | "Oracle"                            | ""             | '{"build":{"type":null},"scm":{"type":null},"ci":{"type":null},"environmentVariables":[{"key":"mykey1","value":"myvalue1"},{"key":"mykey2","value":"myvalue2"}],"systemProperties":[{"key":"java.runtime.name","value":"Oracle"},{"key":"java.version","value":"1.8.0_181"},{"key":"java.vm.vendor","value":""}],"javaVersion":"1.8.0_181","detailedJavaVersion":"Oracle 1.8.0_181","nebulaFeatures":[]}'
+        "is Oracle"                       | "1.8.0_181" | "Java(TM) SE Runtime Environment"   | ""             | '{"build":{"type":null},"scm":{"type":null},"ci":{"type":null},"environmentVariables":[{"key":"mykey1","value":"myvalue1"},{"key":"mykey2","value":"myvalue2"}],"systemProperties":[{"key":"java.runtime.name","value":"Java(TM) SE Runtime Environment"},{"key":"java.version","value":"1.8.0_181"},{"key":"java.vm.vendor","value":""}],"javaVersion":"1.8.0_181","detailedJavaVersion":"Oracle 1.8.0_181","nebulaFeatures":[]}'
+        "is Oracle"                       | "1.8.0_181" | "Java HotSpot(TM) 64-Bit Server VM" | ""             | '{"build":{"type":null},"scm":{"type":null},"ci":{"type":null},"environmentVariables":[{"key":"mykey1","value":"myvalue1"},{"key":"mykey2","value":"myvalue2"}],"systemProperties":[{"key":"java.runtime.name","value":"Java HotSpot(TM) 64-Bit Server VM"},{"key":"java.version","value":"1.8.0_181"},{"key":"java.vm.vendor","value":""}],"javaVersion":"1.8.0_181","detailedJavaVersion":"Oracle 1.8.0_181","nebulaFeatures":[]}'
+        "is OpenJDK - zulu"               | "1.8.0_181" | "OpenJDK"                           | "Azul Systems" | '{"build":{"type":null},"scm":{"type":null},"ci":{"type":null},"environmentVariables":[{"key":"mykey1","value":"myvalue1"},{"key":"mykey2","value":"myvalue2"}],"systemProperties":[{"key":"java.runtime.name","value":"OpenJDK"},{"key":"java.version","value":"1.8.0_181"},{"key":"java.vm.vendor","value":"Azul Systems"}],"javaVersion":"1.8.0_181","detailedJavaVersion":"OpenJDK 1.8.0_181-zulu","nebulaFeatures":[]}'
+        "is OpenJDK"                      | "1.8.0_181" | "OpenJDK"                           | ""             | '{"build":{"type":null},"scm":{"type":null},"ci":{"type":null},"environmentVariables":[{"key":"mykey1","value":"myvalue1"},{"key":"mykey2","value":"myvalue2"}],"systemProperties":[{"key":"java.runtime.name","value":"OpenJDK"},{"key":"java.version","value":"1.8.0_181"},{"key":"java.vm.vendor","value":""}],"javaVersion":"1.8.0_181","detailedJavaVersion":"OpenJDK 1.8.0_181","nebulaFeatures":[]}'
+        "is case insensitive for openjdk" | "1.8.0_181" | "openjdk"                           | ""             | '{"build":{"type":null},"scm":{"type":null},"ci":{"type":null},"environmentVariables":[{"key":"mykey1","value":"myvalue1"},{"key":"mykey2","value":"myvalue2"}],"systemProperties":[{"key":"java.runtime.name","value":"openjdk"},{"key":"java.version","value":"1.8.0_181"},{"key":"java.vm.vendor","value":""}],"javaVersion":"1.8.0_181","detailedJavaVersion":"OpenJDK 1.8.0_181","nebulaFeatures":[]}'
+    }
+
+    def 'extracts nebula features from system and project properties'() {
+        setup:
+        org.gradle.api.Project mockProject = Mock(org.gradle.api.Project)
+        def projectProperties = new LinkedHashMap<String, String>()
+        projectProperties.put("mykey1", "myvalue1")
+        projectProperties.put("nebula.feature.someFeature.enabled", "true")
+        projectProperties.put("mykey2", "myvalue2")
+        def tool = Mock(Tool)
+
+        when:
+        def info = Info.create(tool, tool, tool, mockProject)
+
+        then:
+        info.nebulaFeatures.find { it.key == 'nebula.feature.someFeature.enabled' }.value
+        info.nebulaFeatures.find { it.key == 'nebula.feature.someOtherFeature.enabled' }.value
+
+        1 * mockProject.properties >> projectProperties
     }
 }

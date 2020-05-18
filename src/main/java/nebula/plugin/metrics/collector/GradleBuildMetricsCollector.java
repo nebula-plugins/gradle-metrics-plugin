@@ -172,10 +172,10 @@ public final class GradleBuildMetricsCollector extends BuildAdapter implements P
             GradleToolContainer tool = GradleToolContainer.fromGradle(gradle);
             InfoBrokerPlugin plugin = getNebulaInfoBrokerPlugin(gradleProject);
             if (plugin == null) {
-                dispatcher.environment(Info.create(tool));
+                dispatcher.environment(Info.create(tool, gradleProject));
             } else {
                 GradleInfoCollector collector = new GradleInfoCollector(plugin);
-                dispatcher.environment(Info.create(tool, collector.getSCM(), collector.getCI()));
+                dispatcher.environment(Info.create(tool, collector.getSCM(), collector.getCI(), gradleProject));
             }
         } catch (Exception e) {
             logger.error("Unexpected exception in evaluation listener (error message: {})", getRootCauseMessage(e));

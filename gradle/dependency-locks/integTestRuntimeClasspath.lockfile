@@ -8,6 +8,7 @@ com.fasterxml.jackson.core:jackson-core:2.9.9
 com.fasterxml.jackson.core:jackson-databind:2.9.9.3
 com.fasterxml.jackson.datatype:jackson-datatype-joda:2.9.9
 com.fasterxml.jackson:jackson-bom:2.9.9.20190807
+com.github.stefanbirkner:system-rules:1.19.0
 com.github.tomakehurst:wiremock-standalone:2.20.0
 com.google.code.findbugs:jsr305:1.3.9
 com.google.code.gson:gson:2.3.1
@@ -28,7 +29,7 @@ com.kohlschutter.junixsocket:junixsocket-common:2.0.4
 com.kohlschutter.junixsocket:junixsocket-native-common:2.0.4
 com.netflix.nebula:gradle-contacts-plugin:4.0.2
 com.netflix.nebula:gradle-info-plugin:4.0.3
-com.netflix.nebula:nebula-test:7.6.0
+com.netflix.nebula:nebula-test:7.8.6
 com.perforce:p4java:2015.2.1365273
 com.spatial4j:spatial4j:0.4.1
 com.trilead:trilead-ssh2:1.0.0-build220
