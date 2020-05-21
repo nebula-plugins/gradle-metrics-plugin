@@ -17,6 +17,8 @@
 
 package nebula.plugin.metrics;
 
+import nebula.plugin.metrics.model.BuildMetrics;
+
 import org.gradle.api.invocation.BuildInvocationDetails;
 import org.gradle.api.invocation.Gradle;
 
@@ -31,6 +33,15 @@ public class MetricsGradlePlugin extends AbstractMetricsPlugin<Gradle> {
 
     @Override
     public void apply(Gradle gradle) {
-        configureProject(gradle.getRootProject());
+        if(isOfflineMode(gradle)) {
+           gradle.rootProject(project -> {
+               createMetricsExtension(project);
+               project.getLogger().warn("Build is running offline. Metrics will not be collected.");
+           });
+            return;
+        }
+        BuildMetrics buildMetrics = initializeBuildMetrics(gradle);
+        createAndRegisterGradleBuildMetricsCollector(gradle, buildMetrics);
+        gradle.rootProject(this::configureProject);
     }
 }

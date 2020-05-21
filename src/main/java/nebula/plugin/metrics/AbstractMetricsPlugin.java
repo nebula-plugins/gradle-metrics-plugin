@@ -22,6 +22,7 @@ import groovy.lang.Closure;
 import nebula.plugin.metrics.collector.GradleBuildMetricsCollector;
 import nebula.plugin.metrics.collector.GradleTestSuiteCollector;
 import nebula.plugin.metrics.dispatcher.*;
+import nebula.plugin.metrics.model.BuildMetrics;
 import nebula.plugin.metrics.time.BuildStartedTime;
 import nebula.plugin.metrics.time.Clock;
 import nebula.plugin.metrics.time.MonotonicClock;
@@ -31,7 +32,6 @@ import org.gradle.api.Action;
 import org.gradle.api.GradleException;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
-import org.gradle.api.initialization.Settings;
 import org.gradle.api.invocation.BuildInvocationDetails;
 import org.gradle.api.invocation.Gradle;
 import org.gradle.api.plugins.ExtensionContainer;
@@ -44,6 +44,8 @@ import static com.google.common.base.Preconditions.checkState;
 
 public abstract class AbstractMetricsPlugin<T> implements Plugin<T> {
 
+    private MetricsDispatcher dispatcher = new UninitializedMetricsDispatcher();
+    private final Clock clock = new MonotonicClock();
     private final BuildInvocationDetails buildInvocationDetails;
 
     @Inject
@@ -51,65 +53,44 @@ public abstract class AbstractMetricsPlugin<T> implements Plugin<T> {
         this.buildInvocationDetails = buildInvocationDetails;
     }
 
-    private MetricsDispatcher dispatcher = new UninitializedMetricsDispatcher();
-
-    private final Clock clock = new MonotonicClock();
-
-
-    private Action<Project> configureProjectCollectorAction = new Action<Project>() {
-        @Override
-        public void execute(Project p) {
-            p.getTasks().withType(Test.class).configureEach(test -> {
-                GradleTestSuiteCollector suiteCollector = new GradleTestSuiteCollector(dispatcherSupplier, test);
-                test.addTestListener(suiteCollector);
-            });
-        }
-    };
-
-    public void setDispatcher(MetricsDispatcher dispatcher) {
-        this.dispatcher = checkNotNull(dispatcher);
+    public BuildMetrics initializeBuildMetrics(Gradle gradle) {
+        BuildMetrics buildMetrics = new BuildMetrics(gradle.getStartParameter());
+        BuildStartedTime buildStartedTime = BuildStartedTime.startingAt(buildInvocationDetails.getBuildStartedTime());
+        buildMetrics.setBuildStarted(buildStartedTime.getStartTime());
+        buildMetrics.setProfilingStarted(buildStartedTime.getStartTime());
+        return buildMetrics;
     }
 
-    @VisibleForTesting
-    MetricsDispatcher getDispatcher() {
-        return dispatcher;
+    public void createAndRegisterGradleBuildMetricsCollector(Gradle gradle, BuildMetrics buildMetrics) {
+        final GradleBuildMetricsCollector gradleCollector = new GradleBuildMetricsCollector(dispatcherSupplier, buildMetrics, clock);
+        gradle.addListener(gradleCollector);
+        gradle.buildFinished(new Closure(null) {
+            protected Object doCall(Object arguments) {
+                gradleCollector.buildFinishedClosure((BuildResult)arguments);
+                return null;
+            }
+        });
     }
 
+    public boolean isOfflineMode(Gradle gradle) {
+        return gradle.getStartParameter().isOffline();
+    }
 
-    /**
-     * Supplier allowing the dispatcher to be fetched lazily, so we can replace the instance for testing.
-     */
-    private Supplier<MetricsDispatcher> dispatcherSupplier = new Supplier<MetricsDispatcher>() {
-        @Override
-        public MetricsDispatcher get() {
-            return dispatcher;
-        }
-    };
+    public MetricsPluginExtension createMetricsExtension(Project project) {
+        return project.getExtensions().create("metrics", MetricsPluginExtension.class);
+    }
 
     public void configureProject(Project project) {
         checkNotNull(project);
-
-        //Using internal API to retrieve build start time but still storing it in our own data structure
-        BuildStartedTime buildStartedTime = BuildStartedTime.startingAt(buildInvocationDetails.getBuildStartedTime());
-
         checkState(project == project.getRootProject(), "The metrics plugin may only be applied to the root project");
-        ExtensionContainer extensions = project.getExtensions();
-        extensions.add("metrics", new MetricsPluginExtension());
-        Gradle gradle = project.getGradle();
-        StartParameter startParameter = gradle.getStartParameter();
-        final MetricsPluginExtension extension = extensions.getByType(MetricsPluginExtension.class);
+
+        final MetricsPluginExtension extension = createMetricsExtension(project);
 
         if (project.hasProperty("metrics.enabled") && "false".equals(project.property("metrics.enabled"))) {
             project.getLogger().warn("Metrics have been disabled for this build.");
             return;
         }
 
-        if (startParameter.isOffline()) {
-            project.getLogger().warn("Build is running offline. Metrics will not be collected.");
-            return;
-        }
-
-        configureRootProjectCollectors(project, buildStartedTime);
         project.afterEvaluate(new Action<Project>() {
             @Override
             public void execute(Project project) {
@@ -144,31 +125,13 @@ public abstract class AbstractMetricsPlugin<T> implements Plugin<T> {
         });
     }
 
+    public void setDispatcher(MetricsDispatcher dispatcher) {
+        this.dispatcher = checkNotNull(dispatcher);
+    }
 
-    private void configureRootProjectCollectors(Project rootProject, BuildStartedTime buildStartedTime) {
-        final Gradle gradle = rootProject.getGradle();
-        final GradleBuildMetricsCollector gradleCollector = new GradleBuildMetricsCollector(dispatcherSupplier, buildStartedTime, gradle, clock);
-        gradle.addListener(gradleCollector);
-        gradle.projectsLoaded(new Closure(null) {
-            protected Object doCall(Object arguments) {
-                throw new RuntimeException("sdadsa");
-            }
-        });
-
-        gradle.settingsEvaluated(new Action<Settings>() {
-            @Override
-            public void execute(Settings settings) {
-                checkNotNull(settings);
-                gradleCollector.initializeBuildMetrics();
-                gradleCollector.getBuildMetrics().setSettingsEvaluated(clock.getCurrentTime());
-            }
-        });
-        gradle.buildFinished(new Closure(null) {
-            protected Object doCall(Object arguments) {
-                gradleCollector.buildFinishedClosure((BuildResult)arguments);
-                return null;
-            }
-        });
+    @VisibleForTesting
+    MetricsDispatcher getDispatcher() {
+        return dispatcher;
     }
 
     private void configureProjectCollectors(Project project) {
@@ -178,4 +141,24 @@ public abstract class AbstractMetricsPlugin<T> implements Plugin<T> {
             subproject.afterEvaluate(configureProjectCollectorAction);
         }
     }
+
+    /**
+     * Supplier allowing the dispatcher to be fetched lazily, so we can replace the instance for testing.
+     */
+    private Supplier<MetricsDispatcher> dispatcherSupplier = new Supplier<MetricsDispatcher>() {
+        @Override
+        public MetricsDispatcher get() {
+            return dispatcher;
+        }
+    };
+
+    private Action<Project> configureProjectCollectorAction = new Action<Project>() {
+        @Override
+        public void execute(Project p) {
+            p.getTasks().withType(Test.class).configureEach(test -> {
+                GradleTestSuiteCollector suiteCollector = new GradleTestSuiteCollector(dispatcherSupplier, test);
+                test.addTestListener(suiteCollector);
+            });
+        }
+    };
 }
