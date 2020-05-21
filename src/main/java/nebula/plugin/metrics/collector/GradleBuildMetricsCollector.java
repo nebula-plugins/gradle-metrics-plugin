@@ -82,6 +82,10 @@ public final class GradleBuildMetricsCollector extends BuildAdapter implements P
     private final Clock clock;
     private BuildMetrics buildMetrics;
 
+    public BuildMetrics getBuildMetrics() {
+        return buildMetrics;
+    }
+
     @Override
     public void settingsEvaluated(Settings settings) {
         checkNotNull(settings);
@@ -310,14 +314,13 @@ public final class GradleBuildMetricsCollector extends BuildAdapter implements P
     }
 
 
-    private void initializeBuildMetrics() {
+    public void initializeBuildMetrics() {
         if(buildMetrics != null) {
             return;
         }
-        long now = clock.getCurrentTime();
         BuildMetrics buildMetrics = new BuildMetrics(gradle.getStartParameter());
         buildMetrics.setBuildStarted(buildStartedTime.getStartTime());
-        buildMetrics.setProfilingStarted(now);
+        buildMetrics.setProfilingStarted(buildStartedTime.getStartTime());
         this.buildMetrics = buildMetrics;
     }
 

@@ -1,5 +1,5 @@
 /*
- *  Copyright 2015-2020 Netflix, Inc.
+ *  Copyright 2020 Netflix, Inc.
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -17,25 +17,20 @@
 
 package nebula.plugin.metrics;
 
-import org.gradle.api.Project;
-
 import org.gradle.api.invocation.BuildInvocationDetails;
+import org.gradle.api.invocation.Gradle;
+
 import javax.inject.Inject;
 
-/**
- * Gradle build metrics plugin.
- *
- * @author Danny Thomas
- */
-public final class MetricsPlugin extends AbstractMetricsPlugin<Project> {
+public class MetricsGradlePlugin extends AbstractMetricsPlugin<Gradle> {
 
     @Inject
-    public MetricsPlugin(BuildInvocationDetails buildInvocationDetails) {
+    public MetricsGradlePlugin(BuildInvocationDetails buildInvocationDetails) {
         super(buildInvocationDetails);
     }
 
     @Override
-    public void apply(Project project) {
-        configureProject(project);
+    public void apply(Gradle gradle) {
+        configureProject(gradle.getRootProject());
     }
 }
