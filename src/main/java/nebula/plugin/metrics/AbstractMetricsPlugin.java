@@ -27,14 +27,12 @@ import nebula.plugin.metrics.time.BuildStartedTime;
 import nebula.plugin.metrics.time.Clock;
 import nebula.plugin.metrics.time.MonotonicClock;
 import org.gradle.BuildResult;
-import org.gradle.StartParameter;
 import org.gradle.api.Action;
 import org.gradle.api.GradleException;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 import org.gradle.api.invocation.BuildInvocationDetails;
 import org.gradle.api.invocation.Gradle;
-import org.gradle.api.plugins.ExtensionContainer;
 import org.gradle.api.tasks.testing.Test;
 
 import javax.inject.Inject;
@@ -87,41 +85,39 @@ public abstract class AbstractMetricsPlugin<T> implements Plugin<T> {
         final MetricsPluginExtension extension = createMetricsExtension(project);
 
         if (project.hasProperty("metrics.enabled") && "false".equals(project.property("metrics.enabled"))) {
+            dispatcher = new NoopMetricsDispatcher(extension);
             project.getLogger().warn("Metrics have been disabled for this build.");
             return;
         }
 
-        project.afterEvaluate(new Action<Project>() {
-            @Override
-            public void execute(Project project) {
-                if (dispatcher instanceof UninitializedMetricsDispatcher) {
-                    switch (extension.getDispatcherType()) {
-                        case ES_HTTP: {
-                            dispatcher = new HttpESMetricsDispatcher(extension);
-                            break;
+        project.afterEvaluate(gradleProject -> {
+            if (dispatcher instanceof UninitializedMetricsDispatcher) {
+                switch (extension.getDispatcherType()) {
+                    case ES_HTTP: {
+                        dispatcher = new HttpESMetricsDispatcher(extension);
+                        break;
+                    }
+                    case SPLUNK: {
+                        dispatcher = new SplunkMetricsDispatcher(extension);
+                        break;
+                    }
+                    case REST: {
+                        dispatcher = new RestMetricsDispatcher(extension);
+                        break;
+                    }
+                    case NOOP: {
+                        dispatcher = new NoopMetricsDispatcher(extension);
+                        break;
+                    }
+                    case CUSTOM: {
+                        if(dispatcher instanceof UninitializedMetricsDispatcher) {
+                            throw new GradleException("setDispatcher should be called to set dispatcher when CUSTOM is selected as type");
                         }
-                        case SPLUNK: {
-                            dispatcher = new SplunkMetricsDispatcher(extension);
-                            break;
-                        }
-                        case REST: {
-                            dispatcher = new RestMetricsDispatcher(extension);
-                            break;
-                        }
-                        case NOOP: {
-                            dispatcher = new NoopMetricsDispatcher(extension);
-                            break;
-                        }
-                        case CUSTOM: {
-                            if(dispatcher instanceof UninitializedMetricsDispatcher) {
-                                throw new GradleException("setDispatcher should be called to set dispatcher when CUSTOM is selected as type");
-                            }
-                            break;
-                        }
+                        break;
                     }
                 }
-                configureProjectCollectors(project);
             }
+            configureProjectCollectors(gradleProject);
         });
     }
 
