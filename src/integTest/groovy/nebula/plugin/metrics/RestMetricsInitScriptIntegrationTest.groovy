@@ -24,7 +24,7 @@ class RestMetricsInitScriptIntegrationTest extends IntegrationSpec {
                 }
             }
 
-            apply plugin: nebula.plugin.metrics.MetricsGradlePlugin
+            apply plugin: nebula.plugin.metrics.MetricsInitPlugin
 """.stripMargin()
         addInitScript(init)
     }

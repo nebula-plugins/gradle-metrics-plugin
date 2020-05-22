@@ -27,8 +27,8 @@ com.jcraft:jsch:0.1.54
 com.jcraft:jzlib:1.1.2
 com.kohlschutter.junixsocket:junixsocket-common:2.0.4
 com.kohlschutter.junixsocket:junixsocket-native-common:2.0.4
-com.netflix.nebula:gradle-contacts-plugin:4.0.2
-com.netflix.nebula:gradle-info-plugin:4.0.3
+com.netflix.nebula:gradle-contacts-plugin:5.1.0
+com.netflix.nebula:gradle-info-plugin:7.1.4
 com.netflix.nebula:nebula-test:7.8.6
 com.perforce:p4java:2015.2.1365273
 com.spatial4j:spatial4j:0.4.1

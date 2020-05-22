@@ -17,7 +17,6 @@
 
 package nebula.plugin.metrics.collector;
 
-import nebula.plugin.info.InfoBrokerPlugin;
 import nebula.plugin.metrics.model.GenericCI;
 import nebula.plugin.metrics.model.GenericSCM;
 import nebula.plugin.metrics.model.GenericToolContainer;
@@ -25,6 +24,8 @@ import nebula.plugin.metrics.model.Tool;
 
 import org.gradle.api.Plugin;
 
+import java.lang.reflect.Method;
+import java.util.HashMap;
 import java.util.Map;
 
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -33,21 +34,30 @@ import static com.google.common.base.Preconditions.checkNotNull;
  * Collector for Gradle info.
  */
 public class GradleInfoCollector {
-    private final InfoBrokerPlugin plugin;
+    private final Plugin plugin;
 
-    public GradleInfoCollector(InfoBrokerPlugin plugin) {
+    public GradleInfoCollector(Plugin plugin) {
         this.plugin = checkNotNull(plugin);
     }
 
     public Tool getSCM() {
-        Map<String, String> manifest = plugin.buildManifest();
+        Map<String, String> manifest = buildManifest();
         GenericSCM scm = new GenericSCM(manifest.get("Module-Origin"), manifest.get("Change"));
         return new GenericToolContainer(scm);
     }
 
     public Tool getCI() {
-        Map<String, String> manifest = plugin.buildManifest();
+        Map<String, String> manifest = buildManifest();
         GenericCI ci = new GenericCI(manifest.get("Build-Number"), manifest.get("Build-Job"), manifest.get("Build-Host"), manifest.get("Built-By"), manifest.get("Build-OS"));
         return new GenericToolContainer(ci);
+    }
+
+    private Map<String, String> buildManifest() {
+        try {
+            Method method = plugin.getClass().getDeclaredMethod("buildManifest");
+            return (Map<String, String>) method.invoke(plugin);
+        } catch (Exception e) {
+            return new HashMap<>();
+        }
     }
 }

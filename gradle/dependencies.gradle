@@ -59,7 +59,7 @@ dependencies {
     plugin 'org.apache.commons:commons-lang3:3.4' // also transitive of Jest
     plugin 'commons-io:commons-io:2.5'
 
-    plugin 'com.netflix.nebula:gradle-info-plugin:4.+', optional
+    plugin 'com.netflix.nebula:gradle-info-plugin:latest.release', optional
 
     compileOnly 'com.google.code.findbugs:jsr305:3.0.0'
 

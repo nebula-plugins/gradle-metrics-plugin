@@ -24,7 +24,7 @@ class ESMetricsInitScriptIntegTest extends IntegrationSpec {
                 }
             }
 
-            apply plugin: nebula.plugin.metrics.MetricsGradlePlugin
+            apply plugin: nebula.plugin.metrics.MetricsInitPlugin
 """.stripMargin()
         addInitScript(init)
         fork = false
@@ -62,6 +62,18 @@ class ESMetricsInitScriptIntegTest extends IntegrationSpec {
     def setValidBuildFile(MetricsPluginExtension.DispatcherType dispatcherType) {
         def build = """
         apply plugin: 'java'
+        buildscript {
+          repositories {
+            maven {
+              url "https://plugins.gradle.org/m2/"
+            }
+          }
+          dependencies {
+            classpath "com.netflix.nebula:gradle-info-plugin:7.1.4"
+          }
+        }
+        
+        apply plugin: "nebula.info"
 
         metrics {
             esBasicAuthUsername = 'elastic'

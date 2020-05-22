@@ -19,7 +19,6 @@ package nebula.plugin.metrics.collector;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
 import com.google.common.base.Supplier;
-import nebula.plugin.info.InfoBrokerPlugin;
 import nebula.plugin.metrics.MetricsLoggerFactory;
 import nebula.plugin.metrics.dispatcher.MetricsDispatcher;
 import nebula.plugin.metrics.model.GradleToolContainer;
@@ -30,7 +29,6 @@ import nebula.plugin.metrics.model.CompositeOperation;
 import nebula.plugin.metrics.model.ContinuousOperation;
 import nebula.plugin.metrics.model.ProjectMetrics;
 import nebula.plugin.metrics.model.TaskExecution;
-import nebula.plugin.metrics.time.BuildStartedTime;
 import nebula.plugin.metrics.time.Clock;
 import org.gradle.BuildAdapter;
 import org.gradle.BuildResult;
@@ -49,6 +47,8 @@ import org.gradle.api.tasks.TaskState;
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
 
+import java.lang.reflect.Method;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -159,7 +159,7 @@ public final class GradleBuildMetricsCollector extends BuildAdapter implements P
             dispatcher.started(project); // We register this listener after the build has started, so we fire the start event here instead
 
             GradleToolContainer tool = GradleToolContainer.fromGradle(gradle);
-            InfoBrokerPlugin plugin = getNebulaInfoBrokerPlugin(gradleProject);
+            Plugin<?> plugin = getNebulaInfoBrokerPlugin(gradleProject);
             if (plugin == null) {
                 dispatcher.environment(Info.create(tool, gradleProject));
             } else {
@@ -171,12 +171,22 @@ public final class GradleBuildMetricsCollector extends BuildAdapter implements P
         }
     }
 
-    private InfoBrokerPlugin getNebulaInfoBrokerPlugin(Project gradleProject) {
-        Plugin plugin = gradleProject.getPlugins().findPlugin("nebula.info-broker");
+    private Map<String, Object> getNebulaInfoBrokerPluginReports(Project gradleProject) {
+        try {
+            Plugin<?> nebulaInfoBrokerPlugin = getNebulaInfoBrokerPlugin(gradleProject);
+            Method method = nebulaInfoBrokerPlugin.getClass().getDeclaredMethod("buildReports");
+            return (Map<String, Object>) method.invoke(nebulaInfoBrokerPlugin);
+        }  catch (Exception e) {
+            return new HashMap<>();
+        }
+    }
+
+    private Plugin<?> getNebulaInfoBrokerPlugin(Project gradleProject) {
+        Plugin<?> plugin = gradleProject.getPlugins().findPlugin("nebula.info-broker");
         if (plugin == null) {
             plugin = gradleProject.getPlugins().findPlugin("info-broker");
         }
-        return plugin != null ? (InfoBrokerPlugin) plugin : null;
+        return plugin;
     }
 
     /*
@@ -191,10 +201,9 @@ public final class GradleBuildMetricsCollector extends BuildAdapter implements P
         MetricsDispatcher dispatcher = dispatcherSupplier.get();
         dispatcher.result(result);
 
-        InfoBrokerPlugin infoBrokerPlugin = getNebulaInfoBrokerPlugin(buildResult.getGradle().getRootProject());
-        if (infoBrokerPlugin != null) {
-            Map<String, Object> reports = infoBrokerPlugin.buildReports();
-            for (Map.Entry<String, Object> report : reports.entrySet()) {
+        Map<String,Object> infoBrokerPluginReports = getNebulaInfoBrokerPluginReports(buildResult.getGradle().getRootProject());
+        if (infoBrokerPluginReports != null) {
+            for (Map.Entry<String, Object> report : infoBrokerPluginReports.entrySet()) {
                 dispatcher.report(report.getKey(), report.getValue());
             }
         }
