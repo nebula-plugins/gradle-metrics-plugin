@@ -24,10 +24,10 @@ import org.gradle.api.invocation.Gradle;
 
 import javax.inject.Inject;
 
-public class MetricsGradlePlugin extends AbstractMetricsPlugin<Gradle> {
+public class MetricsInitPlugin extends AbstractMetricsPlugin<Gradle> {
 
     @Inject
-    public MetricsGradlePlugin(BuildInvocationDetails buildInvocationDetails) {
+    public MetricsInitPlugin(BuildInvocationDetails buildInvocationDetails) {
         super(buildInvocationDetails);
     }
 

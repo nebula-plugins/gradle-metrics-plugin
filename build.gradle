@@ -65,9 +65,9 @@ pluginBundle {
             tags = ['nebula', 'metrics']
         }
 
-        metricsGradle {
-            id = 'nebula.metrics.gradle-plugin'
-            displayName = 'Gradle Metrics Gradle plugin'
+        metricsInit {
+            id = 'nebula.metrics.init-plugin'
+            displayName = 'Gradle Metrics Init plugin'
             description = project.description
             tags = ['nebula', 'metrics']
         }
