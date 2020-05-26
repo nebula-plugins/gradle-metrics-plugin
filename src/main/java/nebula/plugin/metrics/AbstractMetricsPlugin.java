@@ -46,12 +46,35 @@ public abstract class AbstractMetricsPlugin<T> implements Plugin<T> {
     private final Clock clock = new MonotonicClock();
     private final BuildInvocationDetails buildInvocationDetails;
 
+    /**
+     * Supplier allowing the dispatcher to be fetched lazily, so we can replace the instance for testing.
+     */
+    private final Supplier<MetricsDispatcher> dispatcherSupplier = () -> dispatcher;
+
+    private final Action<Project> configureProjectCollectorAction = p -> p.getTasks().withType(Test.class).configureEach(test -> {
+        GradleTestSuiteCollector suiteCollector = new GradleTestSuiteCollector(dispatcherSupplier, test);
+        test.addTestListener(suiteCollector);
+    });
+
     @Inject
     public AbstractMetricsPlugin(BuildInvocationDetails buildInvocationDetails) {
         this.buildInvocationDetails = buildInvocationDetails;
     }
 
-    public BuildMetrics initializeBuildMetrics(Gradle gradle) {
+    public void applyToGradle(Gradle gradle) {
+        if(isOfflineMode(gradle)) {
+            gradle.rootProject(project -> {
+                createMetricsExtension(project);
+                project.getLogger().warn("Build is running offline. Metrics will not be collected.");
+            });
+            return;
+        }
+        BuildMetrics buildMetrics = initializeBuildMetrics(gradle);
+        createAndRegisterGradleBuildMetricsCollector(gradle, buildMetrics);
+        gradle.rootProject(this::configureProject);
+    }
+
+    protected BuildMetrics initializeBuildMetrics(Gradle gradle) {
         BuildMetrics buildMetrics = new BuildMetrics(gradle.getStartParameter());
         BuildStartedTime buildStartedTime = BuildStartedTime.startingAt(buildInvocationDetails.getBuildStartedTime());
         buildMetrics.setBuildStarted(buildStartedTime.getStartTime());
@@ -59,7 +82,7 @@ public abstract class AbstractMetricsPlugin<T> implements Plugin<T> {
         return buildMetrics;
     }
 
-    public void createAndRegisterGradleBuildMetricsCollector(Gradle gradle, BuildMetrics buildMetrics) {
+    protected void createAndRegisterGradleBuildMetricsCollector(Gradle gradle, BuildMetrics buildMetrics) {
         final GradleBuildMetricsCollector gradleCollector = new GradleBuildMetricsCollector(dispatcherSupplier, buildMetrics, clock);
         gradle.addListener(gradleCollector);
         gradle.buildFinished(new Closure(null) {
@@ -70,15 +93,15 @@ public abstract class AbstractMetricsPlugin<T> implements Plugin<T> {
         });
     }
 
-    public boolean isOfflineMode(Gradle gradle) {
+    protected boolean isOfflineMode(Gradle gradle) {
         return gradle.getStartParameter().isOffline();
     }
 
-    public MetricsPluginExtension createMetricsExtension(Project project) {
+    protected MetricsPluginExtension createMetricsExtension(Project project) {
         return project.getExtensions().create("metrics", MetricsPluginExtension.class);
     }
 
-    public void configureProject(Project project) {
+    protected void configureProject(Project project) {
         checkNotNull(project);
         checkState(project == project.getRootProject(), "The metrics plugin may only be applied to the root project");
 
@@ -138,23 +161,4 @@ public abstract class AbstractMetricsPlugin<T> implements Plugin<T> {
         }
     }
 
-    /**
-     * Supplier allowing the dispatcher to be fetched lazily, so we can replace the instance for testing.
-     */
-    private Supplier<MetricsDispatcher> dispatcherSupplier = new Supplier<MetricsDispatcher>() {
-        @Override
-        public MetricsDispatcher get() {
-            return dispatcher;
-        }
-    };
-
-    private Action<Project> configureProjectCollectorAction = new Action<Project>() {
-        @Override
-        public void execute(Project p) {
-            p.getTasks().withType(Test.class).configureEach(test -> {
-                GradleTestSuiteCollector suiteCollector = new GradleTestSuiteCollector(dispatcherSupplier, test);
-                test.addTestListener(suiteCollector);
-            });
-        }
-    };
 }
