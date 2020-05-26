@@ -1,20 +1,3 @@
-/*
- *  Copyright 2015-2019 Netflix, Inc.
- *
- *  Licensed under the Apache License, Version 2.0 (the "License");
- *  you may not use this file except in compliance with the License.
- *  You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- *  Unless required by applicable law or agreed to in writing, software
- *  distributed under the License is distributed on an "AS IS" BASIS,
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and
- *  limitations under the License.
- *
- */
-
 package nebula.plugin.metrics
 
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration
@@ -22,24 +5,38 @@ import com.github.tomakehurst.wiremock.junit.WireMockRule
 import nebula.test.IntegrationSpec
 import org.junit.Rule
 
-import static com.github.tomakehurst.wiremock.client.WireMock.*
+import static com.github.tomakehurst.wiremock.client.WireMock.aResponse
+import static com.github.tomakehurst.wiremock.client.WireMock.containing
+import static com.github.tomakehurst.wiremock.client.WireMock.post
+import static com.github.tomakehurst.wiremock.client.WireMock.stubFor
 
-class RestMetricsIntegTest extends IntegrationSpec {
+class RestMetricsInitScriptIntegrationTest extends IntegrationSpec {
 
     @Rule
     WireMockRule wireMockRule = new WireMockRule(WireMockConfiguration.wireMockConfig().dynamicPort().dynamicPort())
 
-    def 'metrics posts data to preconfigured REST server'() {
+    def setup() {
+        File init = new File(projectDir, "init.gradle")
+        init.text = """
+            initscript {
+                dependencies {
+                   ${DependenciesBuilderWithClassesUnderTest.buildDependencies()}
+                }
+            }
+
+            apply plugin: nebula.plugin.metrics.MetricsInitPlugin
+""".stripMargin()
+        addInitScript(init)
+    }
+
+    def 'plugin can be applied at init script level'() {
         setup:
         buildFile << """
-            ${applyPlugin(MetricsPlugin)}
-
-            metrics {
-                restUri = 'http://localhost:${wireMockRule.port()}/myserver'
-                dispatcherType = 'REST'
-            }
-        """.stripIndent()
-
+metrics {
+    restUri = 'http://localhost:${wireMockRule.port()}/myserver'
+    dispatcherType = 'REST'
+}
+"""
 
         //First post
         stubFor(post('/myserver')
@@ -49,7 +46,7 @@ class RestMetricsIntegTest extends IntegrationSpec {
                 .withRequestBody(containing("finishedTime"))
                 .withRequestBody(containing("elapsedTime"))
                 .willReturn(
-                aResponse().withStatus(200).withHeader('Content-Type', 'application/json')))
+                        aResponse().withStatus(200).withHeader('Content-Type', 'application/json')))
 
         //build is finished
         stubFor(post('/myserver')
@@ -61,13 +58,12 @@ class RestMetricsIntegTest extends IntegrationSpec {
                 .withRequestBody(containing("elapsedTime"))
                 .withRequestBody(containing("project\":{\"name\":\"${moduleName}\",\"version\":\"unspecified\"}"))
                 .willReturn(
-                aResponse().withStatus(200).withHeader('Content-Type', 'application/json')))
+                        aResponse().withStatus(200).withHeader('Content-Type', 'application/json')))
 
         when:
-        def result = runTasksSuccessfully('projects')
+        def result = runTasksSuccessfully('build')
 
         then:
         result.standardOutput.contains("Metrics have been posted to http://localhost:${wireMockRule.port()}/myserver")
     }
-
 }

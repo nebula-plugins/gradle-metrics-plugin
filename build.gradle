@@ -24,7 +24,7 @@ apply from: 'gradle/tests.gradle'
 apply from: 'gradle/idea.gradle'
 apply from: 'gradle/dependencies.gradle'
 
-description 'Gradle metrics plugin'
+description 'Gradle Metrics plugin: Collects gradle metrics and publishes to ElasticSearch HTTP/Splunk/REST endpoints'
 
 lombok {
     version = '1.18.10'
@@ -46,10 +46,28 @@ contacts {
 }
 
 pluginBundle {
+    website = 'https://github.com/nebula-plugins/gradle-metrics-plugin'
+    vcsUrl = 'https://github.com/nebula-plugins/gradle-metrics-plugin.git'
+    description = 'Gradle Metrics plugin: Collects gradle metrics and publishes to ElasticSearch HTTP/Splunk/REST endpoints'
+
     plugins {
         metrics {
             id = 'nebula.metrics'
             displayName = 'Gradle Metrics plugin'
+            description = project.description
+            tags = ['nebula', 'metrics']
+        }
+
+        metricsSettings {
+            id = 'nebula.metrics.settings-plugin'
+            displayName = 'Gradle Metrics Settings plugin'
+            description = project.description
+            tags = ['nebula', 'metrics']
+        }
+
+        metricsInit {
+            id = 'nebula.metrics.init-plugin'
+            displayName = 'Gradle Metrics Init plugin'
             description = project.description
             tags = ['nebula', 'metrics']
         }
