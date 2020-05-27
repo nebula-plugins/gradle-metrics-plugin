@@ -83,7 +83,9 @@ public abstract class AbstractMetricsPlugin<T> implements Plugin<T> {
     }
 
     protected void createAndRegisterGradleBuildMetricsCollector(Gradle gradle, BuildMetrics buildMetrics) {
-        final GradleBuildMetricsCollector gradleCollector = new GradleBuildMetricsCollector(dispatcherSupplier, buildMetrics, clock);
+        //Using internal API to retrieve build start time but still storing it in our own data structure
+        BuildStartedTime buildStartedTime = BuildStartedTime.startingAt(buildInvocationDetails.getBuildStartedTime());
+        final GradleBuildMetricsCollector gradleCollector = new GradleBuildMetricsCollector(dispatcherSupplier, buildStartedTime, gradle, buildMetrics, clock);
         gradle.addListener(gradleCollector);
         gradle.buildFinished(new Closure(null) {
             protected Object doCall(Object arguments) {

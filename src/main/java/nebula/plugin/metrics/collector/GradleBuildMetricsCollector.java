@@ -29,6 +29,7 @@ import nebula.plugin.metrics.model.CompositeOperation;
 import nebula.plugin.metrics.model.ContinuousOperation;
 import nebula.plugin.metrics.model.ProjectMetrics;
 import nebula.plugin.metrics.model.TaskExecution;
+import nebula.plugin.metrics.time.BuildStartedTime;
 import nebula.plugin.metrics.time.Clock;
 import org.gradle.BuildAdapter;
 import org.gradle.BuildResult;
@@ -64,16 +65,20 @@ public final class GradleBuildMetricsCollector extends BuildAdapter implements P
 
     private final Logger logger = MetricsLoggerFactory.getLogger(GradleBuildMetricsCollector.class);
     private final Supplier<MetricsDispatcher> dispatcherSupplier;
+    private final BuildStartedTime buildStartedTime;
+    private final Gradle gradle;
 
     private final AtomicBoolean buildProfileComplete = new AtomicBoolean(false);
     private final AtomicBoolean buildResultComplete = new AtomicBoolean(false);
 
-    public GradleBuildMetricsCollector(Supplier<MetricsDispatcher> dispatcherSupplier, BuildMetrics buildMetrics, Clock clock) {
+    public GradleBuildMetricsCollector(Supplier<MetricsDispatcher> dispatcherSupplier, BuildStartedTime buildStartedTime, Gradle gradle, BuildMetrics buildMetrics, Clock clock) {
         checkNotNull(dispatcherSupplier);
         checkNotNull(clock);
         this.dispatcherSupplier = checkNotNull(dispatcherSupplier);
         this.clock = clock;
         this.buildMetrics = buildMetrics;
+        this.buildStartedTime = buildStartedTime;
+        this.gradle = gradle;
     }
 
     private final Clock clock;
@@ -82,24 +87,28 @@ public final class GradleBuildMetricsCollector extends BuildAdapter implements P
     @Override
     public void settingsEvaluated(Settings settings) {
         checkNotNull(settings);
+        initializeBuildMetrics();
         buildMetrics.setSettingsEvaluated(clock.getCurrentTime());
     }
 
     @Override
     public void projectsLoaded(Gradle gradle) {
         checkNotNull(gradle);
+        initializeBuildMetrics();
         buildMetrics.setProjectsLoaded(clock.getCurrentTime());
     }
 
     // ProjectEvaluationListener
     @Override
     public void beforeEvaluate(Project project) {
+        initializeBuildMetrics();
         long now = clock.getCurrentTime();
         buildMetrics.getProjectProfile(project.getPath()).getConfigurationOperation().setStart(now);
     }
 
     @Override
     public void afterEvaluate(Project project, ProjectState state) {
+        initializeBuildMetrics();
         long now = clock.getCurrentTime();
         ProjectMetrics projectMetrics = buildMetrics.getProjectProfile(project.getPath());
         projectMetrics.getConfigurationOperation().setFinish(now);
@@ -108,6 +117,7 @@ public final class GradleBuildMetricsCollector extends BuildAdapter implements P
     // TaskExecutionListener
     @Override
     public void beforeExecute(Task task) {
+        initializeBuildMetrics();
         long now = clock.getCurrentTime();
         Project project = task.getProject();
         ProjectMetrics projectMetrics = buildMetrics.getProjectProfile(project.getPath());
@@ -116,6 +126,7 @@ public final class GradleBuildMetricsCollector extends BuildAdapter implements P
 
     @Override
     public void afterExecute(Task task, TaskState state) {
+        initializeBuildMetrics();
         long now = clock.getCurrentTime();
         Project project = task.getProject();
         ProjectMetrics projectMetrics = buildMetrics.getProjectProfile(project.getPath());
@@ -126,12 +137,14 @@ public final class GradleBuildMetricsCollector extends BuildAdapter implements P
 
     @Override
     public void beforeResolve(ResolvableDependencies dependencies) {
+        initializeBuildMetrics();
         long now = clock.getCurrentTime();
         buildMetrics.getDependencySetProfile(dependencies.getPath()).setStart(now);
     }
 
     @Override
     public void afterResolve(ResolvableDependencies dependencies) {
+        initializeBuildMetrics();
         long now = clock.getCurrentTime();
         buildMetrics.getDependencySetProfile(dependencies.getPath()).setFinish(now);
     }
@@ -140,6 +153,7 @@ public final class GradleBuildMetricsCollector extends BuildAdapter implements P
     @Override
     public void projectsEvaluated(Gradle gradle) {
         checkNotNull(gradle);
+        initializeBuildMetrics();
         buildMetrics.setProjectsEvaluated(clock.getCurrentTime());
         StartParameter startParameter = gradle.getStartParameter();
         checkState(!startParameter.isOffline(), "Collectors should not be registered when Gradle is running offline");
@@ -307,6 +321,16 @@ public final class GradleBuildMetricsCollector extends BuildAdapter implements P
         }
     }
 
+    private void initializeBuildMetrics() {
+        if(buildMetrics != null) {
+            return;
+        }
+        long now = clock.getCurrentTime();
+        BuildMetrics buildMetrics = new BuildMetrics(gradle.getStartParameter());
+        buildMetrics.setBuildStarted(buildStartedTime.getStartTime());
+        buildMetrics.setProfilingStarted(now);
+        this.buildMetrics = buildMetrics;
+    }
 
     @VisibleForTesting
     Result getTaskExecutionResult(TaskExecution taskExecution) {
