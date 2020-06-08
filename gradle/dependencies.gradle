@@ -63,12 +63,12 @@ dependencies {
 
     compileOnly 'com.google.code.findbugs:jsr305:3.0.0'
 
-    testCompile 'com.netflix.nebula:nebula-test:7.+'
-    testCompile "com.google.guava:guava-testlib:$versions.guava"
-    testCompile "com.github.stefanbirkner:system-rules:1.19.0"
-    integTestCompile 'com.github.tomakehurst:wiremock-standalone:2.20.0'
-    integTestCompile 'org.testcontainers:elasticsearch:1.10.5'
-    integTestCompile('org.testcontainers:spock:1.10.5') {
+    testImplementation 'com.netflix.nebula:nebula-test:7.+'
+    testImplementation "com.google.guava:guava-testlib:$versions.guava"
+    testImplementation "com.github.stefanbirkner:system-rules:1.19.0"
+    integTestImplementation 'com.github.tomakehurst:wiremock-standalone:2.20.0'
+    integTestImplementation 'org.testcontainers:elasticsearch:1.10.5'
+    integTestImplementation('org.testcontainers:spock:1.10.5') {
         exclude group: 'org.codehaus.groovy'
     }
 
