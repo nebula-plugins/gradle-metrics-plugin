@@ -37,11 +37,18 @@ import org.gradle.api.tasks.testing.Test;
 
 import javax.inject.Inject;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
 public abstract class AbstractMetricsPlugin<T> implements Plugin<T> {
 
+    public static String METRICS_ENABLED_PROPERTY = "metrics.enabled";
     private MetricsDispatcher dispatcher = new UninitializedMetricsDispatcher();
     private final Clock clock = new MonotonicClock();
     private final BuildInvocationDetails buildInvocationDetails;
@@ -66,6 +73,13 @@ public abstract class AbstractMetricsPlugin<T> implements Plugin<T> {
             gradle.rootProject(project -> {
                 createMetricsExtension(project);
                 project.getLogger().warn("Build is running offline. Metrics will not be collected.");
+            });
+            return;
+        }
+        if(isMetricsDisabled(gradle)) {
+            gradle.rootProject(project -> {
+                createMetricsExtension(project);
+                project.getLogger().warn("Metrics have been disabled for this build.");
             });
             return;
         }
@@ -99,6 +113,24 @@ public abstract class AbstractMetricsPlugin<T> implements Plugin<T> {
         return gradle.getStartParameter().isOffline();
     }
 
+    protected boolean isMetricsDisabled(Gradle gradle) {
+        String metricsEnabledParameter = gradle.getStartParameter().getProjectProperties().get(METRICS_ENABLED_PROPERTY);
+        boolean metricsDisabled = metricsEnabledParameter != null && metricsEnabledParameter.equals("false");
+        if(metricsDisabled) {
+            return true;
+        }
+        File gradleProperties = new File(gradle.getStartParameter().getProjectDir(), "gradle.properties");
+        if(gradleProperties.exists()) {
+            try (Stream<String> stream = Files.lines(gradleProperties.toPath())) {
+                return stream.anyMatch(line ->
+                        line.contains(METRICS_ENABLED_PROPERTY) && line.contains("false"));
+            } catch (IOException e) {
+                return false;
+            }
+        }
+        return false;
+    }
+
     protected MetricsPluginExtension createMetricsExtension(Project project) {
         return project.getExtensions().create("metrics", MetricsPluginExtension.class);
     }
@@ -109,7 +141,7 @@ public abstract class AbstractMetricsPlugin<T> implements Plugin<T> {
 
         final MetricsPluginExtension extension = createMetricsExtension(project);
 
-        if (project.hasProperty("metrics.enabled") && "false".equals(project.property("metrics.enabled"))) {
+        if (project.hasProperty(METRICS_ENABLED_PROPERTY) && "false".equals(project.property(METRICS_ENABLED_PROPERTY))) {
             dispatcher = new NoopMetricsDispatcher(extension);
             project.getLogger().warn("Metrics have been disabled for this build.");
             return;
