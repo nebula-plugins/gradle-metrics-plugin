@@ -44,4 +44,9 @@ public class NoopMetricsDispatcher extends AbstractESMetricsDispatcher {
     protected void bulkIndex(String indexName, String type, Collection<String> sources) {
         counter.addAndGet(sources.size());
     }
+
+    @Override
+    public Optional<String> receipt() {
+        return Optional.absent();
+    }
 }
