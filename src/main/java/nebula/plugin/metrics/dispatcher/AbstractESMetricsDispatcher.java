@@ -17,65 +17,16 @@
 
 package nebula.plugin.metrics.dispatcher;
 
-import ch.qos.logback.classic.spi.ILoggingEvent;
 import com.google.common.base.Optional;
-import com.google.common.base.Supplier;
-import com.google.common.base.Suppliers;
 import com.google.common.base.Throwables;
-import com.google.common.collect.FluentIterable;
-import nebula.plugin.metrics.MetricsPluginExtension;
-import net.logstash.logback.composite.JsonProviders;
-import net.logstash.logback.composite.loggingevent.MdcJsonProvider;
-import net.logstash.logback.layout.LogstashLayout;
 import java.net.MalformedURLException;
 import java.net.URL;
-
-import static com.google.common.base.Preconditions.checkState;
+import nebula.plugin.metrics.MetricsPluginExtension;
 
 public abstract class AbstractESMetricsDispatcher extends AbstractMetricsDispatcher {
 
-    private final Supplier<LogstashLayout> logstashLayoutSupplier = Suppliers.memoize(new Supplier<LogstashLayout>() {
-        @Override
-        public LogstashLayout get() {
-            checkState(buildId.isPresent(), "buildId has not been set");
-            final LogstashLayout layout = new LogstashLayout();
-            /**
-             * Gradle doesn't include a complete SLF4J implementation, so when the provider tries to access MDC
-             * features a warning is output. So we need to expose a method to remove the provider.
-             */
-            JsonProviders<ILoggingEvent> providers = layout.getProviders();
-            MdcJsonProvider provider = FluentIterable.from(providers.getProviders()).filter(MdcJsonProvider.class).first().get();
-            layout.getProviders().removeProvider(provider);
-            layout.setTimeZone("UTC");
-            layout.setCustomFields(String.format("{\"@source\":\"%s\"}", buildId.get()));
-            layout.start();
-            return layout;
-        }
-    });
-
-
     public AbstractESMetricsDispatcher(MetricsPluginExtension extension, boolean async) {
         super(extension, async);
-    }
-
-    private LogstashLayout safeLogstashLayoutGet() {
-        try {
-            return logstashLayoutSupplier.get();
-        } catch (Exception e) {
-            logger.debug("Unable to log event due to errors in initialization", e);
-            return null;
-        }
-    }
-
-    @Override
-    protected void postShutDown() throws Exception {
-        super.postShutDown();
-        try {
-            LogstashLayout logstashLayout = safeLogstashLayoutGet();
-            if (logstashLayout != null) {
-                logstashLayout.stop();
-            }
-        } catch (Exception ignored) {}
     }
 
     @Override

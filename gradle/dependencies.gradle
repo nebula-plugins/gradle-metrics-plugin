@@ -44,11 +44,6 @@ dependencies {
 
     plugin platform("com.fasterxml.jackson:jackson-bom:2.9.9.20190807")
 
-    plugin 'net.logstash.logback:logstash-logback-encoder:4.5.1'
-    // The logback encoder requires logback-classic, but we don't want it to bind and conflict with Gradle's SLF4J implementation
-    // So this version removes the static binding classes
-    plugin files('lib/logback-classic-nobinding-1.1.3.jar')
-
     plugin ("io.searchbox:jest:0.1.7") {
         exclude group: 'commons-logging', module: 'commons-logging'
     }
