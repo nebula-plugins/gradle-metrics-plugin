@@ -18,6 +18,7 @@
 package nebula.plugin.metrics.model;
 
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import lombok.Data;
 import lombok.NonNull;
 import lombok.Value;
 
@@ -31,7 +32,7 @@ import java.util.stream.Collectors;
 /**
  * Environment.
  */
-@Value
+@Data
 @JsonPropertyOrder({"build", "scm", "ci", "environmentVariables", "systemProperties", "javaVersion", "detailedJavaVersion", "nebulaFeatures"})
 public class Info {
     private static final String UNKNOWN = "UNKNOWN";
@@ -56,7 +57,11 @@ public class Info {
         List<KeyValue> envList = KeyValue.mapToKeyValueList(env);
         List<KeyValue> systemPropertiesList = KeyValue.mapToKeyValueList(systemProperties);
         List<KeyValue> nebulaFeaturesList = KeyValue.mapToKeyValueList(nebulaFeatures);
-        return new Info(tool, scm, ci, envList, systemPropertiesList, nebulaFeaturesList);
+        String javaRuntimeName = systemProperties.get("java.runtime.name");
+        String javaVersion = systemProperties.get("java.version");
+        String javaVendor = systemProperties.get("java.vm.vendor");
+        String detailedJavaVersion = determineJavaVersion(javaRuntimeName, javaVersion, javaVendor);
+        return new Info(tool, scm, ci, envList, systemPropertiesList, nebulaFeaturesList, javaVersion.isEmpty() ? "unknown" : javaVersion, detailedJavaVersion);
     }
 
     @NonNull
@@ -77,28 +82,18 @@ public class Info {
     @NonNull
     private List<KeyValue> nebulaFeatures;
 
-    public String getJavaVersion() {
-        String javaVersion = findProperty("java.version");
-        return !javaVersion.isEmpty() ? javaVersion : "unknown";
+    @NonNull
+    private String javaVersion;
+
+    @NonNull
+    private String detailedJavaVersion;
+
+    public void setJavaVersion(String javaRuntimeName, String javaVersion, String javaVendor) {
+        this.javaVersion = javaVersion;
+        this.detailedJavaVersion = determineJavaVersion(javaRuntimeName, javaVersion, javaVendor);
     }
 
-    public String getDetailedJavaVersion() {
-        String javaRuntimeName = findProperty("java.runtime.name");
-        String javaVersion = findProperty("java.version");
-        String javaVendor = findProperty("java.vm.vendor");
-        return determineJavaVersion(javaRuntimeName, javaVersion, javaVendor);
-    }
-
-    private String findProperty(String propertyName) {
-        for (KeyValue systemProperty : systemProperties) {
-            if (systemProperty.getKey().equals(propertyName)) {
-                return systemProperty.getValue();
-            }
-        }
-        return EMPTY_STRING;
-    }
-
-    private String determineJavaVersion(String javaRuntimeName, String javaVersion, String javaVendor) {
+    private static String determineJavaVersion(String javaRuntimeName, String javaVersion, String javaVendor) {
         if(javaVersion.isEmpty()) {
           return UNKNOWN.toLowerCase();
         }
@@ -119,7 +114,12 @@ public class Info {
 
     public static Info sanitize(Info info, List<String> sanitizedProperties, String sanitizedPropertiesRegex) {
         Pattern sanitizedPropertiesPattern = Pattern.compile(sanitizedPropertiesRegex);
-        return new Info(info.getBuild(), info.getScm(), info.getCi(), sanitizeKeyValues(info.getEnvironmentVariables(), sanitizedProperties, sanitizedPropertiesPattern), sanitizeKeyValues(info.getSystemProperties(), sanitizedProperties, sanitizedPropertiesPattern), sanitizeKeyValues(info.getNebulaFeatures(), sanitizedProperties, sanitizedPropertiesPattern));
+        return new Info(info.getBuild(), info.getScm(), info.getCi(),
+                sanitizeKeyValues(info.getEnvironmentVariables(), sanitizedProperties, sanitizedPropertiesPattern),
+                sanitizeKeyValues(info.getSystemProperties(), sanitizedProperties, sanitizedPropertiesPattern),
+                sanitizeKeyValues(info.getNebulaFeatures(), sanitizedProperties, sanitizedPropertiesPattern),
+                info.getJavaVersion(),
+                info.getDetailedJavaVersion());
     }
 
     private static List<KeyValue> sanitizeKeyValues(List<KeyValue> keyValues, List<String> sanitizedProperties, Pattern sanitizedPropertiesPattern) {
