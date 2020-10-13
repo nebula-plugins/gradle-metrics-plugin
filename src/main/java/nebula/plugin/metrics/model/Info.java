@@ -57,9 +57,9 @@ public class Info {
         List<KeyValue> envList = KeyValue.mapToKeyValueList(env);
         List<KeyValue> systemPropertiesList = KeyValue.mapToKeyValueList(systemProperties);
         List<KeyValue> nebulaFeaturesList = KeyValue.mapToKeyValueList(nebulaFeatures);
-        String javaRuntimeName = systemProperties.get("java.runtime.name");
-        String javaVersion = systemProperties.get("java.version");
-        String javaVendor = systemProperties.get("java.vm.vendor");
+        String javaRuntimeName = systemProperties.containsKey("java.runtime.name") ? systemProperties.get("java.runtime.name") : "";
+        String javaVersion = systemProperties.containsKey("java.version") ? systemProperties.get("java.version") : "";
+        String javaVendor = systemProperties.containsKey("java.vm.vendor") ? systemProperties.get("java.vm.vendor") : "";
         String detailedJavaVersion = determineJavaVersion(javaRuntimeName, javaVersion, javaVendor);
         return new Info(tool, scm, ci, envList, systemPropertiesList, nebulaFeaturesList, javaVersion.isEmpty() ? "unknown" : javaVersion, detailedJavaVersion);
     }
