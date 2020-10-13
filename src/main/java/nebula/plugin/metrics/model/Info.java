@@ -32,7 +32,7 @@ import java.util.stream.Collectors;
 /**
  * Environment.
  */
-@Data
+@Value
 @JsonPropertyOrder({"build", "scm", "ci", "environmentVariables", "systemProperties", "javaVersion", "detailedJavaVersion", "nebulaFeatures"})
 public class Info {
     private static final String UNKNOWN = "UNKNOWN";
@@ -88,12 +88,7 @@ public class Info {
     @NonNull
     private String detailedJavaVersion;
 
-    public void setJavaVersion(String javaRuntimeName, String javaVersion, String javaVendor) {
-        this.javaVersion = javaVersion;
-        this.detailedJavaVersion = determineJavaVersion(javaRuntimeName, javaVersion, javaVendor);
-    }
-
-    private static String determineJavaVersion(String javaRuntimeName, String javaVersion, String javaVendor) {
+    public static String determineJavaVersion(String javaRuntimeName, String javaVersion, String javaVendor) {
         if(javaVersion.isEmpty()) {
           return UNKNOWN.toLowerCase();
         }
