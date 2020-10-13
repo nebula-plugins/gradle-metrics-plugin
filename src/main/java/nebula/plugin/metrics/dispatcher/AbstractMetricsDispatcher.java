@@ -53,7 +53,7 @@ public abstract class AbstractMetricsDispatcher extends AbstractQueuedExecutionT
     protected Optional<String> buildId = Optional.absent();
 
     @VisibleForTesting
-    public static ObjectMapper getObjectMapper() {
+    public static ObjectMapper getDefaultObjectMapper() {
         ObjectMapper mapper = new ObjectMapper();
         mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
         mapper.configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
@@ -68,6 +68,10 @@ public abstract class AbstractMetricsDispatcher extends AbstractQueuedExecutionT
         this.mapper = getObjectMapper();
         this.async = async;
         this.build = new Build();
+    }
+
+    protected ObjectMapper getObjectMapper() {
+        return getDefaultObjectMapper();
     }
 
     /**

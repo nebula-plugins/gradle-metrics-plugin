@@ -28,6 +28,5 @@ public class Gradle {
     @NonNull
     private String version;
 
-    @NonNull
     private GradleParameters parameters;
 }

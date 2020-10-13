@@ -38,4 +38,9 @@ public class GradleToolContainer implements Tool {
         Gradle gradleModel = new nebula.plugin.metrics.model.Gradle(gradle.getGradleVersion(), parameters);
         return new GradleToolContainer(gradleModel);
     }
+
+    public static GradleToolContainer fromGradleVersion(String gradleVersion) {
+        Gradle gradleModel = new nebula.plugin.metrics.model.Gradle(gradleVersion, null);
+        return new GradleToolContainer(gradleModel);
+    }
 }

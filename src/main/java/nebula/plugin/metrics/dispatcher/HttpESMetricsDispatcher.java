@@ -39,7 +39,7 @@ import java.util.UUID;
  *
  * @author Danny Thomas
  */
-public final class HttpESMetricsDispatcher extends AbstractESMetricsDispatcher {
+public class HttpESMetricsDispatcher extends AbstractESMetricsDispatcher {
     private JestClient client;
 
     public HttpESMetricsDispatcher(MetricsPluginExtension extension) {
