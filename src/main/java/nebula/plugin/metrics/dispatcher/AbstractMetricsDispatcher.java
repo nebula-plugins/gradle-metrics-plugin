@@ -48,7 +48,7 @@ public abstract class AbstractMetricsDispatcher extends AbstractQueuedExecutionT
 
     protected final ObjectMapper mapper;
     private final boolean async;
-    protected final Build build;
+    private final Build build;
 
     protected Optional<String> buildId = Optional.absent();
 
@@ -144,7 +144,7 @@ public abstract class AbstractMetricsDispatcher extends AbstractQueuedExecutionT
         return Optional.absent();
     }
 
-    protected void indexBuildModel(boolean executeSynchronously) {
+    private void indexBuildModel(boolean executeSynchronously) {
         Runnable runnable = new Runnable() {
             @Override
             public void run() {
