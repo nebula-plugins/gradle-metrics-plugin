@@ -30,6 +30,7 @@ public class Task {
     @NonNull
     private String description;
 
+    @With
     @NonNull
     private Result result;
 

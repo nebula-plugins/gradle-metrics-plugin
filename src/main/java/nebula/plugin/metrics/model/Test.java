@@ -36,6 +36,7 @@ public class Test {
     @NonNull
     private final String suiteName;
 
+    @With
     @NonNull
     private final Result result;
 
