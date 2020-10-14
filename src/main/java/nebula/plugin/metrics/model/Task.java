@@ -17,15 +17,15 @@
 
 package nebula.plugin.metrics.model;
 
-import lombok.Data;
 import lombok.NonNull;
 import lombok.Value;
+import lombok.With;
 import org.joda.time.DateTime;
 
 /**
  * Task.
  */
-@Data
+@Value
 public class Task {
     @NonNull
     private String description;
@@ -36,5 +36,6 @@ public class Task {
     @NonNull
     private DateTime startTime;
 
+    @With
     private long elapsedTime;
 }

@@ -17,14 +17,14 @@
 
 package nebula.plugin.metrics.model;
 
-import lombok.Data;
 import lombok.NonNull;
 import lombok.Value;
+import lombok.With;
 
 /**
  * Value class representing a build event.
  */
-@Data
+@Value
 public class Event {
     @NonNull
     private String description;
@@ -32,5 +32,6 @@ public class Event {
     @NonNull
     private String type;
 
+    @With
     private long elapsedTime;
 }
