@@ -17,13 +17,14 @@
 
 package nebula.plugin.metrics.model;
 
+import lombok.Data;
 import lombok.NonNull;
 import lombok.Value;
 
 /**
  * Value class representing a build event.
  */
-@Value
+@Data
 public class Event {
     @NonNull
     private String description;

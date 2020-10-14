@@ -17,6 +17,7 @@
 
 package nebula.plugin.metrics.model;
 
+import lombok.Data;
 import lombok.NonNull;
 import lombok.Value;
 import org.joda.time.DateTime;
@@ -24,7 +25,7 @@ import org.joda.time.DateTime;
 /**
  * Value object for tests.
  */
-@Value
+@Data
 public class Test {
     @NonNull
     private final String methodName;
