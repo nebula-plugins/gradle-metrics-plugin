@@ -42,7 +42,7 @@ dependencies {
     plugin "com.fasterxml.jackson.core:jackson-annotations"
     plugin "com.fasterxml.jackson.datatype:jackson-datatype-joda"
 
-    plugin platform("com.fasterxml.jackson:jackson-bom:2.9.9.20190807")
+    plugin platform("com.fasterxml.jackson:jackson-bom:2.9.10.+")
 
     plugin ("io.searchbox:jest:0.1.7") {
         exclude group: 'commons-logging', module: 'commons-logging'
